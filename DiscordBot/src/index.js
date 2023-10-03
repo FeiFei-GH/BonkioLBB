@@ -151,7 +151,7 @@ printBonkPkrRooms = (roomsJSON) => {
 
 sendBonkInfo = async () => {
     let updateMsg = "Sending Bonk Info ";
-    setTimeout(sendBonkInfo, 5000);
+    setTimeout(sendBonkInfo, 10000); // too fast and the bot will get ratelimited by the bonk.io server
     const now = new Date();
     console.log(updateMsg.concat(now.getHours(),":", now.getMinutes(),":", now.getSeconds(),".",now.getMilliseconds()));
     let roomsEmbed = new EmbedBuilder()
