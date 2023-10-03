@@ -27,7 +27,7 @@ function bonkHUDInjector(func) {
 // !Main Function!
 bonkHUDInjector(function () {
     // &Define Default Variables
-    var scope = window; // Tempermonkey ya know...
+    var scope = window; // Tampermonkey ya know...
     scope.scope = scope; //make scope defined LOL
     scope.Gwindow = document.getElementById("maingameframe").contentWindow;
     scope.Gdocument = document.getElementById("maingameframe").contentDocument;
