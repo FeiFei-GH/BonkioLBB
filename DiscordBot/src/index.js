@@ -18,7 +18,7 @@ client.on("ready", (c) => {
     DCBotReady = true;
     console.log(`${c.user.username} is online.`);
     
-    sendBonkInfo(); // call it 1st so I dont have to wait
+    sendBonkInfo(); // call it 1st so I don't have to wait
 });
 
 client.on("messageCreate", (msg) => {
@@ -150,8 +150,10 @@ printBonkPkrRooms = (roomsJSON) => {
 }
 
 sendBonkInfo = async () => {
-    console.log("Sending Bonk Info");
-    
+    let updateMsg = "Sending Bonk Info ";
+    setTimeout(sendBonkInfo, 10000); // too fast and the bot will get ratelimited by the bonk.io server
+    const now = new Date();
+    console.log(updateMsg.concat(now.getHours(),":", now.getMinutes(),":", now.getSeconds(),".",now.getMilliseconds()));
     let roomsEmbed = new EmbedBuilder()
         .setColor(0x0099FF)
         .setTitle("Live Bonk Parkour Rooms:")
@@ -190,4 +192,4 @@ sendBonkInfo = async () => {
 
 client.login(process.env.DCBOTTOKEN); // Let the discord bot login
 
-let sendBonkInfoID = setInterval(sendBonkInfo, 10000);
+let sendBonkInfoID = sendBonkInfo
