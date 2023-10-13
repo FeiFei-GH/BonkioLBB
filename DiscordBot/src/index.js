@@ -11,8 +11,8 @@ const client = new Client({
 });
 
 // Global Variables
-var DCBotReady = false;
-var bonkLoginToken = process.env.BonkLoginToken_LB;
+let DCBotReady = false;
+let bonkLoginToken = process.env.BonkLoginToken_LB;
 
 client.on("ready", (c) => {
     DCBotReady = true;
@@ -30,7 +30,7 @@ client.on("messageCreate", (msg) => {
 });
 
 // !My functions
-// Use login token to get rooms data
+// Retrieves Room Data
 const bonkGetRoomsJSON = async () => {
     try {
         const fetchRoomURL = "https://bonk2.io/scripts/getrooms.php";
@@ -49,7 +49,7 @@ const bonkGetRoomsJSON = async () => {
             "Referrer-Policy": "strict-origin-when-cross-origin"
         }
 
-        const fetchRoomData = `version=46&gl=n&token=${bonkLoginToken}`;
+        const fetchRoomData = `version=48&gl=n&token=${bonkLoginToken}`;
 
         const response = await fetch(fetchRoomURL, {
             headers: fetchRoomHeaders,
@@ -65,7 +65,7 @@ const bonkGetRoomsJSON = async () => {
     }
 }
 
-// Get new login token if expired(using rember token)
+// Get new login token if expired(using remember token)
 const getNewBLT = async () => {
     try {
         const fetchRoomURL = "https://bonk2.io/scripts/login_auto.php";
@@ -111,24 +111,24 @@ printBonkPkrRooms = (roomsJSON) => {
         .setTimestamp();
     
     let noRoom = true;
-    for (room of roomsArray) {
+    for (let room of roomsArray) {
         if (room.roomname.toLowerCase().includes("parkour")) {
             noRoom = false;
             
             let mode = "Classic";
             let password = "No";
             
-            if (room.mode_mo == "ar") {
+            if (room.mode_mo === "ar") {
                 mode = "Arrows";
-            } else if (room.mode_mo == "ard") {
+            } else if (room.mode_mo === "ard") {
                 mode = "Death Arrows";
-            } else if (room.mode_mo == "sp") {
+            } else if (room.mode_mo === "sp") {
                 mode = "Grapple";
-            } else if (room.mode_mo == "f") {
+            } else if (room.mode_mo === "f") {
                 mode = "Football";
             }
             
-            if (room.password == 1) {
+            if (room.password === 1) {
                 password = "Yes";
             }
             
@@ -151,7 +151,7 @@ printBonkPkrRooms = (roomsJSON) => {
 
 sendBonkInfo = async () => {
     let updateMsg = "Sending Bonk Info ";
-    setTimeout(sendBonkInfo, 10000); // too fast and the bot will get ratelimited by the bonk.io server
+    setTimeout(sendBonkInfo, 10000); // too fast and the bot will get rate-limited by the bonk.io server
     const now = new Date();
     console.log(updateMsg.concat(now.getHours(),":", now.getMinutes(),":", now.getSeconds(),".",now.getMilliseconds()));
     let roomsEmbed = new EmbedBuilder()
@@ -161,11 +161,11 @@ sendBonkInfo = async () => {
             name: "No Parkour rooms available at the moment",
             value: "Please check back later :D",
         })
-        .setTimestamp();
+        .setTimestamp(Date.now());
     
     try {
         let roomsJSON = await bonkGetRoomsJSON();
-        
+        console.log(JSON.stringify(roomsJSON,null));
         if (roomsJSON.r === 'fail' && roomsJSON.e === 'token') {
             console.log("Token Expired");
             bonkLoginToken = await getNewBLT();
@@ -190,6 +190,6 @@ sendBonkInfo = async () => {
     }
 };
 
-client.login(process.env.DCBOTTOKEN); // Let the discord bot login
+void client.login(process.env.DCBOTTOKEN); // Let the discord bot login
 
-let sendBonkInfoID = sendBonkInfo
+let sendBonkInfoID = sendBonkInfo;
