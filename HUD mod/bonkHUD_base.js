@@ -12,9 +12,9 @@
 // ==/UserScript==
 
 function bonkHUDInjector(func) {
-    if (window.location == window.parent.location) {
+    if (window.location === window.parent.location) {
         // Run Script only when document have loaded
-        if (document.readyState == "complete") {
+        if (document.readyState === "complete") {
             func();
         } else {
             document.addEventListener("readystatechange", function() {
@@ -27,7 +27,7 @@ function bonkHUDInjector(func) {
 // !Main Function!
 bonkHUDInjector(function () {
     // &Define Default Variables
-    var scope = window; // Tampermonkey ya know...
+    let scope = window; // Tampermonkey ya know...
     scope.scope = scope; //make scope defined LOL
     scope.Gwindow = document.getElementById("maingameframe").contentWindow;
     scope.Gdocument = document.getElementById("maingameframe").contentDocument;
@@ -59,26 +59,26 @@ bonkHUDInjector(function () {
     
     // Start all loops
     scope.loop30FPSID = setInterval(loop30FPS,33.33);
-    
-    // overriding draw circle and get playerdata
+
+    // overriding draw circle and get player data
     Gwindow.PIXI.Graphics.prototype.drawCircle = function(...args){
-        var This = this;
-        var Args = [...args]; // Args[2] is player radius but buggy
+        let This = this;
+        let Args = [...args]; // Args[2] is player radius but buggy
         
         setTimeout(function(){
             if (This.parent) {
-                var childs = This.parent.children;
-                var user = 0;
+                let children = This.parent.children;
+                let user = 0;
                 
-                for(var i = 0; i<childs.length; i++){
-                    if(childs[i]._text){
-                        user = childs[i]._text;
+                for(let i = 0; i < children.length; i++){
+                    if(children[i]._text){
+                        user = children[i]._text;
                     }
                 }
                 
                 var keys = Object.keys(currentPlayerIDs);
                 for(var i = 0; i<keys.length; i++){
-                    if(currentPlayerIDs[keys[i]].userName == user){
+                    if(currentPlayerIDs[keys[i]].userName === user){
                         currentPlayerIDs[keys[i]].playerData = This.parent;
                     }
                 }
@@ -91,11 +91,11 @@ bonkHUDInjector(function () {
     //------------------------------Overriding bonkWSS------------------------------//
     Gwindow.WebSocket.prototype.send = function(args) {
         if (this.url.includes(".bonk.io/socket.io/?EIO=3&transport=websocket&sid=")) {
-            bonkWSS = this;
+            let bonkWSS = this;
 
             if (!this.injected) { // initialize overriding receive listener (only run once)
                 this.injected = true;
-                var originalReceive = this.onmessage;
+                let originalReceive = this.onmessage;
 
                 // This function intercepts incoming packets
                 this.onmessage = function (args) {
@@ -249,62 +249,62 @@ bonkHUDInjector(function () {
 
     // Send a packet to server
     scope.sendPacket = function (packet) {
-        if (bonkWSS != 0) {
+        if (bonkWSS !== 0) {
             bonkWSS.send(packet);
         }
     };
     
     // Make client receive a packet
     scope.receivePacket = function (packet) {
-        if (bonkWSS != 0) {
+        if (bonkWSS !== 0) {
             bonkWSS.onmessage({ data: packet });
         }
     };
 
     // &Receive Handler Functions
     scope.receive_RoomJoin = function (args) {
-        var jsonargs = JSON.parse(args.data.substring(2));
-        currentPlayerIDs = {};
-        myID = jsonargs[1];
-        hostID = jsonargs[2];
-        
-        for(var i = 0; i < jsonargs[3].length; i++){
-            if(jsonargs[3][i] != null){
-                currentPlayerIDs[i.toString()] = jsonargs[3][i];
+        const jsonArgs = JSON.parse(args.data.substring(2));
+        let currentPlayerIDs = {};
+        let myID = jsonArgs[1];
+        let hostID = jsonArgs[2];
+
+        for(let i = 0; i < jsonArgs[3].length; i++){
+            if(jsonArgs[3][i] != null){
+                currentPlayerIDs[i.toString()] = jsonArgs[3][i];
             }
         }
         
         return args;
     }
-    
+
     scope.receive_PlayerJoin = function (args) {
-        var jsonargs = JSON.parse(args.data.substring(2));
-        currentPlayerIDs[jsonargs[1]] = {
-            peerID: jsonargs[2],
-            userName: jsonargs[3],
-            guest: jsonargs[4],
-            level: jsonargs[5],
-            team: jsonargs[6],
-            avatar: jsonargs[7],
+        let jsonArgs = JSON.parse(args.data.substring(2));
+        currentPlayerIDs[jsonArgs[1]] = {
+            peerID: jsonArgs[2],
+            userName: jsonArgs[3],
+            guest: jsonArgs[4],
+            level: jsonArgs[5],
+            team: jsonArgs[6],
+            avatar: jsonArgs[7],
         };
 
         return args;
     }
     
     scope.receive_PlayerLeave = function (args) {
-        var jsonargs = JSON.parse(args.data.substring(2));
+        let jsonArgs = JSON.parse(args.data.substring(2));
 
-        if (typeof currentPlayerIDs[jsonargs[1]] != "undefined") {
-            delete currentPlayerIDs[jsonargs[1]];
+        if (typeof currentPlayerIDs[jsonArgs[1]] != "undefined") {
+            delete currentPlayerIDs[jsonArgs[1]];
         }
         return args;
     }
     
     scope.receive_HostLeave = function (args) {
-        var jsonargs = JSON.parse(args.data.substring(2));
+        let jsonArgs = JSON.parse(args.data.substring(2));
 
-        if (typeof currentPlayerIDs[jsonargs[1]] != "undefined") {
-            delete currentPlayerIDs[jsonargs[1]];
+        if (typeof currentPlayerIDs[jsonArgs[1]] != "undefined") {
+            delete currentPlayerIDs[jsonArgs[1]];
         }
         hostID = jsonargs[2];
         
@@ -325,36 +325,36 @@ bonkHUDInjector(function () {
     }
     
     scope.receive_ChatMessage = function (args) {
-        var jsonargs = JSON.parse(args.data.substring(2));
-        let chatUserName = currentPlayerIDs[jsonargs[1]].userName;
-        let chatMessage = jsonargs[2];
+        let jsonArgs = JSON.parse(args.data.substring(2));
+        let chatUserName = currentPlayerIDs[jsonArgs[1]].userName;
+        let chatMessage = jsonArgs[2];
         
         return args;
     }
     
     scope.receive_NewHost = function (args) {
-        var jsonargs = JSON.parse(args.data.substring(2));
-        hostID = jsonargs[1]["newHost"];
+        const jsonArgs = JSON.parse(args.data.substring(2));
+        hostID = jsonArgs[1]["newHost"];
         
         return args;
     }
     
     scope.receive_FriendReq = function (args) {
-        var jsonargs = JSON.parse(args.data.substring(2));
+        let jsonArgs = JSON.parse(args.data.substring(2));
         
         return args;
     }
     
     // &Send Handler Functions
     scope.send_TriggerStart = function (args) {
-        var jsonargs = JSON.parse(args.substring(2));
+        let jsonArgs = JSON.parse(args.substring(2));
         
         if (isInstaStart) {
             isInstaStart = false;
             // jsonargs[1]["gs"]["wl"] = 1; //keep this here for now
                         
-            if(instaDelay != 0){
-                var jsonargs2 = decodeIS(jsonargs[1]["is"]);
+            if(instaDelay !== 0){
+                let jsonargs2 = decodeIS(jsonargs[1]["is"]);
                 jsonargs2["ftu"] = instaDelay * 30;
                             
                 jsonargs2 = encodeIS(jsonargs2);
@@ -367,7 +367,7 @@ bonkHUDInjector(function () {
     }
     
     scope.send_CreatRoom = function (args) {
-        currentPlayerIDs = {};
+        let currentPlayerIDs = {};
         var jsonargs2 = JSON.parse(args.substring(2));
         var jsonargs = jsonargs2[1];
 
@@ -375,7 +375,7 @@ bonkHUDInjector(function () {
             peerID: jsonargs["peerID"],
             userName: Gdocument.getElementById("pretty_top_name").textContent,
             level:
-                Gdocument.getElementById("pretty_top_level").textContent == "Guest"
+                Gdocument.getElementById("pretty_top_level").textContent === "Guest"
                     ? 0
                     : parseInt(Gdocument.getElementById("pretty_top_level").textContent.substring(3)),
             guest: typeof jsonargs.token == "undefined",
@@ -383,8 +383,8 @@ bonkHUDInjector(function () {
             avatar: jsonargs["avatar"],
         };
         
-        myID = 0;
-        hostID = 0;
+        let myID = 0;
+        let hostID = 0;
         
         return args;
     }
@@ -403,7 +403,7 @@ bonkHUDInjector(function () {
     // &------------------------------------------All Functions------------------------------------------
     scope.defaultEnd = function () {
         console.log("defaultEnd");
-        if (Gdocument.getElementById("gamerenderer").style["visibility"] != "hidden") {
+        if (Gdocument.getElementById("gamerenderer").style["visibility"] !== "hidden") {
             Gdocument.getElementById("pretty_top_exit").click();
         }
     };
@@ -429,8 +429,8 @@ bonkHUDInjector(function () {
     }
     
     scope.updatePlayerData = function (scale) {
-        var keys = Object.keys(currentPlayerIDs);
-        for(var i = 0; i < keys.length; i++){
+        let keys = Object.keys(currentPlayerIDs);
+        for(let i = 0; i < keys.length; i++){
             if(currentPlayerIDs[keys[i]].playerData){
                 if(currentPlayerIDs[keys[i]].playerData2){
                     if(currentPlayerIDs[keys[i]].playerData.transform){
@@ -462,16 +462,16 @@ bonkHUDInjector(function () {
     Gwindow.requestAnimationFrame = function(...args){
         //When game playing
         try {
-            if(myID != -1 && Gdocument.getElementById("gamerenderer").style["visibility"]!="hidden"){
-                var canv = 0;
-                for (var i = 0; i<Gdocument.getElementById("gamerenderer").children.length; i++) {
-                    if(Gdocument.getElementById("gamerenderer").children[i].constructor.name == "HTMLCanvasElement"){
+            if(myID !== -1 && Gdocument.getElementById("gamerenderer").style["visibility"] !== "hidden"){
+                let canv = 0;
+                for (let i = 0; i<Gdocument.getElementById("gamerenderer").children.length; i++) {
+                    if(Gdocument.getElementById("gamerenderer").children[i].constructor.name === "HTMLCanvasElement"){
                         canv = Gdocument.getElementById("gamerenderer").children[i];
                         break;
                     }
                 }
-                var canvWidth = parseInt(canv.style["width"]);
-                scale = canvWidth / 730;
+                const canvWidth = parseInt(canv.style["width"]);
+                let scale = canvWidth / 730;
                 
                 updatePlayerData(1 / scale);
             }
