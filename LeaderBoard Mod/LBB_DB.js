@@ -10,7 +10,9 @@
 // @grant        none
 // ==/UserScript==
 
+// Create a new script element
 var LBB_DBJS = document.createElement('script');
+// Inside this script, log a message and then interact with Firebase (a popular Backend-as-a-Service)
 LBB_DBJS.textContent = `
 console.log("MEOW");
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js';
@@ -56,6 +58,7 @@ window.LBB_DB.getPlayerData("Sky_Dream");
 
 
 `;
-
+// The script will be of type module because it uses ES6 imports
 LBB_DBJS.setAttribute('type', 'module');
+// Append the created script to the document head, causing it to execute
 document.head.appendChild(LBB_DBJS);
