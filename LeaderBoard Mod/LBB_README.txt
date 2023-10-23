@@ -50,3 +50,14 @@ Console log: Outputs a message that the injector has been loaded.
 
 LBB_Main.js
 
+Interaction with the server: Interaction with the server is achieved through the sendPacket and receivePacket functions, sending and receiving data.
+
+Handling received events: For instance, handling events like a user joining a room, a player joining, or a player or host leaving. These are implemented through functions that start with receive_.
+
+Sending events: Events such as triggering the start of a game, creating a room, etc. These are implemented through functions that start with send_.
+
+Chat functionality: There's a chat function provided, allowing players to chat within the game.
+
+Time and map-related utilities: Features like converting milliseconds to a string-formatted time, obtaining the current map's name, and adding a player to the map records.
+
+Checking player statuses: For example, checking if a player has completed the game, whether a player is in a specific area, and so on.
