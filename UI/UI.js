@@ -17,19 +17,25 @@ const left = "0";
 const top = "0";
 const width = "172px";
 const height = "100px";
- 
+
+window.latestInput = 0;
+
 window.keyStyle = (keyname) => {
-    if (document.getElementById(keyname).innerHTML == 'false') {
-        document.getElementById(keyname).innerHTML = (keyname)
-        document.getElementById(keyname).style.backgroundColor = '#333333';
- 
-    } else if (document.getElementById(keyname).innerHTML == 'true') {
-        document.getElementById(keyname).innerHTML = (keyname)
+    let inputValues = {
+        '←': 1,
+        '→': 2,
+        '↑': 4,
+        '↓': 8,
+        'Heavy': 16,
+        'Special': 32
+    };
+    if (window.latestInput & inputValues[keyname]) {
         document.getElementById(keyname).style.backgroundColor = '#808080';
+    } else {
+        document.getElementById(keyname).style.backgroundColor = '#333333';
     }
 }
 //sets colors for keys when pressed/released
- 
 window.keyTableReset = () => {
     var keys = ['←', '↑', '→', '↓', 'Heavy', 'Special'];
     for (let i = 0; i < keys.length; i++) {
@@ -85,4 +91,8 @@ function setup() {
  
     window.keyTableReset();
 }
-//adds keytable!
+
+scope.send_SendInputs = function (args) {
+    window.latestInput = args[1].i;
+    return args;
+}
