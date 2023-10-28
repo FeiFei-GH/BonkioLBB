@@ -4,7 +4,7 @@
 // @version      1.0
 // @description  Main
 // @author       FeiFei + LEGEND
-// @license MIT
+// @license      MIT
 // @match        https://bonk.io/gameframe-release.html
 // @run-at       document-end
 // @grant        none
