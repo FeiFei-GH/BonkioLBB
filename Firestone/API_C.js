@@ -5,26 +5,43 @@
 // @description  Connects Bonk.io to Firebase Firestore
 // @author       Char
 // @match        https://bonk.io/gameframe-release.html
+// @grant        GM_xmlhttpRequest
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_deleteValue
 // @require      https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js
 // @require      https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js
 // ==/UserScript==
 
+/** @var GM_xmlhttpRequest */
+
 // unfinished so far
 
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js';
-import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js';
-import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js';
+const FIREBASE_SDK_URL = "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
 
-// initialize Firebase app
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID",
-    measurementId: "YOUR_MEASUREMENT_ID"
-};
+GM_xmlhttpRequest({
+    method: "GET",
+    url: FIREBASE_SDK_URL,
+    onload: (response) => {
+        // load Firebase SDK
+        eval(response.responseText);
+
+        // initialize
+        firebase.initializeApp({
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        });
+
+
+        const db = firebase.firestore();
+
+    }
+});
 
 const db = getFirestore(app);
 
