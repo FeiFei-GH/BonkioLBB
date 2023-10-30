@@ -5,7 +5,7 @@
 // @description  bonkHUD
 // @author       FeiFei
 // @license      MIT
-// @match        https://bonk.io/gameframe-release.html
+// @match        https://bonk.io/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=bonk.io
 // @run-at       document-end
 // @grant        none
@@ -33,7 +33,61 @@ bonkHUDInjector(function () {
     scope.Gdocument = document.getElementById("maingameframe").contentDocument;
     Gwindow.Gwindow = window; // Don't ask
     Gwindow.Gdocument = document; // Don't ask
-    
+
+    //Style
+    let llbStyle = document.createElement('style');
+    llbStyle.innerHTML = `
+    #llbTopButton {
+        width: 58px;
+        height: 34px;
+        background-repeat: no-repeat;
+        background-position: center;
+        position: absolute;
+        right: 290px;
+        top: 0;
+        border-bottom: 2px solid transparent;
+    }
+    .llbSubMenu {
+        width: 300px;
+        position: absolute;
+        right: 0px;
+        padding: 10px;
+        background-color: #273749c7;
+        top: 34px;
+        visibility: hidden;
+    }
+    #llbTopButton:hover .llbSubMenu {
+        width: 300px;
+        right: 0px;
+        position: absolute;
+        padding: 10px;
+        background-color: #273749c7;
+        top: 34px;
+        visibility: visible;
+    }
+    .pretty_llb_text {
+        color: #ffffff;
+        width: max-content;
+        line-height: 34px;
+        font-family: futurept_b1;
+    }
+    `;
+    //Add style to header
+    scope.Gwindow.document.getElementsByTagName('head')[0].appendChild(llbStyle);
+
+    //Create element in top bar
+    const topBarTest = document.createElement('div');
+    //Place it before help button
+    scope.Gwindow.document.getElementById('pretty_top_bar').appendChild(topBarTest);
+    topBarTest.outerHTML = `
+    <div id="llbTopButton" class="pretty_top_button niceborderleft" style="visibility:hidden;">
+        <span>icon</span>
+        <div id="llbInner" class="llbSubMenu niceborderleft niceborderbottom niceborderright">
+            <span class="pretty_llb_text">some text here</span>
+        </div>
+    </div>
+    `;
+
     // Clear all previous intervals
     if (typeof scope.loop30FPSID == "undefined") {
         scope.loop30FPSID = true;
