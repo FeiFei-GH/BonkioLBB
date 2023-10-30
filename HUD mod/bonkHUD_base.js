@@ -80,7 +80,7 @@ bonkHUDInjector(function () {
     //Place it before help button
     scope.Gwindow.document.getElementById('pretty_top_bar').appendChild(topBarTest);
     topBarTest.outerHTML = `
-    <div id="llbTopButton" class="pretty_top_button niceborderleft" style="visibility:hidden;">
+    <div id="llbTopButton" class="pretty_top_button niceborderleft" style="visibility:visible;">
         <span>icon</span>
         <div id="llbInner" class="llbSubMenu niceborderleft niceborderbottom niceborderright">
             <span class="pretty_llb_text">some text here</span>
