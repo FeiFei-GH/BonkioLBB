@@ -90,7 +90,7 @@ bonkHUDInjector(function () {
     
     //------------------------------Overriding bonkWSS------------------------------//
     Gwindow.WebSocket.prototype.send = function(args) {
-        if (this.url.includes(".bonk.io/socket.io/?EIO=3&transport=websocket&sid=")) {
+        if (this.url.includes("socket.io/?EIO=3&transport=websocket&sid=")) {
             let bonkWSS = this;
 
             if (!this.injected) { // initialize overriding receive listener (only run once)
@@ -103,13 +103,13 @@ bonkHUDInjector(function () {
                     if (args.data.startsWith('42[1,')) { // *Update Pings
                         
                     } else if (args.data.startsWith('42[3,')) { // *Room join
-                        args = receive_RoomJoin(args);
+                        //args = receive_RoomJoin(args);
                     } else if (args.data.startsWith('42[4,')) { // *Player join
-                        args = receive_PlayerJoin(args);
+                        //args = receive_PlayerJoin(args);
                     } else if (args.data.startsWith('42[5,')) { // *Player leave
-                        args = receive_PlayerLeave(args);
+                        //args = receive_PlayerLeave(args);
                     } else if (args.data.startsWith('42[6,')) { // *Host leave
-                        args = receive_HostLeave(args);
+                        //args = receive_HostLeave(args);
                     } else if (args.data.startsWith('42[7,')) { // *Inputs
                         console.log(args);
                     } else if (args.data.startsWith('42[8,')) { // *Ready Change
@@ -117,15 +117,15 @@ bonkHUDInjector(function () {
                     } else if (args.data.startsWith('42[13,')) { // *Game End
                         
                     } else if (args.data.startsWith('42[15,')) { // *Game Start
-                        args = receive_GameStart(args);
+                        //args = receive_GameStart(args);
                     } else if (args.data.startsWith('42[16,')) { // *Error
                         
                     } else if (args.data.startsWith('42[18,')) { // *Team Change
-                        args = receive_TeamChange(args);
+                        //args = receive_TeamChange(args);
                     } else if (args.data.startsWith('42[19,')) { // *Teamlock toggle
                         
                     } else if (args.data.startsWith('42[20,')) { // *Chat Message
-                        args = receive_ChatMessage(args);
+                        //args = receive_ChatMessage(args);
                     } else if (args.data.startsWith('42[21,')) { // *Initial data
                         
                     } else if (args.data.startsWith('42[24,')) { // *Kicked
@@ -147,9 +147,9 @@ bonkHUDInjector(function () {
                     } else if (args.data.startsWith('42[40,')) { // *Save Replay
                         
                     } else if (args.data.startsWith('42[41,')) { // *New Host
-                        args = receive_NewHost(args);
+                        //args = receive_NewHost(args);
                     } else if (args.data.startsWith('42[42,')) { // *Friend Req
-                        args = receive_FriendReq(args);
+                        //args = receive_FriendReq(args);
                     } else if (args.data.startsWith('42[43,')) { // *Game starting Countdown
                         
                     } else if (args.data.startsWith('42[44,')) { // *Abort Countdown
@@ -179,9 +179,10 @@ bonkHUDInjector(function () {
             } else {
                 // &Sending outgoing packets
                 if (args.startsWith('42[4,')) { // *Send Inputs
-                    args = send_SendInputs(args);
+                    console.log(args);
+                    //args = send_SendInputs(args);
                 } else if (args.startsWith('42[5,')) { // *Trigger Start
-                    args = send_TriggerStart(args);
+                    //args = send_TriggerStart(args);
                 } else if (args.startsWith('42[6,')) { // *Change Own Team
                     
                 } else if (args.startsWith('42[7,')) { // *Team Lock
@@ -193,7 +194,8 @@ bonkHUDInjector(function () {
                 } else if (args.startsWith('42[11,')) { // *Inform In Lobby
                     
                 } else if (args.startsWith('42[12,')) { // *Create Room
-                    args = send_CreatRoom(args);
+                    console.log(args);
+                    //args = send_CreatRoom(args);
                 } else if (args.startsWith('42[14,')) { // *Return To Lobby
                     
                 } else if (args.startsWith('42[16,')) { // *Set Ready
@@ -209,7 +211,7 @@ bonkHUDInjector(function () {
                 } else if (args.startsWith('42[22,')) { // *Send Map Delete
                     
                 } else if (args.startsWith('42[23,')) { // *Send Map Add
-                    args = send_MapAdd(args);
+                    //args = send_MapAdd(args);
                 } else if (args.startsWith('42[26,')) { // *Change Other Team
                     
                 } else if (args.startsWith('42[27,')) { // *Send Map Suggest
@@ -367,7 +369,7 @@ bonkHUDInjector(function () {
     }
     
     scope.send_CreatRoom = function (args) {
-        let currentPlayerIDs = {};
+        currentPlayerIDs = {};
         var jsonargs2 = JSON.parse(args.substring(2));
         var jsonargs = jsonargs2[1];
 
