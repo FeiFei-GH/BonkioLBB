@@ -104,7 +104,7 @@
     }
 
     // Hook into game's input system to update key table display
-    window.scope.send_SendInputs = function (args) {
+    window.scope.receive_Inputs = function (args) {
         window.latestInput = args[1].i;
         return args;
     };
