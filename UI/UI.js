@@ -14,6 +14,8 @@
 // which is available under the MIT license.
 
 (function () {
+    window.LBB_UI = {};
+
     'use strict';
 
     const left = "0";
@@ -104,8 +106,12 @@
     }
 
     // Hook into game's input system to update key table display
-    window.scope.receive_Inputs = function (args) {
-        window.latestInput = args[1].i;
+    LBB_UI.receive_Inputs = function (args) {
+        var array1 = args.substring(2);
+        console.log("Receive: " + array1);
+        let array2 = JSON.parse(jsonString);
+        console.log("MEOW: " + array2[1]);
+        //window.latestInput = array1[1].i;
         return args;
     };
 })();
