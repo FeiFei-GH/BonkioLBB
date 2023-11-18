@@ -1,55 +1,79 @@
-var scope = window;
-scope.scope = scope;
-scope.Gwindow = document.getElementById("maingameframe").contentWindow;
-scope.Gdocument = document.getElementById("maingameframe").contentDocument;
-Gwindow.Gwindow = window;
-Gwindow.Gdocument = document;
+const http = require("http");
+const fs = require("fs");
+const fsp = fs.promises;
 
-scope.mapid = 60;
-scope.lowestmapid = mapid;
-scope.stop = false;
-if(typeof(scope.ogxmlopen)=="undefined"){
-    scope.ogxmlopen = Gwindow.XMLHttpRequest.prototype.open;
-}
-if(typeof(scope.ogxmlsend)=="undefined"){
-    scope.ogxmlsend = Gwindow.XMLHttpRequest.prototype.send;
-}
-
-Gwindow.XMLHttpRequest.prototype.open = function(_, url) {
-    if(url.includes("map_fave.php")){
-        this.favedMap = true;
+class Bot {
+    constructor(username, password) {
+        this.username = username;
+        this.password = password;
+        this.loggedin = false;
+        this.token = "";
     }
-    ogxmlopen.call(this, ...arguments);
-};
+    async fetchPOST(url, body_) {
+        var data = { r: "fail", e: "" };
+        await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: body_,
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (response) {
+                data = response;
+            });
+        return data;
+    }
+    async login() {
+        var data = await this.fetchPOST(
+            "https://bonk2.io/scripts/login_legacy.php",
+            "username=" + this.username + "&password=" + this.password + "&remember=false"
+        );
+        if (data["r"] == "fail") {
+            return data["e"];
+        }
 
+        this.token = data.token;
+        this.loggedin = true;
+        return data["r"];
+    }
 
-scope.startFaving = function(n){
-    if(n<=0 || stop){return;}
-    setTimeout(function(){
-        chat2("/fav");
-        startFaving(n-1);
+    async favMap(id, unfav = false) {
+        var data = await this.fetchPOST(
+            "https://bonk2.io/scripts/map_fave.php",
+            "token=" + this.token + "&mapid=" + id + "&action=" + (unfav ? "u" : "f")
+        );
+        if (data["r"] == "fail") {
+            return data["e"];
+        }
+        return data["r"];
+    }
+}
+
+var mybot = new Bot("username", "password");
+var mapid = 0;
+
+function sleep(ms) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
     });
 }
 
-Gwindow.XMLHttpRequest.prototype.send = function(data) {
-    if(this.favedMap){
-        var id = data.match(/&mapid=[0-9]*&/)[0];
-        data = data.replace(id,"&mapid="+mapid+"&");
-        this.mapid = mapid;
-        mapid++;
-        this.onreadystatechange = function(){
-            if(this.readyState == 4){
-                var jsonresponse = JSON.parse(this.responseText);
-                if(jsonresponse["e"] != "ratelimited"){
-                    if(this.mapid>lowestmapid){
-                        lowestmapid = this.mapid;
-                    }
-                }
-                else{
-                    stop = true;
-                }
+async function dostuff() {
+    console.log("Logged in: " + (await mybot.login()));
+    while (true) {
+        while (true) {
+            var result = await mybot.favMap(mapid);
+            if (result == "ratelimited") {
+                break;
             }
+            mapid++;
         }
+        await sleep(420000);
+        console.log(mapid);
     }
-    ogxmlsend.call(this, ...arguments);
-};
+}
+
+dostuff();
