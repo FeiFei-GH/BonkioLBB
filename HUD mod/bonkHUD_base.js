@@ -247,7 +247,7 @@ LB_HUD.receive_HostLeave = function (args) {
 
 LB_HUD.receive_Inputs = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
-    console.log("LB HUD Receive: " + args);
+    //console.log("LB HUD Receive: " + args);
     window.LBB_UI.receive_Inputs(args);
     return args;
 }
@@ -305,8 +305,6 @@ LB_HUD.receive_FriendReq = function (args) {
 // &Send Handler Functions
 LB_HUD.send_TriggerStart = function (args) {
     var jsonargs = JSON.parse(args.substring(2));
-
-
     //args = "42" + JSON.stringify(jsonargs);
     return args;
 }
@@ -338,7 +336,7 @@ LB_HUD.send_CreatRoom = function (args) {
 
 LB_HUD.send_SendInputs = function (args) {
     //LB_HUD.playerList[myID].lastMoveTime = Date.now();
-    console.log("LB HUD Send: " + args);
+    //console.log("LB HUD Send: " + args);
     window.LBB_UI.receive_Inputs(args);
     return args;
 }
