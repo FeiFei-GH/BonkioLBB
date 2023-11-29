@@ -61,58 +61,104 @@ window.keyTableReset = () => {
     });
 };
 
-// Function to set up the key table
-const setup = () => {
+// Function to set the opacity of the entire UI
+window.setKeyTableOpacity = (opacity) => {
+    const dragContainer = document.getElementById("drag-container");
+    if (dragContainer) {
+        dragContainer.style.opacity = opacity;
+    }
+};
+
+const addKeyTable = () => {
+    let dragItem = document.createElement("div");
+    dragItem.id = "drag-container";
+    dragItem.style.position = "fixed";
+    dragItem.style.bottom = top;
+    dragItem.style.right = left;
+    dragItem.style.width = width;
+    dragItem.style.height = height;
+    dragItem.style.backgroundColor = "#3c3c3c";
+    dragItem.style.resize = "both";
+    dragItem.style.overflow = "auto";
+    dragItem.style.zIndex = "10";
+
     let keyTable = document.createElement("table");
-    document.body.appendChild(keyTable);
-    keyTable.outerHTML = `<table id="bonk_keytable" style="background-color:#3c3c3c; bottom:${top}; right: ${left}; width: ${width}; height: ${height}; position: fixed; font-family: 'futurept_b1'; z-index: 10; cursor: all-scroll;">
-                <tbody>
-                    <tr>
-                        <td id="Special" style="width: 34%;text-align: center;color: #ccc;">Special</td>
-                        <td id="↑" style="width: 34%;text-align: center;color: #ccc;">↑</td>
-                        <td id="Heavy" style="width: 34%;text-align: center;color: #ccc;">Heavy</td>
-                    </tr>
-                    <tr>
-                        <td id="←" style="width: 34%;text-align: center;color: #ccc;">←</td>
-                        <td id="↓" style="width: 34%;text-align: center;color: #ccc;">↓</td>
-                        <td id="→" style="width: 34%;text-align: center;color: #ccc;">→</td>
-                    </tr>
-                </tbody>
-            </table>`;
+    keyTable.id = "bonk_keytable";
+    keyTable.style.width = "100%";
+    keyTable.style.height = "calc(100% - 30px)";  // Leave space for the settings button
+    keyTable.style.color = "#ccc";
+    keyTable.style.cursor = "all-scroll";
+    keyTable.innerHTML = `
+        <tbody>
+            <tr>
+                <td id="Special" style="width: 34%; text-align: center;">Special</td>
+                <td id="↑" style="width: 34%; text-align: center;">↑</td>
+                <td id="Heavy" style="width: 34%; text-align: center;">Heavy</td>
+            </tr>
+            <tr>
+                <td id="←" style="width: 34%; text-align: center;">←</td>
+                <td id="↓" style="width: 34%; text-align: center;">↓</td>
+                <td id="→" style="width: 34%; text-align: center;">→</td>
+            </tr>
+        </tbody>`;
 
-    // Make the key table draggable
-    const el = document.getElementById("bonk_keytable");
-    let x1 = left, y1 = top, x2, y2;
-    el.onmousedown = dragMouseDown;
+    // Append the keyTable to the dragItem
+    dragItem.appendChild(keyTable);
+    document.body.appendChild(dragItem);
 
-    // Function to handle the mouse down event for dragging
-    function dragMouseDown(e) {
-        e = e || window.event;
+    // Add slider row outside the keyTable to avoid resizing issues
+    let sliderRow = document.createElement("div");
+    sliderRow.id = "slider-row";
+    sliderRow.style.display = "none";
+    sliderRow.innerHTML = `
+        <input type="range" id="opacity-slider" min="0" max="1" step="0.1" value="1"
+               style="width: 100%;" oninput="window.setKeyTableOpacity(this.value)">`;
+    dragItem.appendChild(sliderRow);
 
-        x2 = e.clientX;
-        y2 = e.clientY;
+    // Add keydown event listener for Shift + S to toggle the slider
+    document.addEventListener('keydown', function(e) {
+        if (e.shiftKey && e.key === 'S') {
+            const sliderRow = document.getElementById("slider-row");
+            sliderRow.style.display = sliderRow.style.display === 'none' ? 'block' : 'none';
+        }
+    });
 
-        // Update the position of the key table as the mouse moves
-        document.onmousemove = function (e) {
-            e = e || window.event;
+    // Make the dragItem draggable
+   dragItem.onmousedown = function(e) {
+    // Only trigger if we're not clicking on the slider
+    if (e.target.id !== "opacity-slider") {
+        // Initial mouse positions
+        let startX = e.clientX;
+        let startY = e.clientY;
+        // Get the initial position of the dragItem
+        let startRight = parseInt(window.getComputedStyle(dragItem).right, 10);
+        let startBottom = parseInt(window.getComputedStyle(dragItem).bottom, 10);
 
-            x1 = x2 - e.clientX;
-            y1 = y2 - e.clientY;
-            x2 = e.clientX;
-            y2 = e.clientY;
-            el.style.top = (el.offsetTop - y1) + "px";
-            el.style.left = (el.offsetLeft - x1) + "px";
+        // When moving the mouse, calculate the distance the mouse has moved
+        // and update the position of the dragItem
+        document.onmousemove = function(e) {
+            let moveX = startX - e.clientX;
+            let moveY = startY - e.clientY;
+            dragItem.style.right = (startRight + moveX) + "px";
+            dragItem.style.bottom = (startBottom + moveY) + "px";
         };
 
-        // Clear the movement events when the mouse button is released
-        document.onmouseup = function () {
-            document.onmouseup = null;
+        // Once the mouse is lifted up, stop moving the dragItem
+        document.onmouseup = function() {
             document.onmousemove = null;
         };
     }
+};
 
     // Initialize the key styles
     window.updateKeyStyles();
+};
+
+
+// Function to set up the key table
+const setup = () => {
+    addKeyTable();
+    // The opacity control slider is now within the key table, created in addKeyTable()
 }
 
 // Ensure setup is called when the document is fully loaded
@@ -128,17 +174,9 @@ LBB_UI.receive_Inputs = (args) =>  {
     var jsonStr = args.match(/\{.*\}/)[0];
     // Parse the JSON string to an object
     var jsonObj = JSON.parse(jsonStr);
-    //console.log("jsonObj: " + jsonObj);
-    // Get the value of 'i' from the JSON object
-    var iValue = jsonObj.i;
-    //console.log("jsonStr: " + jsonStr);
-    //console.log("jsonStr: " + jsonStr);
-    //console.log("iValue: " + iValue);
-
     // Update the latest input and refresh the key styles
-    window.latestInput = iValue;
+    window.latestInput = jsonObj.i;
     window.updateKeyStyles();
 
     return args;
 };
-
