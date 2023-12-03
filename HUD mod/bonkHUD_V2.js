@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bonkHUD
 // @namespace    http://tampermonkey.net/
-// @version      2.0
+// @version      2.0.48
 // @description  bonkHUD
 // @author       FeiFei
 // @license      MIT
@@ -10,6 +10,8 @@
 // @run-at       document-end
 // @grant        none
 // ==/UserScript==
+
+// ! Matching Bonk Version 48
 
 window.LB_HUD = {};
 

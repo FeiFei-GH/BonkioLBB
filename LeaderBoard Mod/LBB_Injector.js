@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         LBB_Injector
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      2.0.48
 // @description  Injector
 // @author       FeiFei
 // @license MIT
@@ -9,6 +9,8 @@
 // @run-at       document-start
 // @grant        none
 // ==/UserScript==
+
+// ! Matching Bonk Version 48
 
 const injectorName = `LBB_Injector`;
 const errorMsg = `Whoops! ${injectorName} was unable to load.
@@ -18,35 +20,35 @@ ${injectorName}`;
 
 function injector(src) {
     let newSrc = src;
-    
-    let inputStateVariable = newSrc.match(/(?<=inputState:).{1,15}(?=,)/)[0];
-    
-    let orgCode = `function z4(J7H,e9I){var X5C=[arguments];X5C[2]=i4jFD;X5C[4]=X5C[0][1][X5C[2][138]]()[X5C[2][184]];X5C[3]=X5C[0][0][X5C[2][138]]()[X5C[2][115]];if(!z0F[1][X5C[4]]){z0F[1][X5C[4]]=[];}j2b.o$G();if(!z0F[1][X5C[4]][X5C[3]]){z0F[1][X5C[4]][X5C[3]]={count:1,players:[X5C[0][0][X5C[2][138]]()[X5C[2][141]]]};}else {z0F[1][X5C[4]][X5C[3]][X5C[2][185]]++;z0F[1][X5C[4]][X5C[3]][X5C[2][121]][X5C[2][101]](X5C[0][0][X5C[2][138]]()[X5C[2][141]]);}}`;
-    let newCode = `function z4(J7H, e9I) {
-                        var X5C = [arguments];
-                        X5C[2] = i4jFD;
-                        X5C[4] = X5C[0][1][X5C[2][138]]()[X5C[2][184]];
-                        X5C[3] = X5C[0][0][X5C[2][138]]()[X5C[2][115]];
-                        
-                        if (window.LBB_Main.playerInCZ) {
-                            window.LBB_Main.playerInCZ(X5C[0][0].m_userData.arrayID);
-                        }
-                        
-                        if (!z0F[1][X5C[4]]) {
-                            z0F[1][X5C[4]] = [];
-                        }
-                        j2b.o$G();
-                        if (!z0F[1][X5C[4]][X5C[3]]) {
-                            z0F[1][X5C[4]][X5C[3]] = { count: 1, players: [X5C[0][0][X5C[2][138]]()[X5C[2][141]]] };
-                        } else {
-                            console.log("Meow 3");
-                            z0F[1][X5C[4]][X5C[3]][X5C[2][185]]++;
-                            z0F[1][X5C[4]][X5C[3]][X5C[2][121]][X5C[2][101]](X5C[0][0][X5C[2][138]]()[X5C[2][141]]);
-                        }
-                        
-                        //console.log("z4");
-                    }`;
-    
+
+    // let inputStateVariable = newSrc.match(/(?<=inputState:).{1,15}(?=,)/)[0];
+
+    let orgCode = `function E3(r1d,T$2){var N$w=[arguments];z7J.c94();N$w[9]=m8fvh;N$w[7]=N$w[0][1][N$w[9][138]]()[N$w[9][187]];N$w[5]=N$w[0][0][N$w[9][138]]()[N$w[9][115]];if(!M1j[87][N$w[7]]){M1j[87][N$w[7]]=[];}if(!M1j[87][N$w[7]][N$w[5]]){M1j[87][N$w[7]][N$w[5]]={count:1,players:[N$w[0][0][N$w[9][138]]()[N$w[9][141]]]};}else {M1j[87][N$w[7]][N$w[5]][N$w[9][188]]++;M1j[87][N$w[7]][N$w[5]][N$w[9][121]][N$w[9][101]](N$w[0][0][N$w[9][138]]()[N$w[9][141]]);}}`;
+    let newCode = `function E3(r1d, T$2) {
+        var N$w = [arguments];
+        z7J.c94();
+        N$w[9] = m8fvh;
+        N$w[7] = N$w[0][1][N$w[9][138]]()[N$w[9][187]];
+        N$w[5] = N$w[0][0][N$w[9][138]]()[N$w[9][115]];
+        
+        // Check if LBB_Main is loaded
+        if (window.LBB_Main.playerInCZ) {
+            window.LBB_Main.playerInCZ(N$w[0][0].m_userData.arrayID);
+        }
+        
+        if (!M1j[87][N$w[7]]) {
+            M1j[87][N$w[7]] = [];
+        }
+        if (!M1j[87][N$w[7]][N$w[5]]) {
+            M1j[87][N$w[7]][N$w[5]] = {
+                count: 1,
+                players: [N$w[0][0][N$w[9][138]]()[N$w[9][141]]],
+            };
+        } else {
+            M1j[87][N$w[7]][N$w[5]][N$w[9][188]]++;
+            M1j[87][N$w[7]][N$w[5]][N$w[9][121]][N$w[9][101]](
+                N$w[0][0][N$w[9][138]]()[N$w[9][141]]);}}`;
+
     newSrc = newSrc.replace(orgCode, newCode);
 
     return newSrc;

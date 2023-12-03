@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         LBB_Main
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      2.0.48
 // @description  Main
 // @author       FeiFei + LEGEND
 // @license      MIT
@@ -9,6 +9,8 @@
 // @run-at       document-end
 // @grant        none
 // ==/UserScript==
+
+// ! Matching Bonk Version 48
 
 window.LBB_Main = {};
 
@@ -416,7 +418,7 @@ LBB_Main.send_CreatRoom = function (args) {
 
 LBB_Main.send_SendInputs = function (args) {
     //console.log("SEND: " + args);
-    LBB_Main.playerList[myID].lastMoveTime = Date.now();
+    //LBB_Main.playerList[myID].lastMoveTime = Date.now();
     return args;
 }
 
