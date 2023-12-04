@@ -78,35 +78,95 @@ window.LBB_UI.receive_Inputs = (args) => {
     return args;
 };
 
+// Event listener for toggling the slider display
+document.addEventListener('keydown', (e) => {
+    if (e.shiftKey && e.key === 'S') {
+        toggleSliderDisplay();
+    }
+});
+
+// Function to toggle the slider row display
+function toggleSliderDisplay() {
+    const sliderRow = document.getElementById("slider-row");
+    const keyTable = document.getElementById("bonk_keytable");
+    const isVisible = sliderRow.style.display !== 'none';
+    sliderRow.style.display = isVisible ? 'none' : 'block';
+    keyTable.style.height = isVisible ? "calc(100% - 30px)" : "calc(100% - 50px)"; // Adjust as needed
+}
+
+// Function to handle the drag event
 function dragStart(e, dragItem) {
+    // Prevents dragging from starting on the opacity slider
     if (e.target.id !== "opacity-slider") {
         let startX = e.clientX;
         let startY = e.clientY;
         let startRight = parseInt(window.getComputedStyle(dragItem).right, 10);
         let startBottom = parseInt(window.getComputedStyle(dragItem).bottom, 10);
-
-        function dragMove(e) {
-            let moveX = startX - e.clientX;
-            let moveY = startY - e.clientY;
-            dragItem.style.right = (startRight + moveX) + "px";
-            dragItem.style.bottom = (startBottom + moveY) + "px";
-        }
-
-        function dragEnd() {
-            document.removeEventListener('mousemove', dragMove);
-            document.removeEventListener('mouseup', dragEnd);
-        }
-
-        document.addEventListener('mousemove', dragMove);
-        document.addEventListener('mouseup', dragEnd);
+        const boundDragMove = dragMove.bind(null, startX, startY, startRight, startBottom, dragItem);
+        document.addEventListener('mousemove', boundDragMove);
+        document.addEventListener('mouseup', () => dragEnd(boundDragMove));
     }
+}
+
+// Function to move the draggable element
+function dragMove(startX, startY, startRight, startBottom, dragItem, e) {
+    let moveX = startX - e.clientX;
+    let moveY = startY - e.clientY;
+    dragItem.style.right = (startRight + moveX) + "px";
+    dragItem.style.bottom = (startBottom + moveY) + "px";
+}
+
+// Function to stop the dragging
+function dragEnd(dragMoveFn) {
+    document.removeEventListener('mousemove', dragMoveFn);
+}
+
+// Function to start resizing the UI
+function startResizing(e, dragItem) {
+    e.stopPropagation(); // Prevent triggering dragStart for dragItem
+
+    let startX = e.clientX;
+    let startY = e.clientY;
+    let startWidth = parseInt(window.getComputedStyle(dragItem).width, 10);
+    let startHeight = parseInt(window.getComputedStyle(dragItem).height, 10);
+
+    function doResize(e) {
+        resizeMove(e, startX, startY, startWidth, startHeight, dragItem);
+    }
+
+    function stopResizing() {
+        resizeEnd(doResize);
+    }
+
+    document.addEventListener('mousemove', doResize);
+    document.addEventListener('mouseup', stopResizing);
+}
+
+// Function to handle the resize event
+function resizeMove(e, startX, startY, startWidth, startHeight, dragItem) {
+    let newWidth = startWidth - (e.clientX - startX);
+    let newHeight = startHeight - (e.clientY - startY);
+
+    // Enforce minimum dimensions
+    newWidth = Math.max(200, newWidth);
+    newHeight = Math.max(100, newHeight);
+
+    dragItem.style.width = newWidth + 'px';
+    dragItem.style.height = newHeight + 'px';
+}
+
+// Function to stop the resize event
+function resizeEnd(resizeMoveFn) {
+    document.removeEventListener('mousemove', resizeMoveFn);
+    document.removeEventListener('mouseup', resizeEnd);
 }
 
 // Function to add the key table to the DOM
 const addKeyTable = () => {
+    // Create the main container 'dragItem'
     let dragItem = document.createElement("div");
     dragItem.id = "drag-container";
-    dragItem.style.position = "fixed"; // or 'relative' if it's positioned within another positioned element
+    dragItem.style.position = "fixed";
     dragItem.style.bottom = top;
     dragItem.style.right = left;
     dragItem.style.width = width;
@@ -114,12 +174,11 @@ const addKeyTable = () => {
     dragItem.style.height = height;
     dragItem.style.minHeight = "100px"; // Minimum height to prevent deformation
     dragItem.style.backgroundColor = "#3c3c3c";
-    dragItem.style.resize = "none";
     dragItem.style.overflow = "hidden";
-    dragItem.style.zIndex = "10";
+    dragItem.style.zIndex = "9999";
     dragItem.style.borderRadius = "8px"; // Rounded corners
 
-    // Header
+    // Create the header
     let header = document.createElement("div");
     header.style.width = "100%";
     header.style.height = "30px";
@@ -129,10 +188,10 @@ const addKeyTable = () => {
     header.style.alignItems = "center";
     header.style.justifyContent = "space-between";
     header.style.padding = "0 10px";
-    header.style.borderTopLeftRadius = "8px"; // Rounded top-left corner
-    header.style.borderTopRightRadius = "8px"; // Rounded top-right corner
+    header.style.borderTopLeftRadius = "8px";
+    header.style.borderTopRightRadius = "8px";
 
-    // Title
+    // Create the title span
     let title = document.createElement("span");
     title.textContent = "KeyTable";
     title.style.flexGrow = "1";
@@ -140,26 +199,30 @@ const addKeyTable = () => {
 
     // Create the resize button
     let resizeButton = document.createElement("div");
-    resizeButton.innerText = "⬛";
-    resizeButton.style.position = "absolute"; // Absolute position
-    resizeButton.style.top = "5px"; // Distance from the top of 'dragItem'
-    resizeButton.style.left = "5px"; // Distance from the left of 'dragItem'
+    resizeButton.id = "resize-button";
+    resizeButton.innerText = "⬛"; // Use an appropriate icon or text
+    resizeButton.style.position = "absolute";
+    resizeButton.style.top = "5px";
+    resizeButton.style.left = "5px";
     resizeButton.style.width = "20px";
     resizeButton.style.height = "20px";
     resizeButton.style.backgroundColor = "#3c3c3c";
     resizeButton.style.color = "white";
     resizeButton.style.cursor = "nwse-resize";
 
+    // Append the title and resize button to the header
     header.appendChild(title);
     header.appendChild(resizeButton);
+
+    // Append the header to the dragItem
     dragItem.appendChild(header);
 
+    // Create the key table
     let keyTable = document.createElement("table");
     keyTable.id = "bonk_keytable";
     keyTable.style.width = "100%";
     keyTable.style.height = "calc(100% - 30px)"; // Adjusted height for header
     keyTable.style.color = "#ccc";
-    keyTable.style.cursor = "default"; // Prevents the cursor from being the resize cursor over the table
     keyTable.innerHTML = `
         <tbody>
             <tr>
@@ -174,60 +237,30 @@ const addKeyTable = () => {
             </tr>
         </tbody>`;
 
+    // Append the keyTable to the dragItem
     dragItem.appendChild(keyTable);
 
+    // Create the slider row for opacity control
     let sliderRow = document.createElement("div");
     sliderRow.id = "slider-row";
-    sliderRow.style.display = "none";
+    sliderRow.style.display = "none"; // Initially hidden
     sliderRow.innerHTML = `
-        <input type="range" id="opacity-slider" min="0" max="1" step="0.1" value="1"
+        <input type="range" id="opacity-slider" min="0.1" max="1" step="0.1" value="1"
                style="width: 100%;" oninput="window.setKeyTableOpacity(this.value)">`;
+
+    // Append the sliderRow to the dragItem
     dragItem.appendChild(sliderRow);
 
+    // Append the dragItem to the body of the page
     document.body.appendChild(dragItem);
-
-    function toggleSliderDisplay(e) {
-    if (e.shiftKey && e.key === 'S') {
-        const sliderRow = document.getElementById("slider-row");
-        const keyTable = document.getElementById("bonk_keytable");
-        const isVisible = sliderRow.style.display !== 'none';
-        sliderRow.style.display = isVisible ? 'none' : 'block';
-        keyTable.style.height = isVisible ? "calc(100% - 20px)" : "calc(100% - 50px)"; // Adjust these values as needed
-    }
-}
-
-    // Add event listeners for the slider display toggle and drag functionality
-    document.addEventListener('keydown', toggleSliderDisplay);
-    dragItem.addEventListener('mousedown', (e) => dragStart(e, dragItem));
-
-    // Event listener for resize button
-    resizeButton.addEventListener('mousedown', function(e) {
-        e.stopPropagation(); // Prevent triggering dragStart for dragItem
-        let startX = e.clientX;
-        let startY = e.clientY;
-        let startWidth = parseInt(window.getComputedStyle(dragItem).width, 10);
-        let startHeight = parseInt(window.getComputedStyle(dragItem).height, 10);
-
-        function resizeMove(e) {
-            let newWidth = startWidth - (e.clientX - startX);
-            let newHeight = startHeight - (e.clientY - startY);
-            dragItem.style.width = newWidth + 'px';
-            dragItem.style.height = newHeight + 'px';
-        }
-
-        function resizeEnd() {
-            document.removeEventListener('mousemove', resizeMove);
-            document.removeEventListener('mouseup', resizeEnd);
-        }
-
-        document.addEventListener('mousemove', resizeMove);
-        document.addEventListener('mouseup', resizeEnd);
-    });
 
     // Initialize the key styles
     window.updateKeyStyles();
-};
 
+    // Add event listeners for dragging and resizing
+    dragItem.addEventListener('mousedown', (e) => dragStart(e, dragItem));
+    resizeButton.addEventListener('mousedown', (e) => startResizing(e, dragItem));
+};
 
 // Ensure setup is called when the document is fully loaded
 if (document.readyState === "complete" || document.readyState === "interactive") {
@@ -235,4 +268,3 @@ if (document.readyState === "complete" || document.readyState === "interactive")
 } else {
     document.addEventListener("DOMContentLoaded", addKeyTable);
 }
-
