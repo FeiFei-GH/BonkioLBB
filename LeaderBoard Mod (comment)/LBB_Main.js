@@ -13,14 +13,15 @@
 window.LBB_Main = {};
 
 LBB_Main.bonkWSS = 0;
-window.originalSend = window.WebSocket.prototype.send;
-LBB_Main.originalDrawCircle = window.PIXI.Graphics.prototype.drawCircle;
+window.originalSend = window.WebSocket.prototype.send; // store original WebSocket send method for later override
+LBB_Main.originalDrawCircle = window.PIXI.Graphics.prototype.drawCircle; // Store the original method of drawing a circle
 LBB_Main.scale = -1;
 LBB_Main.requestAnimationFrameOriginal = window.requestAnimationFrame;
 
 // My custom vars
 LBB_Main.playerList = {};
-LBB_Main.unfinishedPlayerIDs = new Set();
+LBB_Main.unfinishedPlayerIDs = new Set(); // IDs of players who haven't finished
+LBB_Main.myID = -1; // My ID
 LBB_Main.myID = -1;
 LBB_Main.hostID = -1;
 LBB_Main.decodedMap = {};
@@ -28,6 +29,7 @@ LBB_Main.mapPPM = -1;
 LBB_Main.mapCapZones = [];
 LBB_Main.mapRecordsData = new Map();
 
+// Initialize default values for in-game message texts
 LBB_Main.joinText = "Welcome username! You will be joining shortly";
 LBB_Main.joinText2 = "Welcome username! You will be joining shortly, game auto restarts after timer minutes";
 LBB_Main.winText = "username finishes with: "
@@ -51,7 +53,9 @@ LBB_Main.matchEndsAfterFinish = 9000;
 
 // !Overriding bonkWSS
 // #region Overriding bonkWSS
+// Override the send method of WebSocket
 window.WebSocket.prototype.send = function(args) {
+    // Check if the WebSocket URL contains the specific bonk.io address
     if (this.url.includes(".bonk.io/socket.io/?EIO=3&transport=websocket&sid=")) {
         LBB_Main.bonkWSS = this;
 
@@ -60,7 +64,9 @@ window.WebSocket.prototype.send = function(args) {
             var originalReceive = this.onmessage;
 
             // This function intercepts incoming packets
+            // Override the onmessage handler function
             this.onmessage = function (args) {
+                // Handle different types of messages based on the beginning of the received data
                 // &Receiving incoming packets
                 if (args.data.startsWith('42[1,')) { // *Update Pings
                     
@@ -138,7 +144,7 @@ window.WebSocket.prototype.send = function(args) {
                 LBB_Main.bonkWSS = 0;
                 return originalClose.call(this);
             };
-        } else {
+        } else { //// Handle sent data, process different types of messages based on the beginning of the send data
             // &Sending outgoing packets
             if (args.startsWith('42[4,')) { // *Send Inputs
                 args = LBB_Main.send_SendInputs(args);
@@ -224,12 +230,14 @@ LBB_Main.receivePacket = function (packet) {
 };
 
 // &----------------------Receive Handler Functions----------------------
+// Handling when joining a room
 LBB_Main.receive_RoomJoin = function (args) {
+    //parse the received data
     var jsonargs = JSON.parse(args.data.substring(2));
-    LBB_Main.playerList = {};
+    LBB_Main.playerList = {}; // reset player list
     LBB_Main.myID = jsonargs[1];
     LBB_Main.hostID = jsonargs[2];
-    
+    // Populate player list
     for(var i = 0; i < jsonargs[3].length; i++){
         if(jsonargs[3][i] != null){
             LBB_Main.playerList[i.toString()] = jsonargs[3][i];
@@ -238,10 +246,10 @@ LBB_Main.receive_RoomJoin = function (args) {
     
     return args;
 }
-
+// Handling when a player joins
 LBB_Main.receive_PlayerJoin = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
-    LBB_Main.playerList[jsonargs[1]] = {
+    LBB_Main.playerList[jsonargs[1]] = { // create player object
         peerId: jsonargs[2],
         userName: jsonargs[3],
         guest: jsonargs[4],
@@ -251,7 +259,7 @@ LBB_Main.receive_PlayerJoin = function (args) {
         tabbed: false,
         avatar: jsonargs[7],
     };
-
+    // send remind info if there is join text
     if (LBB_Main.joinText != "" || LBB_Main.joinText2 != "") {
         if (LBB_Main.autoRestartTimer < 180000) {
             LBB_Main.chat(LBB_Main.joinText2.replaceAll("username", jsonargs[3]).replaceAll("timer", (LBB_Main.autoRestartTimer / 60000)));
@@ -261,7 +269,7 @@ LBB_Main.receive_PlayerJoin = function (args) {
     }
     return args;
 }
-
+// handling when player leave
 LBB_Main.receive_PlayerLeave = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
 
@@ -272,7 +280,7 @@ LBB_Main.receive_PlayerLeave = function (args) {
     
     return args;
 }
-
+// handling when host leave
 LBB_Main.receive_HostLeave = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
 
@@ -295,10 +303,10 @@ LBB_Main.receive_Inputs = function (args) {
 
 //! Detects when match starts!!!
 LBB_Main.receive_GameStart = function (args) {
-    LBB_Main.gameStartTimeStamp = Date.now();
-    LBB_Main.firstFinishTimeStamp = -1;
-    LBB_Main.firstFinish = true;
-    LBB_Main.matchEnds = false;
+    LBB_Main.gameStartTimeStamp = Date.now(); // record start time
+    LBB_Main.firstFinishTimeStamp = -1; // Initialize the first completed timestamp
+    LBB_Main.firstFinish = true; // mark whether first finished player
+    LBB_Main.matchEnds = false; // if match ends
     
     // Check who is playing
     LBB_Main.unfinishedPlayerIDs = new Set(Object.keys(LBB_Main.playerList));
@@ -307,21 +315,22 @@ LBB_Main.receive_GameStart = function (args) {
             LBB_Main.unfinishedPlayerIDs.delete(id);
         }
     }
-    
+    // send game start remind
     if (LBB_Main.startText != "") {
         LBB_Main.chat(LBB_Main.startText);
     }
 
     return args;
 }
-
+// handle when player changes their team
 LBB_Main.receive_TeamChange = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
     LBB_Main.playerList[jsonargs[1]].team = jsonargs[2];
     
     return args;
 }
-
+//Handle when a chat message is received. If the chat message starts with "!",
+//it's treated as a command and processed accordingly
 LBB_Main.receive_ChatMessage = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
     let chatUserID = jsonargs[1];
@@ -333,14 +342,14 @@ LBB_Main.receive_ChatMessage = function (args) {
     
     return args;
 }
-
+//Handle when the game mode is changed
 LBB_Main.receive_ModeChange = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
     LBB_Main.currentMode = jsonargs[3];
     
     return args;
 }
-
+//Handle when the game map is switched
 LBB_Main.receive_MapSwitch = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
     
@@ -352,14 +361,14 @@ LBB_Main.receive_MapSwitch = function (args) {
     
     return args;
 }
-
+//Handle when there's a new game host
 LBB_Main.receive_NewHost = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
     LBB_Main.hostID = jsonargs[1]["newHost"];
     
     return args;
 }
-
+//Handle when a friend request is received.
 LBB_Main.receive_FriendReq = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
     //LBB_Main.sendPacket(`42[35,{"id":${jsonargs[1]}}]`);
@@ -369,6 +378,7 @@ LBB_Main.receive_FriendReq = function (args) {
 }
 
 // &Send Handler Functions
+// handling when trigger game start
 LBB_Main.send_TriggerStart = function (args) {
     var jsonargs = JSON.parse(args.substring(2));
     
@@ -384,17 +394,19 @@ LBB_Main.send_TriggerStart = function (args) {
             jsonargs[1]["is"] = jsonargs2;
         }
     }
-
+    //Format and return data
     args = "42" + JSON.stringify(jsonargs);
     return args;
 }
 
+//Initialize the game room when created
 LBB_Main.send_CreatRoom = function (args) {
     LBB_Main.playerList = {};
     var jsonargs2 = JSON.parse(args.substring(2));
     var jsonargs = jsonargs2[1];
 
     LBB_Main.playerList[0] = {
+        // Initialize the host player details
         peerId: jsonargs["peerID"],
         userName: document.getElementById("pretty_top_name").textContent,
         level:
@@ -407,19 +419,21 @@ LBB_Main.send_CreatRoom = function (args) {
         tabbed: false,
         avatar: jsonargs["avatar"],
     };
-    
+    // Set the player's ID and host ID to 0 (self, since the player is the creator)
     LBB_Main.myID = 0;
     LBB_Main.hostID = 0;
     
     return args;
 }
 
+//Send the player's inputs， Send the player's inputs
 LBB_Main.send_SendInputs = function (args) {
     //console.log("SEND: " + args);
     LBB_Main.playerList[myID].lastMoveTime = Date.now();
     return args;
 }
 
+//Handle the addition of a new map
 LBB_Main.send_MapAdd = function (args) {
     //console.log("Map Changed");
     var jsonargs = JSON.parse(args.substring(2));
@@ -431,7 +445,7 @@ LBB_Main.send_MapAdd = function (args) {
 }
 // #endregion
 
-
+// send a chat message
 LBB_Main.chat = function (message) {
     LBB_Main.sendPacket('42[10,{"message":' + JSON.stringify(message) + "}]");
 };
@@ -440,7 +454,7 @@ LBB_Main.chat = function (message) {
 
 
 
-
+// Convert milliseconds to a formatted string: "MM:SS.mmm".
 LBB_Main.msToStr = function(ms) {
     var minutes = Math.floor(ms / 60000);
     var seconds = Math.floor((ms % 60000) / 1000);
@@ -459,13 +473,13 @@ LBB_Main.msToStr = function(ms) {
     
     return "" + minutes + ":" + (seconds < 10 ? "0" : "") + seconds + "." + milliSeconds;
 }
-
+//Get the name of the current map
 LBB_Main.getCurrentMapName = function() {
     return document.getElementById("newbonklobby_maptext").innerHTML;
 }
 
 
-
+// Add or update a player's finish time for a specific map
 LBB_Main.addPlayerToMapRecords = function (mapName, playerName, time) {
     let playerTimeType = 0;
     
@@ -504,7 +518,7 @@ LBB_Main.addPlayerToMapRecords = function (mapName, playerName, time) {
     return playerTimeType;
 };
 
-
+//Handle the event when a player finishes
 LBB_Main.playerFinished = function (id, timeGot) {
     let finishMessage = "";
     
@@ -531,7 +545,7 @@ LBB_Main.playerFinished = function (id, timeGot) {
     LBB_Main.unfinishedPlayerIDs.delete(id);
 }
 
-
+//Handle the event when a player enters a checkpoint zone
 LBB_Main.playerInCZ = function (id) {
     id = id.toString();
     
