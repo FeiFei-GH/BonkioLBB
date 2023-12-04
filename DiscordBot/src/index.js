@@ -1,26 +1,24 @@
-const dotenv = require("dotenv");
-dotenv.config(); // Load sensitive information
-
-const { Client, Intents, MessageEmbed } = require("discord.js");
+require("dotenv").config(); // Put sensitive infos in this please!
+const { Client, IntentsBitField, EmbedBuilder } = require("discord.js");
 
 const client = new Client({
     intents: [
-        Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_MEMBERS,
-        Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_MESSAGE_CONTENT,
+        IntentsBitField.Flags.Guilds,
+        IntentsBitField.Flags.GuildMembers,
+        IntentsBitField.Flags.GuildMessages,
+        IntentsBitField.Flags.MessageContent,
     ],
 });
 
-// Common: Global variables
+// Global Variables
 let DCBotReady = false;
 let bonkLoginToken = process.env.BonkLoginToken_LB;
 
-client.once("ready", () => {
+client.on("ready", (c) => {
     DCBotReady = true;
-    console.log(`${client.user.username} is online.`);
+    console.log(`${c.user.username} is online.`);
     
-    sendBonkInfo(); // Common: Call immediately to avoid waiting
+    sendBonkInfo(); // call it 1st so I don't have to wait
 });
 
 client.on("messageCreate", (msg) => {
@@ -28,10 +26,11 @@ client.on("messageCreate", (msg) => {
         return;
     }
     
-    // Common: Handle messages here
+    // ?Things to deal with messages in channel can go here
 });
 
-// Common: Custom functions
+// !My functions
+// Retrieves Room Data
 const bonkGetRoomsJSON = async () => {
     try {
         const fetchRoomURL = "https://bonk2.io/scripts/getrooms.php";
@@ -53,9 +52,9 @@ const bonkGetRoomsJSON = async () => {
         const fetchRoomData = `version=48&gl=n&token=${bonkLoginToken}`;
 
         const response = await fetch(fetchRoomURL, {
-            method: "POST",
             headers: fetchRoomHeaders,
             body: fetchRoomData,
+            method: "POST",
         });
         
         const responseJSON = await response.json();
@@ -66,6 +65,7 @@ const bonkGetRoomsJSON = async () => {
     }
 }
 
+// Get new login token if expired(using remember token)
 const getNewBLT = async () => {
     try {
         const fetchRoomURL = "https://bonk2.io/scripts/login_auto.php";
@@ -85,12 +85,12 @@ const getNewBLT = async () => {
             'TE': 'trailers'
         }
 
-        const fetchRoomData = `rememberToken=${process.env.BonkRememberToken_LB}`;
+        const fetchRoomData = `rememberToken=${process.env.BonkRemberToken_LB}`;
 
         const response = await fetch(fetchRoomURL, {
-            method: "POST",
             headers: fetchRoomHeaders,
             body: fetchRoomData,
+            method: "POST",
         });
         
         const responseJSON = await response.json();
@@ -101,11 +101,12 @@ const getNewBLT = async () => {
     }
 }
 
-const printBonkPkrRooms = (roomsJSON) => {
+// Print those infos in the channel
+printBonkPkrRooms = (roomsJSON) => {
     let roomsArray = roomsJSON.rooms;
     
-    let roomsEmbed = new MessageEmbed()
-        .setColor("#0099FF")
+    let roomsEmbed = new EmbedBuilder()
+        .setColor(0x0099FF)
         .setTitle("Live Bonk Parkour Rooms:")
         .setTimestamp();
     
@@ -148,13 +149,13 @@ const printBonkPkrRooms = (roomsJSON) => {
     return roomsEmbed;
 }
 
-const sendBonkInfo = async () => {
+sendBonkInfo = async () => {
     let updateMsg = "Sending Bonk Info ";
-    setTimeout(sendBonkInfo, 10000); // Common: Too fast and the bot will get rate-limited by the bonk.io server
+    setTimeout(sendBonkInfo, 10000); // too fast and the bot will get rate-limited by the bonk.io server
     const now = new Date();
-    console.log(`${updateMsg}${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}.${now.getMilliseconds()}`);
-    let roomsEmbed = new MessageEmbed()
-        .setColor("#0099FF")
+    console.log(updateMsg.concat(now.getHours(),":", now.getMinutes(),":", now.getSeconds(),".",now.getMilliseconds()));
+    let roomsEmbed = new EmbedBuilder()
+        .setColor(0x0099FF)
         .setTitle("Live Bonk Parkour Rooms:")
         .addFields({
             name: "No Parkour rooms available at the moment",
@@ -164,7 +165,7 @@ const sendBonkInfo = async () => {
     
     try {
         let roomsJSON = await bonkGetRoomsJSON();
-        console.log(JSON.stringify(roomsJSON, null, 2));
+        console.log(JSON.stringify(roomsJSON,null));
         if (roomsJSON.r === 'fail' && roomsJSON.e === 'token') {
             console.log("Token Expired");
             bonkLoginToken = await getNewBLT();
@@ -172,7 +173,7 @@ const sendBonkInfo = async () => {
             roomsEmbed = printBonkPkrRooms(roomsJSON);
         }
     } catch (err) {
-        console.log("Failed getting bonk rooms");
+        console.log("failed getting bonk rooms");
         console.error(err);
     }
     
@@ -180,15 +181,15 @@ const sendBonkInfo = async () => {
         try {
             const channel = client.channels.cache.get('1122510728331542579');
             const message = await channel.messages.fetch('1122529394922106930');
-            //channel.send({ embeds: [roomsEmbed] }); // Common: Use this to send a new message
+            //channel.send({ embeds: [roomsEmbed] }); // Use this to send a new message
             message.edit({ embeds: [roomsEmbed] });
         } catch (err) {
-            console.log("Failed sending bonk info to Discord");
+            console.log("failed sending bonk info to discord");
             console.error(err);
         }
     }
 };
 
-void client.login(process.env.DCBOTTOKEN); // Let the Discord bot login
+void client.login(process.env.DCBOTTOKEN); // Let the discord bot login
 
 let sendBonkInfoID = sendBonkInfo;
