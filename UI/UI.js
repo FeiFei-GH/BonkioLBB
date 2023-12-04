@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         LBB_DB UI
-// @version      1.0.48
+// @version      1.1.48
 // @description  Adds a keytable to bonk.io
 // @author       BZD
 // @namespace    http://tampermonkey.net/
@@ -106,22 +106,60 @@ function dragStart(e, dragItem) {
 const addKeyTable = () => {
     let dragItem = document.createElement("div");
     dragItem.id = "drag-container";
-    dragItem.style.position = "fixed";
+    dragItem.style.position = "fixed"; // or 'relative' if it's positioned within another positioned element
     dragItem.style.bottom = top;
     dragItem.style.right = left;
     dragItem.style.width = width;
+    dragItem.style.minWidth = "200px"; // Minimum width to prevent deformation
     dragItem.style.height = height;
+    dragItem.style.minHeight = "100px"; // Minimum height to prevent deformation
     dragItem.style.backgroundColor = "#3c3c3c";
-    dragItem.style.resize = "both";
-    dragItem.style.overflow = "auto";
+    dragItem.style.resize = "none";
+    dragItem.style.overflow = "hidden";
     dragItem.style.zIndex = "10";
+    dragItem.style.borderRadius = "8px"; // Rounded corners
+
+    // Header
+    let header = document.createElement("div");
+    header.style.width = "100%";
+    header.style.height = "30px";
+    header.style.backgroundColor = "#3c3c3c";
+    header.style.color = "white";
+    header.style.display = "flex";
+    header.style.alignItems = "center";
+    header.style.justifyContent = "space-between";
+    header.style.padding = "0 10px";
+    header.style.borderTopLeftRadius = "8px"; // Rounded top-left corner
+    header.style.borderTopRightRadius = "8px"; // Rounded top-right corner
+
+    // Title
+    let title = document.createElement("span");
+    title.textContent = "KeyTable";
+    title.style.flexGrow = "1";
+    title.style.textAlign = "center";
+
+    // Create the resize button
+    let resizeButton = document.createElement("div");
+    resizeButton.innerText = "⬛";
+    resizeButton.style.position = "absolute"; // Absolute position
+    resizeButton.style.top = "5px"; // Distance from the top of 'dragItem'
+    resizeButton.style.left = "5px"; // Distance from the left of 'dragItem'
+    resizeButton.style.width = "20px";
+    resizeButton.style.height = "20px";
+    resizeButton.style.backgroundColor = "#3c3c3c";
+    resizeButton.style.color = "white";
+    resizeButton.style.cursor = "nwse-resize";
+
+    header.appendChild(title);
+    header.appendChild(resizeButton);
+    dragItem.appendChild(header);
 
     let keyTable = document.createElement("table");
     keyTable.id = "bonk_keytable";
     keyTable.style.width = "100%";
-    keyTable.style.height = "calc(100% - 30px)";  // Leave space for the settings button
+    keyTable.style.height = "calc(100% - 30px)"; // Adjusted height for header
     keyTable.style.color = "#ccc";
-    keyTable.style.cursor = "all-scroll";
+    keyTable.style.cursor = "default"; // Prevents the cursor from being the resize cursor over the table
     keyTable.innerHTML = `
         <tbody>
             <tr>
@@ -149,16 +187,47 @@ const addKeyTable = () => {
     document.body.appendChild(dragItem);
 
     function toggleSliderDisplay(e) {
-        if (e.shiftKey && e.key === 'S') {
-            sliderRow.style.display = sliderRow.style.display === 'none' ? 'block' : 'none';
-        }
+    if (e.shiftKey && e.key === 'S') {
+        const sliderRow = document.getElementById("slider-row");
+        const keyTable = document.getElementById("bonk_keytable");
+        const isVisible = sliderRow.style.display !== 'none';
+        sliderRow.style.display = isVisible ? 'none' : 'block';
+        keyTable.style.height = isVisible ? "calc(100% - 20px)" : "calc(100% - 50px)"; // Adjust these values as needed
     }
+}
 
+    // Add event listeners for the slider display toggle and drag functionality
     document.addEventListener('keydown', toggleSliderDisplay);
     dragItem.addEventListener('mousedown', (e) => dragStart(e, dragItem));
 
+    // Event listener for resize button
+    resizeButton.addEventListener('mousedown', function(e) {
+        e.stopPropagation(); // Prevent triggering dragStart for dragItem
+        let startX = e.clientX;
+        let startY = e.clientY;
+        let startWidth = parseInt(window.getComputedStyle(dragItem).width, 10);
+        let startHeight = parseInt(window.getComputedStyle(dragItem).height, 10);
+
+        function resizeMove(e) {
+            let newWidth = startWidth - (e.clientX - startX);
+            let newHeight = startHeight - (e.clientY - startY);
+            dragItem.style.width = newWidth + 'px';
+            dragItem.style.height = newHeight + 'px';
+        }
+
+        function resizeEnd() {
+            document.removeEventListener('mousemove', resizeMove);
+            document.removeEventListener('mouseup', resizeEnd);
+        }
+
+        document.addEventListener('mousemove', resizeMove);
+        document.addEventListener('mouseup', resizeEnd);
+    });
+
+    // Initialize the key styles
     window.updateKeyStyles();
 };
+
 
 // Ensure setup is called when the document is fully loaded
 if (document.readyState === "complete" || document.readyState === "interactive") {
