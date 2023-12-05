@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         LBB_DB
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.0.48
 // @description  DataBase
 // @author       FeiFei
 // @license MIT
@@ -10,6 +10,7 @@
 // @grant        none
 // ==/UserScript==
 
+// ! Matching Bonk Version 48
 
 /* import statements */
 var LBB_DBJS = document.createElement('script');
