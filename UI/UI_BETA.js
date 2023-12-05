@@ -43,16 +43,14 @@ function pickColor(component) {
     let colorPicker = document.createElement('input');
     colorPicker.type = 'color';
     colorPicker.style.position = 'absolute';
-    colorPicker.style.visibility = 'hidden'; // 隐藏颜色选择器，但保留在文档中
+    colorPicker.style.visibility = 'hidden';
 
-    // 当用户选择颜色后处理颜色变化
     colorPicker.addEventListener('change', function() {
         applyColor(component, this.value);
-        document.body.removeChild(this); // 移除颜色选择器
-        window.colorPickMode = false; // 重置颜色选择模式
+        document.body.removeChild(this); 
+        window.colorPickMode = false;
     });
 
-    // 将颜色选择器添加到文档中并触发颜色选择器弹出
     document.body.appendChild(colorPicker);
     colorPicker.click();
 }
