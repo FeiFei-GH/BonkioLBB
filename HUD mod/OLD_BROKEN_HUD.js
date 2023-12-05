@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.0
 // @description  bonkHUD
-// @author       FeiFei
+// @author       FeiFei + BZD
 // @license      MIT
 // @match        https://bonk.io/gameframe-release.html
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=bonk.io
