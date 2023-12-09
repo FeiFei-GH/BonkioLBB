@@ -26,6 +26,7 @@ fs.readFile(csvFilePath, 'utf-8', (err, fileContent) => {
 
     const lines = fileContent.split('\n');
     lines.forEach((line) => {
+        const cleanLine = line.trim();
         const elements = line.split(',');
         const mapInfo = new MapInfo(
             elements[0],
@@ -41,8 +42,7 @@ fs.readFile(csvFilePath, 'utf-8', (err, fileContent) => {
 
     });
 
-    //console.log(mapList[1]);
-    
+    //create a mapList json file
     const jsonFilePath = path.join(__dirname, 'mapList.json');
     fs.writeFile(jsonFilePath, JSON.stringify(mapList, null, 2), 'utf-8', (err) => {
         if (err) {
