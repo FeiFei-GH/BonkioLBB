@@ -16,7 +16,6 @@
 window.LB_HUD = {};
 
 LB_HUD.bonkWSS = 0;
-window.originalSend = window.WebSocket.prototype.send;
 LB_HUD.originalDrawCircle = window.PIXI.Graphics.prototype.drawCircle;
 LB_HUD.scale = -1;
 LB_HUD.requestAnimationFrameOriginal = window.requestAnimationFrame;
@@ -27,22 +26,27 @@ LB_HUD.myID = -1;
 LB_HUD.hostID = -1;
 
 //NOT CREATING ELEMENT CORRECTLY
-const eventHandle = document.createElement("div");
-eventHandle.id = "WSS_API";
-document.body.appendChild(eventHandle);
+LB_HUD.events = document.createElement("div");
+LB_HUD.events.id = "WSS_API";
+document.body.appendChild(LB_HUD.events);
+
+/*LB_HUD.events.addEventListener("chatIn", (e) => {
+    console.log("HUM " + e.chatData.chatMessage);
+});*/
 
 // !Overriding bonkWSS
 // #region Overriding bonkWSS
+const originalSend = window.WebSocket.prototype.send;
+const originalOnmessage = window.WebSocket.prototype.onmessage;
 window.WebSocket.prototype.send = function(args) {
     if (this.url.includes("socket.io/?EIO=3&transport=websocket&sid=")) {
         LB_HUD.bonkWSS = this;
 
-        if (!this.injected) { // initialize overriding receive listener (only run once)
+        if(!this.injected) {
             this.injected = true;
-            var originalReceive = this.onmessage;
-
-            // This function intercepts incoming packets
-            this.onmessage = function (args) {
+            console.log("testermessage");
+            this.onmessage = function(args) {
+                //console.log("onmessage");
                 // &Receiving incoming packets
                 if (args.data.startsWith('42[1,')) { // *Update Pings
                     
@@ -69,6 +73,7 @@ window.WebSocket.prototype.send = function(args) {
                 } else if (args.data.startsWith('42[19,')) { // *Teamlock toggle
                     
                 } else if (args.data.startsWith('42[20,')) { // *Chat Message
+                    console.log("chatted");
                     args = LB_HUD.receive_ChatMessage(args);
                 } else if (args.data.startsWith('42[21,')) { // *Initial data
                     
@@ -112,17 +117,19 @@ window.WebSocket.prototype.send = function(args) {
                     
                 }
                 
-                return originalReceive.call(this, args);
+                originalOnmessage.apply(this, [args]);
             };
 
             var originalClose = this.onclose;
             this.onclose = function () {
-                LB_HUD.bonkWSS = 0;
-                return originalClose.call(this);
+                LBB_Main.bonkWSS = 0;
+                originalClose.apply(this, [args]);
             };
-        } else {
+        }
+        else {
             // &Sending outgoing packets
             if (args.startsWith('42[4,')) { // *Send Inputs
+                console.log("hnm");
                 args = LB_HUD.send_SendInputs(args);
             } else if (args.startsWith('42[5,')) { // *Trigger Start
                 args = LB_HUD.send_TriggerStart(args);
@@ -188,7 +195,86 @@ window.WebSocket.prototype.send = function(args) {
         }
     }
 
-    return originalSend.call(this, args);
+    originalSend.apply(this, [args]);
+};
+
+
+window.WebSocket.prototype.onmessage = function(args) {
+    console.log("onmessage");
+    if (this.url.includes("socket.io/?EIO=3&transport=websocket&sid=")) {
+        console.log("testermessage");
+        // &Receiving incoming packets
+        if (args.data.startsWith('42[1,')) { // *Update Pings
+            
+        } else if (args.data.startsWith('42[3,')) { // *Room join
+            args = LB_HUD.receive_RoomJoin(args);
+        } else if (args.data.startsWith('42[4,')) { // *Player join
+            args = LB_HUD.receive_PlayerJoin(args);
+        } else if (args.data.startsWith('42[5,')) { // *Player leave
+            args = LB_HUD.receive_PlayerLeave(args);
+        } else if (args.data.startsWith('42[6,')) { // *Host leave
+            args = LB_HUD.receive_HostLeave(args);
+        } else if (args.data.startsWith('42[7,')) { // *Inputs
+            args = LB_HUD.receive_Inputs(args);
+        } else if (args.data.startsWith('42[8,')) { // *Ready Change
+            
+        } else if (args.data.startsWith('42[13,')) { // *Game End
+            
+        } else if (args.data.startsWith('42[15,')) { // *Game Start
+            args = LB_HUD.receive_GameStart(args);
+        } else if (args.data.startsWith('42[16,')) { // *Error
+            
+        } else if (args.data.startsWith('42[18,')) { // *Team Change
+            args = LB_HUD.receive_TeamChange(args);
+        } else if (args.data.startsWith('42[19,')) { // *Teamlock toggle
+            
+        } else if (args.data.startsWith('42[20,')) { // *Chat Message
+            console.log("chatted");
+            args = LB_HUD.receive_ChatMessage(args);
+        } else if (args.data.startsWith('42[21,')) { // *Initial data
+            
+        } else if (args.data.startsWith('42[24,')) { // *Kicked
+            
+        } else if (args.data.startsWith('42[26,')) { // *Mode change
+            args = LB_HUD.receive_ModeChange(args);
+        } else if (args.data.startsWith('42[27,')) { // *Change WL (Rounds)
+            
+        } else if (args.data.startsWith('42[29,')) { // *Map switch
+            args = LB_HUD.receive_MapSwitch(args);
+        } else if (args.data.startsWith('42[32,')) { // *inactive?
+            
+        } else if (args.data.startsWith('42[33,')) { // *Map Suggest
+            
+        } else if (args.data.startsWith('42[34,')) { // *Map Suggest Client
+            
+        } else if (args.data.startsWith('42[36,')) { // *Player Balance Change
+            
+        } else if (args.data.startsWith('42[40,')) { // *Save Replay
+            
+        } else if (args.data.startsWith('42[41,')) { // *New Host
+            args = LB_HUD.receive_NewHost(args);
+        } else if (args.data.startsWith('42[42,')) { // *Friend Req
+            args = LB_HUD.receive_FriendReq(args);
+        } else if (args.data.startsWith('42[43,')) { // *Game starting Countdown
+            
+        } else if (args.data.startsWith('42[44,')) { // *Abort Countdown
+            
+        } else if (args.data.startsWith('42[45,')) { // *Player Leveled Up
+            
+        } else if (args.data.startsWith('42[46,')) { // *Local Gained XP
+            
+        } else if (args.data.startsWith('42[49,')) { // *Created Room Share Link
+            
+        } else if (args.data.startsWith('42[52,')) { // *Tabbed
+            
+        } else if (args.data.startsWith('42[58,')) { // *Room Name Update
+            
+        } else if (args.data.startsWith('42[59,')) { // *Room Password Update
+            
+        }
+    }
+    
+    originalOnmessage.apply(this, [args]);
 };
 
 // Send a packet to server
@@ -278,7 +364,7 @@ LB_HUD.receive_ChatMessage = function (args) {
 
     var receiveChatEvent = new CustomEvent("chatIn", {chatData: {chatUserID: chatUserID, chatMessage: chatMessage}});
     
-    eventHandle.dispatchEvent(receiveChatEvent);
+    LB_HUD.events.dispatchEvent(receiveChatEvent);
     
     return args;
 }
