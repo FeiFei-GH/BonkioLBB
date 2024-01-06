@@ -29,6 +29,7 @@ LB_HUD.hostID = -1;
 //NOT CREATING ELEMENT CORRECTLY
 const eventHandle = document.createElement("div");
 eventHandle.id = "WSS_API";
+document.body.appendChild(eventHandle);
 
 // !Overriding bonkWSS
 // #region Overriding bonkWSS
