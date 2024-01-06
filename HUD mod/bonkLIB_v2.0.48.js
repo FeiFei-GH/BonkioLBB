@@ -16,8 +16,8 @@
 window.LB_HUD = {};
 
 LB_HUD.bonkWSS = 0;
-window.originalSend = window.WebSocket.prototype.send;
-LB_HUD.originalDrawCircle = window.PIXI.Graphics.prototype.drawCircle;
+LB_HUD.originalSend = window.WebSocket.prototype.send;
+//LB_HUD.originalDrawCircle = window.PIXI.Graphics.prototype.drawCircle;
 LB_HUD.scale = -1;
 LB_HUD.requestAnimationFrameOriginal = window.requestAnimationFrame;
 
@@ -43,8 +43,8 @@ window.WebSocket.prototype.send = function(args) {
 
         if (!this.injected) { // initialize overriding receive listener (only run once)
             this.injected = true;
-            var originalReceive = this.onmessage;
 
+            this.originalReceive = this.onmessage;
             // This function intercepts incoming packets
             this.onmessage = function (args) {
                 // &Receiving incoming packets
@@ -116,13 +116,13 @@ window.WebSocket.prototype.send = function(args) {
                     
                 }
                 
-                return originalReceive.call(this, args);
+                return this.originalReceive.call(this, args);
             };
 
-            var originalClose = this.onclose;
+            this.originalClose = this.onclose;
             this.onclose = function () {
                 LB_HUD.bonkWSS = 0;
-                return originalClose.call(this);
+                return this.originalClose.call(this);
             };
         } else {
             // &Sending outgoing packets
@@ -192,7 +192,7 @@ window.WebSocket.prototype.send = function(args) {
         }
     }
 
-    return originalSend.call(this, args);
+    return LB_HUD.originalSend.call(this, args);
 };
 
 // Send a packet to server
@@ -279,6 +279,7 @@ LB_HUD.receive_ChatMessage = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
     let chatUserID = jsonargs[1];
     let chatMessage = jsonargs[2];
+    console.log("EEEEE");
 
     var receiveChatEvent = new CustomEvent("chatIn", {chatData: {chatUserID: chatUserID, chatMessage: chatMessage}});
     
