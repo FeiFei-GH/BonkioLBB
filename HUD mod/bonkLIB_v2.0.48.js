@@ -26,6 +26,9 @@ LB_HUD.playerList = {};
 LB_HUD.myID = -1;
 LB_HUD.hostID = -1;
 
+//NOT CREATING ELEMENT CORRECTLY
+const eventHandle = document.createElement("div");
+eventHandle.id = "WSS_API";
 
 // !Overriding bonkWSS
 // #region Overriding bonkWSS
@@ -271,7 +274,10 @@ LB_HUD.receive_ChatMessage = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
     let chatUserID = jsonargs[1];
     let chatMessage = jsonargs[2];
+
+    var receiveChatEvent = new CustomEvent("chatIn", {chatData: {chatUserID: chatUserID, chatMessage: chatMessage}});
     
+    eventHandle.dispatchEvent(receiveChatEvent);
     
     return args;
 }
