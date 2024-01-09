@@ -31,8 +31,9 @@ bonkAPI.hostID = -1;
 bonkAPI.events.id = "WSS_API";
 document.body.appendChild(bonkAPI.events);*/
 
-var EventHandler = (function() {}).prototype = {
-    addEventListener: function(event, method) {
+var EventHandler;
+(EventHandler = function() {}).prototype = {
+    addEventListener: function(event, method, scope, context) {
         var listeners, handlers;
         if(!(listeners = this.listeners)) {
             listeners = this.listeners = {};
@@ -40,11 +41,15 @@ var EventHandler = (function() {}).prototype = {
         if(!(handlers = listeners[event])) {
             handlers = listeners[event] = [];
         }
-        handlers.push(method); //can later add something like data or req where this can fire data based off of the input
-        // ({method: method, ...: ...})
+        scope = (scope ? scope : window);
+        handlers.push({
+            method: method,
+            scope: scope,
+            context: (context ? context : scope)
+        });
     },
-    fireEvent: function(event, data) {
-        var listeners, handlers, handler, l;
+    fireEvent: function(event, data, context) {
+        var listeners, handlers, handler, l, scope;
         if(!(listeners = this.listeners)) {
             return;
         }
@@ -53,8 +58,11 @@ var EventHandler = (function() {}).prototype = {
         }
         l = handlers.length;
         for(let i = 0; i < l; i++) {
-            //might need to add scope, need to test
-            handlers[i].method.call(this, data);
+            handler = handlers[i];
+            if(typeof(context) !== "undefined" && context !== handler.context) {
+                continue;
+            }
+            handler.method.call(handler.scope, data);
         }
     }
 };
