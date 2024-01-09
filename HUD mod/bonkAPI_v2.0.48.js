@@ -27,12 +27,42 @@ bonkAPI.myID = -1;
 bonkAPI.hostID = -1;
 
 //Not nice but works
-bonkAPI.events = document.createElement("div");
+/*bonkAPI.events = document.createElement("div");
 bonkAPI.events.id = "WSS_API";
-document.body.appendChild(bonkAPI.events);
+document.body.appendChild(bonkAPI.events);*/
 
-/*LB_HUD.events.addEventListener("chatIn", (e) => {
-    console.log("HUM " + e.chatData.chatMessage);
+var EventHandler = (function() {}).prototype = {
+    addEventListener: function(event, method) {
+        var listeners, handlers;
+        if(!(listeners = this.listeners)) {
+            listeners = this.listeners = {};
+        }
+        if(!(handlers = listeners[event])) {
+            handlers = listeners[event] = [];
+        }
+        handlers.push(method); //can later add something like data or req where this can fire data based off of the input
+        // ({method: method, ...: ...})
+    },
+    fireEvent: function(event, data) {
+        var listeners, handlers, handler, l;
+        if(!(listeners = this.listeners)) {
+            return;
+        }
+        if(!(handlers = listeners[event])) {
+            return;
+        }
+        l = handlers.length;
+        for(let i = 0; i < l; i++) {
+            //might need to add scope, need to test
+            handlers[i].method.call(this, data);
+        }
+    }
+};
+
+bonkAPI.events = new EventHandler();
+
+/*bonkAPI.events.addEventListener("chatIn", function(e){
+    console.log("HUM " + e.chatMessage);
 });*/
 
 // !Overriding bonkWSS
@@ -265,11 +295,7 @@ bonkAPI.receive_Inputs = function (args) {
 //! Detects when match starts!!!
 bonkAPI.receive_GameStart = function (args) {
     //Dont need to send args if it doesnt have usefull information
-    var sendObj = {packet: args};
-
-    var receiveGameStartEvent = new Event("gameStart");
-    receiveGameStartEvent.data = sendObj;
-    bonkAPI.events.dispatchEvent(receiveGameStartEvent);
+    bonkAPI.events.fireEvent("gameStart", args);
     return args;
 }
 
@@ -286,10 +312,7 @@ bonkAPI.receive_ChatMessage = function (args) {
     let chatMessage = jsonargs[2];
 
     var sendObj = {userID: chatUserID, message: chatMessage};
-
-    var receiveChatEvent = new Event("chatIn");
-    receiveChatEvent.data = sendObj;
-    bonkAPI.events.dispatchEvent(receiveChatEvent);
+    bonkAPI.events.fireEvent("chatIn", sendObj);
     
     return args;
 }
