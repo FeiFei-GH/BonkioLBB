@@ -63,7 +63,6 @@ var EventHandler;
             if(typeof(context) !== "undefined" && context !== handler.context) {
                 continue;
             }
-            console.log(this.hasEvent);
             handler.method.call(handler.scope, data);
         }
     }
@@ -77,13 +76,14 @@ bonkAPI.events = new EventHandler();
 
 // !Overriding bonkWSS
 // #region Overriding bonkWSS
+
 window.WebSocket.prototype.send = function(args) {
     if (this.url.includes("socket.io/?EIO=3&transport=websocket&sid=")) {
-        bonkAPI.bonkWSS = this;
-
-        if (!this.injected) { // initialize overriding receive listener (only run once)
-            this.injected = true;
-            this.originalReceive = this.onmessage;
+        //this.originalSend = this.send;
+        if (!this.injectedAPI) { // initialize overriding receive listener (only run once)
+            bonkAPI.bonkWSS = this;
+            this.injectedAPI = true;
+            var originalReceive = this.onmessage;
             // This function intercepts incoming packets
             this.onmessage = function (args) {
                 // &Receiving incoming packets
@@ -154,15 +154,16 @@ window.WebSocket.prototype.send = function(args) {
                         break; // *Room Password Update
                 }
                 
-                return this.originalReceive.call(this, args);
+                return originalReceive.call(this, args);
             };
 
-            this.originalClose = this.onclose;
+            var originalClose = this.onclose;
             this.onclose = function () {
                 bonkAPI.bonkWSS = 0;
-                return this.originalClose.call(this);
+                return originalClose.call(this);
             };
         } else {
+            console.log(args.substring(0,5));
             // &Sending outgoing packets
             switch(args.substring(0, 5)) {
                 case "42[4,": args = bonkAPI.send_SendInputs(args);
