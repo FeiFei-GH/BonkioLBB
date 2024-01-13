@@ -81,7 +81,7 @@ window.WebSocket.prototype.send = function(args) {
     if (this.url.includes("socket.io/?EIO=3&transport=websocket&sid=")) {
         //this.originalSend = this.send;
         if (!this.injectedAPI) { // initialize overriding receive listener (only run once)
-            bonkAPI.bonkWSS = this;
+            window.bonkAPI.bonkWSS = this;
             this.injectedAPI = true;
             var originalReceive = this.onmessage;
             // This function intercepts incoming packets
@@ -90,16 +90,20 @@ window.WebSocket.prototype.send = function(args) {
                 switch(args.data.substring(0, 5)) {
                     case "42[1,":
                         break; //FORGORT TO ADD WHAT THESE DID
+                    case "42[2,":
+                        break; // *UNKNOWN, received after sending create room packet
                     case "42[3,": args = bonkAPI.receive_RoomJoin(args);
                         break; // *Room Join
-                    case "42[5,": args = bonkAPI.receive_PlayerJoin(args);
+                    case "42[4,": args = bonkAPI.receive_PlayerJoin(args);
+                        break; // *Player Join
+                    case "42[5,": args = bonkAPI.receive_PlayerLeave(args);
                         break; // *Player Join
                     case "42[6,": args = bonkAPI.receive_HostLeave(args);
                         break; // *Host Leave
                     case "42[7,": args = bonkAPI.receive_Inputs(args);
                         break; // *Receive Inputs
                     case "42[8,":
-                        break;
+                        break; // *Ready Change
                     case "42[13":
                         break; // *Game End
                     case "42[15": args = bonkAPI.receive_GameStart(args);
@@ -163,7 +167,6 @@ window.WebSocket.prototype.send = function(args) {
                 return originalClose.call(this);
             };
         } else {
-            console.log(args.substring(0,5));
             // &Sending outgoing packets
             switch(args.substring(0, 5)) {
                 case "42[4,": args = bonkAPI.send_SendInputs(args);
@@ -180,7 +183,7 @@ window.WebSocket.prototype.send = function(args) {
                     break;  // *Chat Message
                 case "42[11":
                     break;  // *Inform In Lobby
-                case "42[12": args = bonkAPI.send_CreatRoom(args);
+                case "42[12": args = bonkAPI.send_CreateRoom(args);
                     break;  // *Create Room
                 case "42[14":
                     break;  // *Return To Lobby
@@ -442,12 +445,12 @@ bonkAPI.send_TriggerStart = function (args) {
     return args;
 }
 
-bonkAPI.send_CreatRoom = function (args) {
+bonkAPI.send_CreateRoom = function (args) {
     bonkAPI.playerList = {};
     var jsonargs2 = JSON.parse(args.substring(2));
     var jsonargs = jsonargs2[1];
 
-    bonkAPI.playerList[0] = {
+    bonkAPI.playerList["0"] = {
         peerId: jsonargs["peerID"],
         userName: document.getElementById("pretty_top_name").textContent,
         level:
