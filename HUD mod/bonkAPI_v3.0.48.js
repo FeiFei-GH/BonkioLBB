@@ -263,7 +263,7 @@ var receive_RoomJoin = function (args) {
     // !this name isnt descriptive
     if(events.hasEvent["onJoin"]) {
         var sendObj = { hostID: jsonargs[2],
-                        userData: playerList,
+                        userData: playerList, // !May or may not be immutable
                         roomId: jsonargs[6],
                         bypass: jsonargs[7] };
         events.fireEvent("onJoin", sendObj);
@@ -517,6 +517,7 @@ bonkAPI.getPlayerByName = function(name) {
             return Object.assign({}, playerList[i]);
         }
     }
+    return null;
 };
 Object.freeze(bonkAPI.getPlayerByName);
 
@@ -525,7 +526,7 @@ bonkAPI.getPlayersByTeam = function(team) {
     var teamList = [];
     for(let i = 0; i < playerList.length; i++) {
         if(team == playerList[i].team) {
-            teamList.push(playerList[i]);
+            teamList.push({userID: i, userData: playerList[i]});
         }
     }
     return teamList;
