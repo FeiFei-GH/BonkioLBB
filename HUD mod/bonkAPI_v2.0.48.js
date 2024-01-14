@@ -13,24 +13,6 @@
 
 // ! Matching Bonk Version 48
 
-window.bonkAPI = {};
-
-bonkAPI.bonkWSS = 0;
-bonkAPI.originalSend = window.WebSocket.prototype.send;
-//LB_HUD.originalDrawCircle = window.PIXI.Graphics.prototype.drawCircle;
-bonkAPI.scale = -1;
-bonkAPI.requestAnimationFrameOriginal = window.requestAnimationFrame;
-
-// My custom vars
-bonkAPI.playerList = {};
-bonkAPI.myID = -1;
-bonkAPI.hostID = -1;
-
-//Not nice but works
-/*bonkAPI.events = document.createElement("div");
-bonkAPI.events.id = "WSS_API";
-document.body.appendChild(bonkAPI.events);*/
-
 var EventHandler;
 (EventHandler = function() {this.hasEvent = []}).prototype = {
     addEventListener: function(event, method, scope, context) {
@@ -67,6 +49,20 @@ var EventHandler;
         }
     }
 };
+Object.freeze(EventHandler);
+
+window.bonkAPI = {};
+
+bonkAPI.bonkWSS = 0;
+bonkAPI.originalSend = window.WebSocket.prototype.send;
+//LB_HUD.originalDrawCircle = window.PIXI.Graphics.prototype.drawCircle;
+bonkAPI.scale = -1;
+bonkAPI.requestAnimationFrameOriginal = window.requestAnimationFrame;
+
+// My custom vars
+bonkAPI.playerList = [];
+bonkAPI.myID = -1;
+bonkAPI.hostID = -1;
 
 bonkAPI.events = new EventHandler();
 
@@ -255,14 +251,14 @@ bonkAPI.receivePacket = function (packet) {
 // &----------------------Receive Handler Functions----------------------
 bonkAPI.receive_RoomJoin = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
-    bonkAPI.playerList = {};
+    bonkAPI.playerList = [];
     bonkAPI.myID = jsonargs[1];
     bonkAPI.hostID = jsonargs[2];
     
     for(var i = 0; i < jsonargs[3].length; i++){
-        if(jsonargs[3][i] != null){
-            bonkAPI.playerList[i.toString()] = jsonargs[3][i];
-        }
+        //if(jsonargs[3][i] != null){
+        bonkAPI.playerList[i] = jsonargs[3][i];
+        //}
     }
 
     // this name isnt descriptive
@@ -446,11 +442,11 @@ bonkAPI.send_TriggerStart = function (args) {
 }
 
 bonkAPI.send_CreateRoom = function (args) {
-    bonkAPI.playerList = {};
+    bonkAPI.playerList = [];
     var jsonargs2 = JSON.parse(args.substring(2));
     var jsonargs = jsonargs2[1];
 
-    bonkAPI.playerList["0"] = {
+    bonkAPI.playerList[0] = {
         peerId: jsonargs["peerID"],
         userName: document.getElementById("pretty_top_name").textContent,
         level:
