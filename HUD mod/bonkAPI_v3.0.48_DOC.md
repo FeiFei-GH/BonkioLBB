@@ -5,7 +5,7 @@ Description here...
 
 In a userscript, it is recomended to change `@run-at` to `document-idle` or `document-end` to ensure that bonkAPI has been fully injected.
 
-#### Methods:
+### Methods:
 All methods in bonkAPI can be accesed by using the `bonkAPI` object in window. Inside of a userscript, all you need is `bonkAPI.methodName(arguements)`.
 - [addEventListener(event, method)](#addeventlistenerevent-method)
 - [receivePacket(packet)](#receivepacketpacket)
@@ -19,7 +19,7 @@ All methods in bonkAPI can be accesed by using the `bonkAPI` object in window. I
 - [getPlayerByName(name)](#getplayerbynamename)
 - [getPlayersByTeam(team)](#getplayersbyteamteam)
 
-### addEventListener(event, method)
+## addEventListener(event, method)
 Listen for a specific `event` and call `method` when the event has been fired.
 
 Example
@@ -35,7 +35,7 @@ bonkAPI.addEventListener("userJoin", function(e) {
 
 Here is a [list of events](#events).
 
-### receivePacket(packet)
+## receivePacket(packet)
 Fake receives a specific packet. For information on packets, see [Demystify Bonk](https://github.com/UnmatchedBracket/DemystifyBonk/blob/main/Packets.md).
 
 Example
@@ -44,7 +44,7 @@ Example
 bonkAPI.receivePacket('42[34,"SomeMap","Maker",2]');
 ```
 
-### sendPacket(packet)
+## sendPacket(packet)
 Sends a specific packet to bonk servers. For information on packets, see [Demystify Bonk](https://github.com/UnmatchedBracket/DemystifyBonk/blob/main/Packets.md).
 
 Example
@@ -53,7 +53,7 @@ Example
 bonkAPI.sendPacket('42[6,{"targetTeam":4}]')
 ```
 
-### chat(message)
+## chat(message)
 Sends a message to the lobby with the string `message`.
 
 Example
@@ -61,7 +61,7 @@ Example
 bonkAPI.chat("Hello, Bonk!");
 ```
 
-### getMyID()
+## getMyID()
 Returns you're current id in the lobby you are in.
 
 Example
@@ -74,7 +74,7 @@ if(bonkAPI.getPlayerByID(bonkAPI.getMyID()).guest === true) {
 }
 ```
 
-### getHostID()
+## getHostID()
 Returns the id of the host of the lobby you are in.
 
 Example
@@ -84,7 +84,7 @@ let host = bonkAPI.getPlayerByID(bonkAPI.getHostID()).userName;
 bonkAPI.chat("Don't kick me pls, " + host);
 ```
 
-### getPlayerList()
+## getPlayerList()
 Gets the entire list of players in the lobby at the point in time, including `null` values where a player has left. The first person to create the lobby is 0 and new player's are always the next available integer. Changing the returned value will not change what is stored in bonkAPI.
 
 If you need to access many players in a short amount of time, it is more efficient to use this than [`getPlayerByName(name)`](#getplayerbynamename) or [`getPlayerByID(id)`](#getplayerbyidid)
@@ -101,7 +101,7 @@ for(let i = 0; i < players.length; i++) {
 }
 ```
 
-### getPlayerListLength()
+## getPlayerListLength()
 Gets the length of the current full list of players in the lobby, including players who left.
 
 Example
@@ -116,7 +116,7 @@ for(let i = 0; i < bonkAPI.getPlayerListLength(); i++) {
 }
 ```
 
-### getPlayerByID(id)
+## getPlayerByID(id)
 Gets the user data of the player at the given `id`. It is possible to get `null` if the player has left.
 
 Example
@@ -137,7 +137,7 @@ bonkAPI.addEventListener("userJoin", function(e) {
 });
 ```
 
-### getPlayerByName(name)
+## getPlayerByName(name)
 Gets the user data of the player with the given `name` in a string. Returns `null` if a player with the name doesn't exist.
 
 Example
@@ -153,7 +153,7 @@ return -1;
 /* End method */
 ```
 
-### getPlayersByTeam(team)
+## getPlayersByTeam(team)
 Gets a list of objects that contain the `userID` and `userData` of all of the players in the specified `team`, which is an integer.
 - 0: Spectator
 - 1: Free For All
@@ -180,6 +180,19 @@ if(bonkAPI.getMyID() === bonkAPI.getHostID()) {
 }
 ```
 
-### Events
-- someevents
-- here
+## Events
+These are strings that are given as an arguement to `addEventListener()`, where when the conditions are met, the function given will be called. You can access the object data given from the event by using a function with atleast one parameter ([see](#addeventlistenerevent-method)).
+
+| Events | Object Data |
+|---|---|
+| onJoin | Fired when you join a lobby<br>`hostID`: ID of host<br>`userData`: User data of the joined player(you!)<br>`roomID`: ID of the current room<br>`bypass`: special number |
+| userJoin | Fired when someone joins the lobby<br>`userID`: ID of the joined player<br>`userData`: User data of the joined player |
+| userLeave | Fired when someone leaves the lobby<br>`userID`: ID of the player who left<br>`userData`: User data of the player who left |
+| hostChange | Fired when the host changes<br>`userID`: ID of the new host |
+| receivedInputs | Fired when someone has inputed in a game<br>`userID`: ID of the player who did the input<br>`rawInput`: An int that represents the buttons pressed as 6 bits<br>`frame`: Frame when the input happened<br>`sequence`: The total number of inputs |
+| gameStart | Fired when the game starts<br>`extraData`: String of the packet filled with data you (probably) don't need |
+| teamChange | Fired when someone's team has been changed<br>`userID`: The player who changed teams<br>`team`: The new team represented as an integer from 0-5 |
+| chatIn | Fired when someone has chatted<br>`userID`: The player who chatted<br>`message`: What they sent |
+| modeChange | Fired when the mode has changed<br>`mode`: The new mode represented by a short string |
+| mapChange | Fired when the map has changed<br>`mapData`: A string containing raw map data |
+| receivedFriend | Fired when you have been given a friend request<br>`userID`: The user who (for some reason) requested to friend you |

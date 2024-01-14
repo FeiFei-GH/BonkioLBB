@@ -264,7 +264,7 @@ var receive_RoomJoin = function (args) {
     if(events.hasEvent["onJoin"]) {
         var sendObj = { hostID: jsonargs[2],
                         userData: playerList, // !May or may not be immutable
-                        roomId: jsonargs[6],
+                        roomID: jsonargs[6],
                         bypass: jsonargs[7] };
         events.fireEvent("onJoin", sendObj);
     }
