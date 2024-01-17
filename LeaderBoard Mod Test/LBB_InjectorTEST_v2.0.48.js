@@ -24,33 +24,47 @@ function injector(src) {
     // let inputStateVariable = newSrc.match(/(?<=inputState:).{1,15}(?=,)/)[0];
 
     let orgCode = `function E3(r1d,T$2){var N$w=[arguments];z7J.c94();N$w[9]=m8fvh;N$w[7]=N$w[0][1][N$w[9][138]]()[N$w[9][187]];N$w[5]=N$w[0][0][N$w[9][138]]()[N$w[9][115]];if(!M1j[87][N$w[7]]){M1j[87][N$w[7]]=[];}if(!M1j[87][N$w[7]][N$w[5]]){M1j[87][N$w[7]][N$w[5]]={count:1,players:[N$w[0][0][N$w[9][138]]()[N$w[9][141]]]};}else {M1j[87][N$w[7]][N$w[5]][N$w[9][188]]++;M1j[87][N$w[7]][N$w[5]][N$w[9][121]][N$w[9][101]](N$w[0][0][N$w[9][138]]()[N$w[9][141]]);}}`;
-    let newCode = `function E3(r1d, T$2) {
-        var N$w = [arguments];
-        z7J.c94();
-        N$w[9] = m8fvh;
-        N$w[7] = N$w[0][1][N$w[9][138]]()[N$w[9][187]];
-        N$w[5] = N$w[0][0][N$w[9][138]]()[N$w[9][115]];
-        
-        // Check if LBB_Main is loaded
-        if (window.LBB_Main.playerInCZ) {
-            window.LBB_Main.playerInCZ(N$w[0][0].m_userData.arrayID);
-        }
-        
-        if (!M1j[87][N$w[7]]) {
-            M1j[87][N$w[7]] = [];
-        }
-        if (!M1j[87][N$w[7]][N$w[5]]) {
-            M1j[87][N$w[7]][N$w[5]] = {
-                count: 1,
-                players: [N$w[0][0][N$w[9][138]]()[N$w[9][141]]],
-            };
-        } else {
-            M1j[87][N$w[7]][N$w[5]][N$w[9][188]]++;
-            M1j[87][N$w[7]][N$w[5]][N$w[9][121]][N$w[9][101]](
-                N$w[0][0][N$w[9][138]]()[N$w[9][141]]);}}`;
+    let newCode = `
+        function E3(r1d, T$2) {
+            var N$w = [arguments];
+            z7J.c94();
+            N$w[9] = m8fvh;
+            N$w[7] = N$w[0][1][N$w[9][138]]()[N$w[9][187]];
+            N$w[5] = N$w[0][0][N$w[9][138]]()[N$w[9][115]];
+            
+            // Check if LBB_Main is loaded
+            if (window.LBB_Main.capZoneEvent) {
+                window.LBB_Main.capZoneEvent(N$w[0][0].m_userData.arrayID);
+            }
+            
+            if (!M1j[87][N$w[7]]) {
+                M1j[87][N$w[7]] = [];
+            }
+            if (!M1j[87][N$w[7]][N$w[5]]) {
+                M1j[87][N$w[7]][N$w[5]] = {
+                    count: 1,
+                    players: [N$w[0][0][N$w[9][138]]()[N$w[9][141]]],
+                };
+            } else {
+                M1j[87][N$w[7]][N$w[5]][N$w[9][188]]++;
+                M1j[87][N$w[7]][N$w[5]][N$w[9][121]][N$w[9][101]](
+                    N$w[0][0][N$w[9][138]]()[N$w[9][141]]);}}`;
 
     newSrc = newSrc.replace(orgCode, newCode);
+    
+    orgCode = `return M1j[945];`;
+    newCode = `
+        // Check if LBB_Main is loaded
+        if (window.LBB_Main.stepEvent) {
+            window.LBB_Main.stepEvent(M1j[945]);
+        }
+        
+        return M1j[945];`;
 
+    newSrc = newSrc.replace(orgCode, newCode);
+    
+    
+    
     return newSrc;
 }
 

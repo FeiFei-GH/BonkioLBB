@@ -1,9 +1,15 @@
 Bonk Version 48:
 
+--------------------------------NOTES--------------------------------
 2 Step Functions:
 N is football
 J is normal
 
+discDeaths in inputState only save up to 91 frames of death info
+
+
+--------------------------------LINES--------------------------------
+Line 6159:
 J["globalStepVars"] = {
                     discs: M1j[8],
                     shakeVectorThisStep: M1j[18],
@@ -15,14 +21,33 @@ J["globalStepVars"] = {
                     swingCollideDestroyEvents: M1j[33],
                 };
 
-Useful Vars:
-E3 is called when player touches capzone
-? seems to be the call back function
-? is get called every animation update
-J["prototype"]["step"] is the step function
-? seems to handle things when game ends
+Step function at Line 6046:
+        J["prototype"]["step"] = function (n5S, M6B, D7v, V10, V7Q, A_p, F$k, V$Y) {
 
 
+Returns physics frame at Line 8645:
+M1j[945] is the physics frame
+
+
+Death info at Line 8303:
+if (M1j[8][M1j[364]]["diedThisStep"]) {
+                            M1j[945]["discDeaths"]["push"]({
+                                i: M1j[364],
+                                x: M1j[8][M1j[364]]["body"]["GetPosition"]()["x"],
+                                y: M1j[8][M1j[364]]["body"]["GetPosition"]()["y"],
+                                xv: M1j[8][M1j[364]]["body"]["GetLinearVelocity"]()["x"],
+                                yv: M1j[8][M1j[364]]["body"]["GetLinearVelocity"]()["y"],
+                                f: 0,
+                                m: M1j[8][M1j[364]]["diedThisStep"],
+                            });
+
+
+gameFrame and 1800 gameState at Line 5384:
+                Y3z[8]++;
+                Y3z[3][Y3z[8]] = o3x[7];
+
+
+--------------------------------OTHER--------------------------------
 
 Game mode IDs:
 Classic: b
@@ -32,7 +57,3 @@ Grapple: sp
 Football: f
 VTOL: v
 Simple (inaccessible): bs
-
-Inside inputState, there is discDeaths.
-Useful to get when players spawned.
-

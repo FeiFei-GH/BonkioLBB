@@ -1228,7 +1228,13 @@ leaderBoardBot(function () {
 
         return args;
     };
-
+    
+    // or window.bonkAPI
+    bonkAPI.addEventListener('receiveChat', (message) => {
+        console.log(message);
+    });
+    
+    
     LBB.receive_MapSwitch = function (args) {
         var jsonargs = JSON.parse(args.data.substring(2));
 

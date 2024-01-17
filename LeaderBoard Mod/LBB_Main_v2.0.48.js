@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      2.0.48
 // @description  Main
-// @author       FeiFei + LEGEND
+// @author       FeiFei
 // @license      MIT
 // @match        https://bonk.io/gameframe-release.html
 // @run-at       document-end
@@ -12,20 +12,13 @@
 
 // ! Matching Bonk Version 48
 
+// Everything should be inside this object
+// to prevent conflict with other prgrams.
 window.LBB_Main = {};
 
-LBB_Main.bonkWSS = 0;
-window.originalSend = window.WebSocket.prototype.send;
-LBB_Main.originalDrawCircle = window.PIXI.Graphics.prototype.drawCircle;
-LBB_Main.scale = -1;
-LBB_Main.requestAnimationFrameOriginal = window.requestAnimationFrame;
-
 // My custom vars
-LBB_Main.playerList = {};
 LBB_Main.unfinishedPlayerIDs = new Set();
-LBB_Main.myID = -1;
-LBB_Main.hostID = -1;
-LBB_Main.decodedMap = {};
+
 LBB_Main.mapPPM = -1;
 LBB_Main.mapCapZones = [];
 LBB_Main.mapRecordsData = new Map();
@@ -51,179 +44,7 @@ LBB_Main.matchEndsAfterFinish = 9000;
 
 
 
-// !Overriding bonkWSS
-// #region Overriding bonkWSS
-window.WebSocket.prototype.send = function(args) {
-    if (this.url.includes(".bonk.io/socket.io/?EIO=3&transport=websocket&sid=")) {
-        LBB_Main.bonkWSS = this;
 
-        if (!this.injected) { // initialize overriding receive listener (only run once)
-            this.injected = true;
-            var originalReceive = this.onmessage;
-
-            // This function intercepts incoming packets
-            this.onmessage = function (args) {
-                // &Receiving incoming packets
-                if (args.data.startsWith('42[1,')) { // *Update Pings
-                    
-                } else if (args.data.startsWith('42[3,')) { // *Room join
-                    args = LBB_Main.receive_RoomJoin(args);
-                } else if (args.data.startsWith('42[4,')) { // *Player join
-                    args = LBB_Main.receive_PlayerJoin(args);
-                } else if (args.data.startsWith('42[5,')) { // *Player leave
-                    args = LBB_Main.receive_PlayerLeave(args);
-                } else if (args.data.startsWith('42[6,')) { // *Host leave
-                    args = LBB_Main.receive_HostLeave(args);
-                } else if (args.data.startsWith('42[7,')) { // *Inputs
-                    args = LBB_Main.receive_Inputs(args);
-                } else if (args.data.startsWith('42[8,')) { // *Ready Change
-                    
-                } else if (args.data.startsWith('42[13,')) { // *Game End
-                    
-                } else if (args.data.startsWith('42[15,')) { // *Game Start
-                    args = LBB_Main.receive_GameStart(args);
-                } else if (args.data.startsWith('42[16,')) { // *Error
-                    
-                } else if (args.data.startsWith('42[18,')) { // *Team Change
-                    args = LBB_Main.receive_TeamChange(args);
-                } else if (args.data.startsWith('42[19,')) { // *Teamlock toggle
-                    
-                } else if (args.data.startsWith('42[20,')) { // *Chat Message
-                    args = LBB_Main.receive_ChatMessage(args);
-                } else if (args.data.startsWith('42[21,')) { // *Initial data
-                    
-                } else if (args.data.startsWith('42[24,')) { // *Kicked
-                    
-                } else if (args.data.startsWith('42[26,')) { // *Mode change
-                    args = LBB_Main.receive_ModeChange(args);
-                } else if (args.data.startsWith('42[27,')) { // *Change WL (Rounds)
-                    
-                } else if (args.data.startsWith('42[29,')) { // *Map switch
-                    args = LBB_Main.receive_MapSwitch(args);
-                } else if (args.data.startsWith('42[32,')) { // *inactive?
-                    
-                } else if (args.data.startsWith('42[33,')) { // *Map Suggest
-                    
-                } else if (args.data.startsWith('42[34,')) { // *Map Suggest Client
-                    
-                } else if (args.data.startsWith('42[36,')) { // *Player Balance Change
-                    
-                } else if (args.data.startsWith('42[40,')) { // *Save Replay
-                    
-                } else if (args.data.startsWith('42[41,')) { // *New Host
-                    args = LBB_Main.receive_NewHost(args);
-                } else if (args.data.startsWith('42[42,')) { // *Friend Req
-                    args = LBB_Main.receive_FriendReq(args);
-                } else if (args.data.startsWith('42[43,')) { // *Game starting Countdown
-                    
-                } else if (args.data.startsWith('42[44,')) { // *Abort Countdown
-                    
-                } else if (args.data.startsWith('42[45,')) { // *Player Leveled Up
-                    
-                } else if (args.data.startsWith('42[46,')) { // *Local Gained XP
-                    
-                } else if (args.data.startsWith('42[49,')) { // *Created Room Share Link
-                    
-                } else if (args.data.startsWith('42[52,')) { // *Tabbed
-                    
-                } else if (args.data.startsWith('42[58,')) { // *Room Name Update
-                    
-                } else if (args.data.startsWith('42[59,')) { // *Room Password Update
-                    
-                }
-                
-                return originalReceive.call(this, args);
-            };
-
-            var originalClose = this.onclose;
-            this.onclose = function () {
-                LBB_Main.bonkWSS = 0;
-                return originalClose.call(this);
-            };
-        } else {
-            // &Sending outgoing packets
-            if (args.startsWith('42[4,')) { // *Send Inputs
-                args = LBB_Main.send_SendInputs(args);
-            } else if (args.startsWith('42[5,')) { // *Trigger Start
-                args = LBB_Main.send_TriggerStart(args);
-            } else if (args.startsWith('42[6,')) { // *Change Own Team
-                
-            } else if (args.startsWith('42[7,')) { // *Team Lock
-                
-            } else if (args.startsWith('42[9,')) { // *Kick/Ban Player
-                
-            } else if (args.startsWith('42[10,')) { // *Chat Message
-                
-            } else if (args.startsWith('42[11,')) { // *Inform In Lobby
-                
-            } else if (args.startsWith('42[12,')) { // *Create Room
-                args = LBB_Main.send_CreatRoom(args);
-            } else if (args.startsWith('42[14,')) { // *Return To Lobby
-                
-            } else if (args.startsWith('42[16,')) { // *Set Ready
-                
-            } else if (args.startsWith('42[17,')) { // *All Ready Reset
-                
-            } else if (args.startsWith('42[19,')) { // *Send Map Reorder
-                
-            } else if (args.startsWith('42[20,')) { // *Send Mode
-                
-            } else if (args.startsWith('42[21,')) { // *Send WL (Rounds)
-                
-            } else if (args.startsWith('42[22,')) { // *Send Map Delete
-                
-            } else if (args.startsWith('42[23,')) { // *Send Map Add
-                args = LBB_Main.send_MapAdd(args);
-            } else if (args.startsWith('42[26,')) { // *Change Other Team
-                
-            } else if (args.startsWith('42[27,')) { // *Send Map Suggest
-                
-            } else if (args.startsWith('42[29,')) { // *Send Balance
-                
-            } else if (args.startsWith('42[32,')) { // *Send Team Settings Change
-                
-            } else if (args.startsWith('42[33,')) { // *Send Arm Record
-                
-            } else if (args.startsWith('42[34,')) { // *Send Host Change
-                
-            } else if (args.startsWith('42[35,')) { // *Send Friended
-                
-            } else if (args.startsWith('42[36,')) { // *Send Start Countdown
-                
-            } else if (args.startsWith('42[37,')) { // *Send Abort Countdown
-                
-            } else if (args.startsWith('42[38,')) { // *Send Req XP
-                
-            } else if (args.startsWith('42[39,')) { // *Send Map Vote
-                
-            } else if (args.startsWith('42[40,')) { // *Inform In Game
-                
-            } else if (args.startsWith('42[41,')) { // *Get Pre Vote
-                console.log(`Map ID: ${args}`);
-            } else if (args.startsWith('42[44,')) { // *Tabbed
-                
-            } else if (args.startsWith('42[50,')) { // *Send No Host Swap
-                
-            }
-        }
-    }
-
-    return originalSend.call(this, args);
-};
-
-// Send a packet to server
-LBB_Main.sendPacket = function (packet) {
-    if (LBB_Main.bonkWSS != 0) {
-        LBB_Main.bonkWSS.send(packet);
-    }
-};
-
-// Make client receive a packet
-LBB_Main.receivePacket = function (packet) {
-    if (LBB_Main.bonkWSS != 0) {
-        LBB_Main.bonkWSS.onmessage({ data: packet });
-    }
-};
 
 // &----------------------Receive Handler Functions----------------------
 LBB_Main.receive_RoomJoin = function (args) {
@@ -317,12 +138,7 @@ LBB_Main.receive_GameStart = function (args) {
     return args;
 }
 
-LBB_Main.receive_TeamChange = function (args) {
-    var jsonargs = JSON.parse(args.data.substring(2));
-    LBB_Main.playerList[jsonargs[1]].team = jsonargs[2];
-    
-    return args;
-}
+
 
 LBB_Main.receive_ChatMessage = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
@@ -336,12 +152,7 @@ LBB_Main.receive_ChatMessage = function (args) {
     return args;
 }
 
-LBB_Main.receive_ModeChange = function (args) {
-    var jsonargs = JSON.parse(args.data.substring(2));
-    LBB_Main.currentMode = jsonargs[3];
-    
-    return args;
-}
+
 
 LBB_Main.receive_MapSwitch = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
@@ -355,12 +166,6 @@ LBB_Main.receive_MapSwitch = function (args) {
     return args;
 }
 
-LBB_Main.receive_NewHost = function (args) {
-    var jsonargs = JSON.parse(args.data.substring(2));
-    LBB_Main.hostID = jsonargs[1]["newHost"];
-    
-    return args;
-}
 
 LBB_Main.receive_FriendReq = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
@@ -434,11 +239,6 @@ LBB_Main.send_MapAdd = function (args) {
 // #endregion
 
 
-LBB_Main.chat = function (message) {
-    LBB_Main.sendPacket('42[10,{"message":' + JSON.stringify(message) + "}]");
-};
-
-
 
 
 
@@ -468,43 +268,7 @@ LBB_Main.getCurrentMapName = function() {
 
 
 
-LBB_Main.addPlayerToMapRecords = function (mapName, playerName, time) {
-    let playerTimeType = 0;
-    
-    // if (isNameGuest(playerName)) {
-    //     chat("Not allow to add Guest's data");
-    //     return -1;
-    // }
-    
-    // If the map doesn't exist in the map data, create it with an empty player map
-    if (!LBB_Main.mapRecordsData.has(mapName)) {
-        LBB_Main.mapRecordsData.set(mapName, new Map());
-    }
-    const playerMap = LBB_Main.mapRecordsData.get(mapName);
-    
-    // If the player doesn't exist in the player map, create it with the new data
-    if (!playerMap.has(playerName)) {
-        if (time == -1) {
-            playerMap.set(playerName, { bestTime: time, numberOfFinishes: 0 });
-        } else {
-            playerMap.set(playerName, { bestTime: time, numberOfFinishes: 1 });
-            playerTimeType = 1;
-        }
-    } else { // player got record before
-        const playerData = playerMap.get(playerName);
 
-        // If the time is better than the current best time, update the player's data
-        if (time < playerData.bestTime) {
-            playerData.bestTime = time;
-            playerTimeType = 1;
-        }
-
-        // Increment the number of finishes for the player
-        playerData.numberOfFinishes++;
-    }
-    
-    return playerTimeType;
-};
 
 LBB_Main.playerFinished = function (id, timeGot) {
     let finishMessage = "";
@@ -532,7 +296,12 @@ LBB_Main.playerFinished = function (id, timeGot) {
     LBB_Main.unfinishedPlayerIDs.delete(id);
 }
 
-LBB_Main.playerInCZ = function (id) {
+LBB_Main.stepEvent = function (physicsFrame) {
+    console.log("physicsFrame: ");
+    console.log(physicsFrame);
+};
+
+LBB_Main.capZoneEvent = function (id) {
     id = id.toString();
     
     if (LBB_Main.unfinishedPlayerIDs.has(id)) {
