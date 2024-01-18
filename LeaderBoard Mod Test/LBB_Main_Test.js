@@ -28,6 +28,12 @@ LBB_Main.stepEvent = (gameState) => {
     console.log(gameState);
 };
 
-LBB_Main.capZoneEvent = (id) => {
+LBB_Main.capZoneEvent = (id, frame) => {
     //console.log("player: " + id);
+    //console.log("Frame: " + time);
+};
+
+LBB_Main.playerFinishEvent = (playerID, finalFrame) => {
+    console.log("playerID: " + playerID);
+    console.log("finalFrame: " + finalFrame);
 };

@@ -374,7 +374,7 @@ bonkAPI.receive_PlayerJoin = function (args) {
     //? - send the playerlist as data
     //? - send the new player object as data
     //? - send nothing and let the user access bonkAPI.playerList
-    /** 
+    /**
      * When another player joins the lobby.
      * @event userJoin
      * @type {object}
@@ -798,6 +798,16 @@ bonkAPI.getPlayerByName = function (name) {
         }
     }
     return null;
+};
+
+/**
+ * 
+ * @function getPlayerNameByID
+ * @param
+ * @returns
+ */
+bonkAPI.getPlayerNameByID = function (id) {
+    return this.playerList[id].userName;
 };
 
 /**
