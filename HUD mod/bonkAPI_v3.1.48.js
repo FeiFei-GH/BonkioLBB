@@ -18,10 +18,26 @@
 window.bonkAPI = {};
 
 // Functions handle add Listeners from other programs and also fires event to them
+/** 
+ * @class EventHandler
+ * @classdesc Stores functions and events and can fire events with data.
+ * This class is already instantiated onto bonkAPI so if you dont need your
+ * own event handler, ignore this class.
+ * @hideconstructor
+*/
 bonkAPI.EventHandler;
 (bonkAPI.EventHandler = function () {
     this.hasEvent = [];
 }).prototype = {
+    /**
+     * Begins to listen for the given event to call the method later.
+     * @method
+     * @memberof EventHandler
+     * @param {string} event - Event that is listened for
+     * @param {function(object)} method - Function that is called
+     * @param {*} [scope] - Where the function should be called from, defaults to window
+     * @param {*} [context] - defaults to nothing
+     */
     addEventListener: function (event, method, scope, context) {
         var listeners, handlers;
         if (!(listeners = this.listeners)) {
@@ -40,6 +56,15 @@ bonkAPI.EventHandler;
             context: context ? context : scope,
         });
     },
+    /**
+     * Fires the event given to call the methods linked to that event.
+     * @method
+     * @memberof EventHandler
+     * @param {*} event - Event that is being fired
+     * @param {*} data - Data sent along with the event
+     * @param {*} [context] 
+     * @returns 
+     */
     fireEvent: function (event, data, context) {
         var listeners, handlers, handler, l, scope;
         if (!(listeners = this.listeners)) {
@@ -61,7 +86,19 @@ bonkAPI.EventHandler;
 Object.freeze(bonkAPI.EventHandler);
 
 // !Initialize Variable
+/**
+ * Contains data of a single player
 
+ * @typedef {object} Player
+ * @property {string} peerID - Peer ID of player
+ * @property {string} userName - Username of player
+ * @property {number} level - Level of player
+ * @property {boolean} guest - Is guest
+ * @property {number} team - Integer of what team from 0 to 5
+ * @property {boolean} ready - Is ready
+ * @property {boolean} tabbed - Is tabbed
+ * @property {JSON} avatar - Avatar data
+ */
 bonkAPI.bonkWSS = 0;
 bonkAPI.originalSend = window.WebSocket.prototype.send;
 bonkAPI.originalRequestAnimationFrame = window.requestAnimationFrame;
@@ -257,6 +294,11 @@ window.WebSocket.prototype.send = function (args) {
 // #region
 // !Note: these could be dangerous, maybe add some sanitization
 // *Send a packet to server
+/**
+ * Sends the given packet to bonk servers.
+ * @function bonkAPI.sendPacket
+ * @param {string} packet - Packet to send to bonk
+ */
 bonkAPI.sendPacket = function (packet) {
     if (bonkAPI.bonkWSS != 0) {
         bonkAPI.bonkWSS.send(packet);
@@ -264,6 +306,11 @@ bonkAPI.sendPacket = function (packet) {
 };
 
 // *Make client receive a packet
+/**
+ * Makes your client receive the given packet.
+ * @function bonkAPI.receivePacket
+ * @param {string} packet - Packet that is received
+ */
 bonkAPI.receivePacket = function (packet) {
     if (bonkAPI.bonkWSS != 0) {
         bonkAPI.bonkWSS.onmessage({ data: packet });
@@ -273,6 +320,13 @@ bonkAPI.receivePacket = function (packet) {
 
 // !Receive Handler Functions
 // #region -----------------Receive Handler Functions-----------------------
+/**
+ * Triggered when the user joins a lobby.
+ * @function receive_RoomJoin
+ * @fires onJoin
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.receive_RoomJoin = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
     bonkAPI.playerList = [];
@@ -284,7 +338,15 @@ bonkAPI.receive_RoomJoin = function (args) {
         bonkAPI.playerList[i] = jsonargs[3][i];
         //}
     }
-
+    /** 
+     * When the user joins a lobby.
+     * @event onJoin
+     * @type {object}
+     * @property {number} hostID - ID of the host
+     * @property {Array.<Player>} userData - List of players currently in the room
+     * @property {*} roomID - ID of the lobby joined
+     * @property {string} bypass
+    */
     // !this name isnt descriptive
     if (bonkAPI.events.hasEvent["onJoin"]) {
         var sendObj = {
@@ -299,6 +361,13 @@ bonkAPI.receive_RoomJoin = function (args) {
     return args;
 };
 
+/**
+ * Triggered when a player joins the lobby.
+ * @function receive_PlayerJoin
+ * @fires userJoin
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.receive_PlayerJoin = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
     bonkAPI.playerList[jsonargs[1]] = {
@@ -316,6 +385,13 @@ bonkAPI.receive_PlayerJoin = function (args) {
     //? - send the bonkAPI.playerList as data
     //? - send the new player object as data
     //? - send nothing and let the user access bonkAPI.playerList
+    /** 
+     * When another player joins the lobby.
+     * @event userJoin
+     * @type {object}
+     * @property {number} userID - ID of the player joined
+     * @property {Player} userData - {@linkcode Player} object data of the player that joined
+    */
     if (bonkAPI.events.hasEvent["userJoin"]) {
         var sendObj = { userID: jsonargs[2], userData: bonkAPI.playerList[jsonargs[1]] };
         bonkAPI.events.fireEvent("userJoin", sendObj);
@@ -324,9 +400,23 @@ bonkAPI.receive_PlayerJoin = function (args) {
     return args;
 };
 
+/**
+ * Triggered when a player leaves the lobby.
+ * @function receive_PlayerLeave
+ * @fires userLeave
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.receive_PlayerLeave = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
 
+    /** 
+     * When another player leaves the lobby.
+     * @event userLeave
+     * @type {object}
+     * @property {number} userID - ID of the player left
+     * @property {Player} userData - {@linkcode Player} object data of the player that left
+    */
     if (bonkAPI.events.hasEvent["userLeave"]) {
         var sendObj = { userID: jsonargs[2], userData: bonkAPI.playerList[jsonargs[1]] };
         bonkAPI.events.fireEvent("userLeave", sendObj);
@@ -335,11 +425,24 @@ bonkAPI.receive_PlayerLeave = function (args) {
     return args;
 };
 
+/**
+ * Triggered when the host has changed.
+ * @function receive_HostLeave
+ * @fires hostChange
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.receive_HostLeave = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
 
     bonkAPI.hostID = jsonargs[2];
 
+    /** 
+     * When the host changes.
+     * @event hostChange
+     * @type {object}
+     * @property {number} userID - ID of the new host
+    */
     //Using hostChange to use for multiple cases
     if (bonkAPI.events.hasEvent["hostChange"]) {
         var sendObj = { userID: jsonargs[2] };
@@ -349,6 +452,13 @@ bonkAPI.receive_HostLeave = function (args) {
     return args;
 };
 
+/**
+ * Triggered when a player sends an input.
+ * @function receive_Inputs
+ * @fires receivedInputs
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.receive_Inputs = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
 
@@ -358,6 +468,15 @@ bonkAPI.receive_Inputs = function (args) {
      * different data, the second could have booleans
      * representing the inputs, the other is binary
      */
+    /** 
+     * When inputs are received from other players.
+     * @event receivedInputs
+     * @type {object}
+     * @property {number} userID - ID of the player who inputted
+     * @property {number} rawInput - Input of the player in the form of 6 bits
+     * @property {number} frame - Frame when input happened
+     * @property {number} sequence - The total amount of inputs by that player
+    */
     if (bonkAPI.events.hasEvent["receivedInputs"]) {
         var sendObj = {
             userID: jsonargs[1],
@@ -377,8 +496,21 @@ bonkAPI.receive_Inputs = function (args) {
 };
 
 //! Detects when match starts!!!
+/**
+ * Triggered when the game starts.
+ * @function receive_GameStart
+ * @fires gameStart
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.receive_GameStart = function (args) {
     // *Dont need to send args if it doesnt have usefull information
+    /** 
+     * When game has started
+     * @event gameStart
+     * @type {object}
+     * @property {string} extraData - Packet sent with the start of the game, contains data
+     */
     if (bonkAPI.events.hasEvent["gameStart"]) {
         var sendObj = { extraData: args };
         bonkAPI.events.fireEvent("gameStart", sendObj);
@@ -387,10 +519,24 @@ bonkAPI.receive_GameStart = function (args) {
     return args;
 };
 
+/**
+ * Triggered when a player changes team.
+ * @function receive_TeamChange
+ * @fires teamChange
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.receive_TeamChange = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
     bonkAPI.playerList[jsonargs[1]].team = jsonargs[2];
 
+    /** 
+     * When a player has changed teams.
+     * @event teamChange
+     * @type {object}
+     * @property {number} userID - Player who changed teams
+     * @property {number} team - The new team, represented from 0 to 5
+     */
     if (bonkAPI.events.hasEvent["teamChange"]) {
         var sendObj = { userID: jsonargs[1], team: jsonargs[2] };
         bonkAPI.events.fireEvent("teamChange", sendObj);
@@ -399,11 +545,25 @@ bonkAPI.receive_TeamChange = function (args) {
     return args;
 };
 
+/**
+ * Triggered when received a message.
+ * @function receive_ChatMessage
+ * @fires chatIn
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.receive_ChatMessage = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
     let chatUserID = jsonargs[1];
     let chatMessage = jsonargs[2];
 
+    /** 
+     * When the user has received a message.
+     * @event chatIn
+     * @type {object}
+     * @property {number} userID - Player who chatted
+     * @property {string} message - The message received
+     */
     if (bonkAPI.events.hasEvent["chatIn"]) {
         var sendObj = { userID: chatUserID, message: chatMessage };
         bonkAPI.events.fireEvent("chatIn", sendObj);
@@ -412,10 +572,23 @@ bonkAPI.receive_ChatMessage = function (args) {
     return args;
 };
 
+/**
+ * Triggered when the mode changes.
+ * @function receive_ModeChange
+ * @fires modeChange
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.receive_ModeChange = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
 
     // *Maybe change raw arguement to full mode name or numbers
+    /** 
+     * When the mode has changed.
+     * @event modeChange
+     * @type {object}
+     * @property {string} mode - Short string representing the new mode
+     */
     if (bonkAPI.events.hasEvent["modeChange"]) {
         var sendObj = { mode: jsonargs[1] };
         bonkAPI.events.fireEvent("modeChange", sendObj);
@@ -424,10 +597,23 @@ bonkAPI.receive_ModeChange = function (args) {
     return args;
 };
 
+/**
+ * Triggered when map has changed.
+ * @function receive_MapSwitch
+ * @fires mapChange
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.receive_MapSwitch = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
 
     // *Using mapChange to stick with other bonkAPI.events using "change"
+    /** 
+     * When the map has changed.
+     * @event mapChange
+     * @type {object}
+     * @property {string} mapData - String with the data of the map
+     */
     if (bonkAPI.events.hasEvent["mapChange"]) {
         var sendObj = { mapData: jsonargs[1] };
         bonkAPI.events.fireEvent("mapChange", sendObj);
@@ -436,6 +622,13 @@ bonkAPI.receive_MapSwitch = function (args) {
     return args;
 };
 
+//! NO EVENT HERE YET
+/**
+ * Triggered when there is a new host.
+ * @function receive_NewHost
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.receive_NewHost = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
     bonkAPI.hostID = jsonargs[1]["newHost"];
@@ -448,11 +641,24 @@ bonkAPI.receive_NewHost = function (args) {
     return args;
 };
 
+/**
+ * Triggered when the user receives a friend request.
+ * @function receive_FriendReq
+ * @fires receivedFriend
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.receive_FriendReq = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
     //LB_HUD.sendPacket(`42[35,{"id":${jsonargs[1]}}]`);
     //LB_HUD.chat("Friended :3");
 
+    /** 
+     * When the the user has been friended.
+     * @event receivedFriend
+     * @type {object}
+     * @property {number} userID - ID of the player who friended you
+     */
     if (bonkAPI.events.hasEvent["receivedFriend"]) {
         var sendObj = { userID: jsonargs[1] };
         bonkAPI.events.fireEvent("receivedFriend", sendObj);
@@ -462,6 +668,12 @@ bonkAPI.receive_FriendReq = function (args) {
 };
 
 // &Send Handler Functions
+/**
+ * Called when started the game.
+ * @function send_TriggerStart
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.send_TriggerStart = function (args) {
     var jsonargs = JSON.parse(args.substring(2));
 
@@ -469,6 +681,12 @@ bonkAPI.send_TriggerStart = function (args) {
     return args;
 };
 
+/**
+ * Called when created a room.
+ * @function send_CreateRoom
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.send_CreateRoom = function (args) {
     bonkAPI.playerList = [];
     var jsonargs2 = JSON.parse(args.substring(2));
@@ -494,11 +712,23 @@ bonkAPI.send_CreateRoom = function (args) {
     return args;
 };
 
+/**
+ * Called when sending inputs out.
+ * @function send_SendInputs
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.send_SendInputs = function (args) {
     //LB_HUD.playerList[myID].lastMoveTime = Date.now();
     return args;
 };
 
+/**
+ * Called when user changes map
+ * @function send_MapAdd
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.send_MapAdd = function (args) {
     //console.log("Map Changed");
     var jsonargs = JSON.parse(args.substring(2));
@@ -511,33 +741,51 @@ bonkAPI.send_MapAdd = function (args) {
 // #region
 /**
  * Sends message in chat.
+ * @function chat
  * @param {string} message - The message.
  */
 bonkAPI.chat = function (message) {
     bonkAPI.sendPacket('42[10,{"message":' + JSON.stringify(message) + "}]");
 };
 
-
+/**
+ * Adds a listener to {@linkcode EventHandler} to call the method.
+ * @function addEventListener
+ * @param {string} event - The event that is listened for
+ * @param {function(object)} method - Method that is called when event is fired
+ * @param {*} [scope] - Defaults to window
+ * @param {*} [context] - Defaults to nothing
+ */
 bonkAPI.addEventListener = function (event, method, scope, context) {
     bonkAPI.events.addEventListener(event, method, scope, context);
 };
 
-
 /**
- * Represents a book.
- * @returns {number} Sum of a and b
+ * Returns the entire list of {@linkcode Player} objects in the lobby at time this
+ * function was called.
+ * @function getPlayerList
+ * @returns {Array.<Player>} Array of {@linkcode Player} objects
  */
 // *Returns a copy of bonkAPI.playerList
 bonkAPI.getPlayerList = function () {
     return Object.assign([], bonkAPI.playerList);
 };
 
-
+/**
+ * Returns the amount of players that have been in the lobby.
+ * @function getPlayerListLength
+ * @returns {number} Length of the player list
+ */
 bonkAPI.getPlayerListLength = function () {
     return bonkAPI.playerList.length;
 };
 
-
+/**
+ * Returns the {@linkcode Player} object of the ID given.
+ * @function getPlayerByID
+ * @param {number} id - ID of the player that is being looked for
+ * @returns {Player} Player object
+ */
 bonkAPI.getPlayerByID = function (id) {
     for (let i = 0; i < bonkAPI.playerList.length; i++) {
         if (i == id) {
@@ -546,6 +794,22 @@ bonkAPI.getPlayerByID = function (id) {
     }
 };
 
+/**
+ * Returns the name of the player of the ID given.
+ * @function getPlayerNameByID
+ * @param id - ID of the player to get the name of
+ * @returns {string} Name of player
+ */
+bonkAPI.getPlayerNameByID = function (id) {
+    return bonkAPI.playerList[id].userName;
+};
+
+/**
+ * Returns the {@linkcode Player} object of the name given.
+ * @function getPlayerByName
+ * @param {string} name - Name of the player that is being looked for
+ * @returns {Player} Player object
+ */
 bonkAPI.getPlayerByName = function (name) {
     for (let i = 0; i < bonkAPI.playerList.length; i++) {
         if (name == bonkAPI.playerList[i].userName) {
@@ -555,7 +819,13 @@ bonkAPI.getPlayerByName = function (name) {
     return null;
 };
 
-// *Returns list of players in a team(using team numbers, not strings)
+/**
+ * Returns a list of {@linkcode Player} objects that are in the specified
+ * team.
+ * @function getPlayersByTeam
+ * @param {number} team - Team of the player, from 0 to 5
+ * @returns {Array.<Player>} List of {@linkcode Player} objects
+ */
 bonkAPI.getPlayersByTeam = function (team) {
     var teamList = [];
     for (let i = 0; i < bonkAPI.playerList.length; i++) {
@@ -566,10 +836,20 @@ bonkAPI.getPlayersByTeam = function (team) {
     return teamList;
 };
 
+/**
+ * Returns your own player ID.
+ * @function getMyID
+ * @returns {number} ID of the user
+ */
 bonkAPI.getMyID = function () {
     return bonkAPI.myID;
 };
 
+/**
+ * Returns the player ID of the host.
+ * @function getHostID
+ * @returns {number} ID of the host
+ */
 bonkAPI.getHostID = function () {
     return bonkAPI.hostID;
 };
