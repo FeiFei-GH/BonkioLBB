@@ -25,6 +25,8 @@ LBB_Main.msgs = {
     goMsg: "Go!",
 };
 
+LBB_Main.processedFinishEvents = [];
+
 
 // *Helper functions
 LBB_Main.frameToMS = (frame) => {
@@ -36,7 +38,7 @@ LBB_Main.frameToMS = (frame) => {
 LBB_Main.msToTimeStr = (ms) => {
     var minutes = Math.floor(ms / 60000);
     var seconds = Math.floor((ms % 60000) / 1000);
-    var milliSeconds = ms % 1000;
+    var milliSeconds = Math.round(ms % 1000 / 10);
     
     // Add leading zero to minute component if it is less than 10
     if (minutes < 10) {
@@ -44,8 +46,6 @@ LBB_Main.msToTimeStr = (ms) => {
     }
     
     if (milliSeconds < 10) {
-        milliSeconds = "00" + milliSeconds;
-    } else if (milliSeconds < 100) {
         milliSeconds = "0" + milliSeconds;
     }
     
@@ -60,15 +60,15 @@ LBB_Main.sendFinishedMsg = (playerName, timeStr) => {
 
 
 // *Use bonkAPI as listener
-bonkAPI.addEventListener("userJoin", function(e) {
-    let playerName = bonkAPI.getPlayerNameByID(e.userID);
+bonkAPI.addEventListener("userJoin", (e) => {
+    let playerName = e.userData.userName;
     
     if (true) {
         bonkAPI.chat(LBB_Main.msgs.welcomeMsg.replaceAll("username", playerName));
     }
 });
 
-bonkAPI.addEventListener("gameStart", function(e) {
+bonkAPI.addEventListener("gameStart", (e) => {
     if (true) {
         bonkAPI.chat(LBB_Main.msgs.goMsg);
     }
@@ -76,9 +76,21 @@ bonkAPI.addEventListener("gameStart", function(e) {
 
 
 // *Use LBBAPI as listener
-LBB_Main.capZoneEvent = (playerID, finalFrame) => {
-    let playerName = bonkAPI.getPlayerNameByID(playerID);
-    let timeStr = LBB_main.msToTimeStr(LBB_main.frameToMS(finalFrame));
-    
-    LBB_Main.sendFinishedMsg(playerName, timeStr);
+LBB_Main.gameStartListener = (playerData) => {
+    playerData.forEach((player, playerID) => {
+        LBB_Main.processedFinishEvents[playerID] = {};
+        LBB_Main.processedFinishEvents[playerID].previousProcessFrame = -1;
+    });
+};
+
+LBB_Main.playerFinishListener = (playerID, finalFrame, processFrame) => {
+    if (LBB_Main.processedFinishEvents[playerID].previousProcessFrame != processFrame) {
+        LBB_Main.processedFinishEvents[playerID].previousProcessFrame = processFrame;
+        console.log("playerID: " + playerID + " finalFrame: " + finalFrame);
+        
+        let playerName = bonkAPI.getPlayerNameByID(playerID);
+        let timeStr = LBB_Main.msToTimeStr(LBB_Main.frameToMS(finalFrame));
+        
+        LBB_Main.sendFinishedMsg(playerName, timeStr);
+    }
 };

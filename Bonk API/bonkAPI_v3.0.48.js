@@ -1,3 +1,16 @@
+// ==UserScript==
+// @name         bonkAPI
+// @namespace    http://tampermonkey.net/
+// @version      3.1.48
+// @description  bonkAPI
+// @author       FeiFei + Clarifi
+// @license      MIT
+// @match        https://bonk.io/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=bonk.io
+// @run-at       document-start
+// @grant        none
+// ==/UserScript==
+
 // ! Compitable with Bonk Version 48
 
 // Everything should be inside this object
