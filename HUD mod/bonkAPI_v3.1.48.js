@@ -393,7 +393,7 @@ bonkAPI.receive_PlayerJoin = function (args) {
      * @property {Player} userData - {@linkcode Player} object data of the player that joined
     */
     if (bonkAPI.events.hasEvent["userJoin"]) {
-        var sendObj = { userID: jsonargs[2], userData: bonkAPI.playerList[jsonargs[1]] };
+        var sendObj = { userID: jsonargs[1], userData: bonkAPI.playerList[jsonargs[1]] };
         bonkAPI.events.fireEvent("userJoin", sendObj);
     }
 
@@ -418,7 +418,7 @@ bonkAPI.receive_PlayerLeave = function (args) {
      * @property {Player} userData - {@linkcode Player} object data of the player that left
     */
     if (bonkAPI.events.hasEvent["userLeave"]) {
-        var sendObj = { userID: jsonargs[2], userData: bonkAPI.playerList[jsonargs[1]] };
+        var sendObj = { userID: jsonargs[1], userData: bonkAPI.playerList[jsonargs[1]] };
         bonkAPI.events.fireEvent("userLeave", sendObj);
     }
 
@@ -445,7 +445,7 @@ bonkAPI.receive_HostLeave = function (args) {
     */
     //Using hostChange to use for multiple cases
     if (bonkAPI.events.hasEvent["hostChange"]) {
-        var sendObj = { userID: jsonargs[2] };
+        var sendObj = { userID: jsonargs[1] };
         bonkAPI.events.fireEvent("hostChange", sendObj);
     }
 
@@ -528,7 +528,7 @@ bonkAPI.receive_GameStart = function (args) {
  */
 bonkAPI.receive_TeamChange = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
-    bonkAPI.playerList[jsonargs[1]].team = jsonargs[2];
+    bonkAPI.playerList[parseInt(jsonargs[1])].team = jsonargs[2];
 
     /** 
      * When a player has changed teams.
