@@ -126,9 +126,10 @@ let initializeBonkAPI = function(f) {
 initializeBonkAPI(function() {
 bonkAPI.bonkWSS = 0;
 bonkAPI.originalSend = window.WebSocket.prototype.send;
-bonkAPI.gameFrame = document.getElementById("maingameframe");
-bonkAPI.originalRequestAnimationFrame = document.getElementById("maingameframe").contentWindow.requestAnimationFrame;
-bonkAPI.originalDrawCircle = document.getElementById("maingameframe").contentWindow.PIXI.Graphics.prototype.drawCircle;
+//bonkAPI.gameFrame = document.getElementById("maingameframe");
+//bonkAPI.originalRequestAnimationFrame = document.getElementById("maingameframe").contentWindow.requestAnimationFrame;
+//bonkAPI.originalDrawCircle = document.getElementById("maingameframe").contentWindow.PIXI.Graphics.prototype.drawCircle;
+//bonkAPI.parentDraw = 0;
 
 // bonkAPI Vars
 bonkAPI.playerList = [];
@@ -321,7 +322,14 @@ window.WebSocket.prototype.send = function (args) {
 
 // !---------------------Overriding PIXI--------------------------------
 // #region
-/*bonkAPI.gameFrame.contentWindow.PIXI.Graphics.prototype.drawCircle = function (...args) {
+/*document.getElementById("maingameframe").contentWindow.PIXI.Graphics.prototype.drawCircle = function (...args) {
+    setTimeout(function() {
+        bonkAPI.parentDraw = this.parent;
+        while(bonkAPI.parentDraw.parent) {
+            bonkAPI.parentDraw = bonkAPI.parentDraw.parent;
+        }
+    }, 0);
+    
     return bonkAPI.originalDrawCircle.call(this, ...args);
 }*/
 // #endregion
@@ -329,7 +337,7 @@ window.WebSocket.prototype.send = function (args) {
 // !--------------------Overriding RequestAnimationFrame-----------------
 // #region
 /*document.getElementById("maingameframe").contentWindow.requestAnimationFrame = function (...args) {
-    if(bonkAPI.gameFrame.style["visibility"] != "hidden") {
+    if(bonkAPI.parentDraw && bonkAPI.gameFrame.contentDocument.getElementById("gamerenderer").style["visibility"] != "hidden") {
         bonkAPI.handleGameAnimationFrame(...args);
     }
 
@@ -529,21 +537,21 @@ bonkAPI.receive_Inputs = function (args) {
      */
     /** 
      * When inputs are received from other players.
-     * @event receivedInputs
+     * @event gameInputs
      * @type {object}
      * @property {number} userID - ID of the player who inputted
      * @property {number} rawInput - Input of the player in the form of 6 bits
      * @property {number} frame - Frame when input happened
      * @property {number} sequence - The total amount of inputs by that player
     */
-    if (bonkAPI.events.hasEvent["receivedInputs"]) {
+    if (bonkAPI.events.hasEvent["gameInputs"]) {
         var sendObj = {
             userID: jsonargs[1],
             rawInput: jsonargs[2]["i"],
             frame: jsonargs[2]["f"],
             sequence: jsonargs[2]["c"],
         };
-        bonkAPI.events.fireEvent("receivedInputs", sendObj);
+        bonkAPI.events.fireEvent("gameInputs", sendObj);
     } //example
     /*if(bonkAPI.bonkAPI.events.hasEvent["receiveRawInput"]) {
         obj here
@@ -782,19 +790,21 @@ bonkAPI.send_SendInputs = function (args) {
 
     /** 
      * When inputs are received from other players.
-     * @event sendInputs
+     * @event gameInputs
      * @type {object}
+     * @property {number} userID - ID of the player who inputted
      * @property {number} rawInput - Input of the player in the form of 6 bits
      * @property {number} frame - Frame when input happened
      * @property {number} sequence - The total amount of inputs by that player
     */
-    if (bonkAPI.events.hasEvent["sendInputs"]) {
+    if (bonkAPI.events.hasEvent["gameInputs"]) {
         var sendObj = {
+            userID: bonkAPI.myID,
             rawInput: jsonargs[1]["i"],
             frame: jsonargs[1]["f"],
             sequence: jsonargs[1]["c"],
         };
-        bonkAPI.events.fireEvent("sendInputs", sendObj);
+        bonkAPI.events.fireEvent("gameInputs", sendObj);
     }
     return args;
 };
@@ -806,9 +816,19 @@ bonkAPI.send_SendInputs = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.send_MapAdd = function (args) {
-    //console.log("Map Changed");
-    var jsonargs = JSON.parse(args.substring(2));
+    var jsonargs = JSON.parse(args.data.substring(2));
 
+    // *Using mapChange to stick with other bonkAPI.events using "change"
+    /** 
+     * When the map has changed.
+     * @event mapChange
+     * @type {object}
+     * @property {string} mapData - String with the data of the map
+     */
+    if (bonkAPI.events.hasEvent["mapChange"]) {
+        var sendObj = { mapData: jsonargs[1]["m"] };
+        bonkAPI.events.fireEvent("mapChange", sendObj);
+    }
     return args;
 };
 // #endregion
