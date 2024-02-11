@@ -27,6 +27,7 @@ LBB_Main.msgs = {
 
 LBB_Main.processedFinishEvents = [];
 
+// !-------------------------------------------------------------------------------------
 
 // *Helper functions
 LBB_Main.frameToMS = (frame) => {
@@ -53,11 +54,13 @@ LBB_Main.msToTimeStr = (ms) => {
 }
 
 
+
 // *Main Functions
 LBB_Main.sendFinishedMsg = (playerName, timeStr) => {
     bonkAPI.chat(LBB_Main.msgs.finishMsg.replaceAll("username", playerName).replaceAll("time", timeStr));
 }
 
+// !-------------------------------------------------------------------------------------
 
 // *Use bonkAPI as listener
 bonkAPI.addEventListener("userJoin", (e) => {
@@ -74,8 +77,15 @@ bonkAPI.addEventListener("gameStart", (e) => {
     }
 });
 
+bonkAPI.addEventListener("globalMapSwitch", (e) => {
+    let decodedMap = bonkAPI.decodeMap(e.mapData);
+    
+    console.log(decodedMap);
+});
 
-// *Use LBBAPI as listener
+// !-------------------------------------------------------------------------------------
+
+// *Use LBB_Injector as listener
 LBB_Main.gameStartListener = (playerData) => {
     playerData.forEach((player, playerID) => {
         LBB_Main.processedFinishEvents[playerID] = {};
@@ -84,6 +94,7 @@ LBB_Main.gameStartListener = (playerData) => {
 };
 
 LBB_Main.playerFinishListener = (playerID, finalFrame, processFrame) => {
+    // Check if the spawn frame ID already printed to prevent output again
     if (LBB_Main.processedFinishEvents[playerID].previousProcessFrame != processFrame) {
         LBB_Main.processedFinishEvents[playerID].previousProcessFrame = processFrame;
         console.log("playerID: " + playerID + " finalFrame: " + finalFrame);
