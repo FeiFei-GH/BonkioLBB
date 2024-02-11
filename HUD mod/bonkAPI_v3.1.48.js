@@ -778,7 +778,24 @@ bonkAPI.send_CreateRoom = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.send_SendInputs = function (args) {
-    //LB_HUD.playerList[myID].lastMoveTime = Date.now();
+    var jsonargs = JSON.parse(args.data.substring(2));
+
+    /** 
+     * When inputs are received from other players.
+     * @event sendInputs
+     * @type {object}
+     * @property {number} rawInput - Input of the player in the form of 6 bits
+     * @property {number} frame - Frame when input happened
+     * @property {number} sequence - The total amount of inputs by that player
+    */
+    if (bonkAPI.events.hasEvent["sendInputs"]) {
+        var sendObj = {
+            rawInput: jsonargs[1]["i"],
+            frame: jsonargs[1]["f"],
+            sequence: jsonargs[1]["c"],
+        };
+        bonkAPI.events.fireEvent("sendInputs", sendObj);
+    }
     return args;
 };
 
