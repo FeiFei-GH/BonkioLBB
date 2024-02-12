@@ -12,7 +12,6 @@
 // ==/UserScript==
 
 // ! Compitable with Bonk Version 48
-"use strict";
 
 // Everything should be inside this object
 // to prevent conflict with other prgrams.
@@ -82,22 +81,6 @@ bonkAPI.EventHandler;
             }
             handler.method.call(handler.scope, data);
         }
-    },
-    /**
-     * Fires the given event to the desired scope. This is meant to fire events not to do
-     * with bonkAPI's events(ie keyup, keydown).
-     * @param {string} event - Event that is being fired
-     * @param {object} options - Options that go along with the event
-     * @param {*} scope - Scope of where the event is being listened, defaults to #maingameframe
-     */
-    fireWindowEvent(event, options, scope) {
-        scope = scope ? scope : document.getElementById("maingameframe").contentDocument;
-        var toSend = document.createEvent("HTMLEvents");
-        toSend.initEvent(event, true, false);
-        for(let p in options) {
-            toSend[p] = options[p];
-        }
-        scope.dispatchEvent(toSend);
     }
 };
 Object.freeze(bonkAPI.EventHandler);
@@ -117,13 +100,6 @@ Object.freeze(bonkAPI.EventHandler);
  * @property {JSON} avatar - Avatar data
  */
 
-let initializeBonkAPI = function(f) {
-    if(window.location == window.parent.location){
-        if(document.readyState == "complete"){f();}
-        else{document.addEventListener('readystatechange',function(){setTimeout(f,1500);});}
-    }
-}
-initializeBonkAPI(function() {
 bonkAPI.bonkWSS = 0;
 bonkAPI.originalSend = window.WebSocket.prototype.send;
 //bonkAPI.gameFrame = document.getElementById("maingameframe");
@@ -135,8 +111,6 @@ bonkAPI.originalSend = window.WebSocket.prototype.send;
 bonkAPI.playerList = [];
 bonkAPI.myID = -1;
 bonkAPI.hostID = -1;
-bonkAPI.queuePress = [];
-bonkAPI.injectedAnimation = false;
 
 bonkAPI.events = new bonkAPI.EventHandler();
 
@@ -373,18 +347,6 @@ bonkAPI.receivePacket = function (packet) {
 };
 // #endregion
 
-// !----------------------------Handling PIXI-----------------------------
-// #region
-bonkAPI.handleGameAnimationFrame = function (...args) {
-    if(bonkAPI.queuePress.length != 0) {
-        for(let i = 0; i < bonkAPI.queuePress.length; i++) {
-            bonkAPI.fireKey(bonkAPI.queuePress[i], t = true);
-        }
-        bonkAPI.queuePress = [];
-    }
-};
-//#endregion
-
 // !---------------------Receive Handler Functions-----------------------
 // #region 
 /**
@@ -522,7 +484,7 @@ bonkAPI.receive_HostLeave = function (args) {
 /**
  * Triggered when a player sends an input.
  * @function receive_Inputs
- * @fires receivedInputs
+ * @fires gameInputs
  * @param {string} args - Packet received by websocket.
  * @returns {string} arguements
  */
@@ -810,13 +772,14 @@ bonkAPI.send_SendInputs = function (args) {
 };
 
 /**
- * Called when user changes map
+ * Called when user changes map.
  * @function send_MapAdd
  * @param {string} args - Packet received by websocket.
  * @returns {string} arguements
  */
 bonkAPI.send_MapAdd = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
+    console.log("uno");
 
     // *Using mapChange to stick with other bonkAPI.events using "change"
     /** 
@@ -826,6 +789,7 @@ bonkAPI.send_MapAdd = function (args) {
      * @property {string} mapData - String with the data of the map
      */
     if (bonkAPI.events.hasEvent["mapChange"]) {
+        console.log("dos");
         var sendObj = { mapData: jsonargs[1]["m"] };
         bonkAPI.events.fireEvent("mapChange", sendObj);
     }
@@ -845,21 +809,6 @@ bonkAPI.chat = function (message) {
 };
 
 /**
- * Fires an event to press and release a key.
- * @function fireKey
- * @param {number} key - Key code to press
- */
-bonkAPI.fireKey = function (key, t = false) {
-    if(t) {
-        bonkAPI.events.fireWindowEvent("keydown", {keyCode: key});
-        bonkAPI.events.fireWindowEvent("keyup", {keyCode: key});
-    }
-    else {
-        bonkAPI.queuePress.push(key);
-    }
-};
-
-/**
  * Defaults to banning the player with the given ID.
  * @function banPlayerByID
  * @param {number} id - ID of the player to be kicked/banned
@@ -867,7 +816,7 @@ bonkAPI.fireKey = function (key, t = false) {
  */
 bonkAPI.banPlayerByID = function (id, kick = false) {
     bonkAPI.sendPacket('42[9,{"banshortid":' + id + ',"kickonly":' + kick + '}]');
-}
+};
 
 /**
  * Adds a listener to {@linkcode EventHandler} to call the method.
@@ -925,7 +874,7 @@ bonkAPI.getPlayer = function (ref) {
     else {
         return null;
     }
-}
+};
 
 /**
  * Returns the {@linkcode Player} object of the ID given.
@@ -965,7 +914,7 @@ bonkAPI.getPlayerIDByName = function (name) {
             return i;
         }
     }
-}
+};
 
 /**
  * Returns the {@linkcode Player} object of the name given.
@@ -1017,7 +966,7 @@ bonkAPI.getHostID = function () {
     return bonkAPI.hostID;
 };
 // #endregion
-});
+
 // Freeze all constant objects
 /*Object.freeze(bonkAPI.addEventListener);
 Object.freeze(bonkAPI.chat);
