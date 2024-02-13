@@ -27,9 +27,8 @@ LBB_Main.msgs = {
 
 LBB_Main.processedFinishEvents = [];
 
-// !-------------------------------------------------------------------------------------
+// !---------------------------------Helper functions---------------------------------
 
-// *Helper functions
 LBB_Main.frameToMS = (frame) => {
     const frameRate = 30; // TPS
     const milliseconds = (frame / frameRate) * 1000;
@@ -53,16 +52,14 @@ LBB_Main.msToTimeStr = (ms) => {
     return "" + minutes + ":" + (seconds < 10 ? "0" : "") + seconds + "." + milliSeconds;
 }
 
+// !---------------------------------Main Functions---------------------------------
 
-
-// *Main Functions
 LBB_Main.sendFinishedMsg = (playerName, timeStr) => {
     bonkAPI.chat(LBB_Main.msgs.finishMsg.replaceAll("username", playerName).replaceAll("time", timeStr));
 }
 
-// !-------------------------------------------------------------------------------------
+// !---------------------------------Use bonkAPI as listener---------------------------------
 
-// *Use bonkAPI as listener
 bonkAPI.addEventListener("userJoin", (e) => {
     let playerName = e.userData.userName;
     
@@ -77,15 +74,15 @@ bonkAPI.addEventListener("gameStart", (e) => {
     }
 });
 
-bonkAPI.addEventListener("globalMapSwitch", (e) => {
-    let decodedMap = bonkAPI.decodeMap(e.mapData);
+bonkAPI.addEventListener("mapSwitch", (e) => {
+    //console.log("Map switched");
+    let decodedMap = LBB_Tool.decodeMap(e.mapData);
     
     console.log(decodedMap);
 });
 
-// !-------------------------------------------------------------------------------------
+// !---------------------------------Use LBB_Injector as listener---------------------------------
 
-// *Use LBB_Injector as listener
 LBB_Main.gameStartListener = (playerData) => {
     playerData.forEach((player, playerID) => {
         LBB_Main.processedFinishEvents[playerID] = {};

@@ -5,8 +5,9 @@
 // @description  Leader Board Bot
 // @author       FeiFei + LEGEND
 // @license MIT
+// @match        https://bonk.io/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=bonk.io
-// @run-at       document-end
+// @run-at       document-start
 // @grant        none
 // ==/UserScript==
 
