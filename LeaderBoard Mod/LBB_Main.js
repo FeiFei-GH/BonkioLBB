@@ -5,7 +5,7 @@
 // @description  Main
 // @author       FeiFei
 // @license      MIT
-// @match        https://bonk.io/gameframe-release.html
+// @match        https://*.bonk.io/gameframe-release.html
 // @run-at       document-end
 // @grant        none
 // ==/UserScript==
@@ -33,36 +33,36 @@ LBB_Main.frameToMS = (frame) => {
     const frameRate = 30; // TPS
     const milliseconds = (frame / frameRate) * 1000;
     return Math.round(milliseconds); // Round to nearest integer
-}
+};
 
 LBB_Main.msToTimeStr = (ms) => {
     var minutes = Math.floor(ms / 60000);
     var seconds = Math.floor((ms % 60000) / 1000);
-    var milliSeconds = Math.round(ms % 1000 / 10);
-    
+    var milliSeconds = Math.round((ms % 1000) / 10);
+
     // Add leading zero to minute component if it is less than 10
     if (minutes < 10) {
         minutes = "0" + minutes;
     }
-    
+
     if (milliSeconds < 10) {
         milliSeconds = "0" + milliSeconds;
     }
-    
+
     return "" + minutes + ":" + (seconds < 10 ? "0" : "") + seconds + "." + milliSeconds;
-}
+};
 
 // !---------------------------------Main Functions---------------------------------
 
 LBB_Main.sendFinishedMsg = (playerName, timeStr) => {
     bonkAPI.chat(LBB_Main.msgs.finishMsg.replaceAll("username", playerName).replaceAll("time", timeStr));
-}
+};
 
 // !---------------------------------Use bonkAPI as listener---------------------------------
 
 bonkAPI.addEventListener("userJoin", (e) => {
     let playerName = e.userData.userName;
-    
+
     if (true) {
         bonkAPI.chat(LBB_Main.msgs.welcomeMsg.replaceAll("username", playerName));
     }
@@ -75,10 +75,9 @@ bonkAPI.addEventListener("gameStart", (e) => {
 });
 
 bonkAPI.addEventListener("mapSwitch", (e) => {
-    //console.log("Map switched");
-    let decodedMap = LBB_Tool.decodeMap(e.mapData);
+    console.log("Map switched: ");
     
-    console.log(decodedMap);
+    console.log(bonkAPI.decodeMap(e.mapData));
 });
 
 // !---------------------------------Use LBB_Injector as listener---------------------------------
@@ -95,10 +94,10 @@ LBB_Main.playerFinishListener = (playerID, finalFrame, processFrame) => {
     if (LBB_Main.processedFinishEvents[playerID].previousProcessFrame != processFrame) {
         LBB_Main.processedFinishEvents[playerID].previousProcessFrame = processFrame;
         console.log("playerID: " + playerID + " finalFrame: " + finalFrame);
-        
+
         let playerName = bonkAPI.getPlayerNameByID(playerID);
         let timeStr = LBB_Main.msToTimeStr(LBB_Main.frameToMS(finalFrame));
-        
+
         LBB_Main.sendFinishedMsg(playerName, timeStr);
     }
 };
