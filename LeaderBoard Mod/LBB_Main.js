@@ -9,13 +9,12 @@
 // @run-at       document-end
 // @grant        none
 // ==/UserScript==
-
 // ! Compitable with Bonk Version 48
 
 // *Everything should be inside this object to prevent conflict with other prgrams.
 window.LBB_Main = {};
 
-// *Initialize Vars
+// #region //!------------------Initialize Variables-----------------
 LBB_Main.msgs = {
     welcomeMsg: "Welcome username!",
     welcomeMsg2: "Welcome username! You will be joining shortly",
@@ -26,9 +25,9 @@ LBB_Main.msgs = {
 };
 
 LBB_Main.processedFinishEvents = [];
+// #endregion
 
-// !---------------------------------Helper functions---------------------------------
-
+// #region //!------------------Helper Functions-----------------
 LBB_Main.frameToMS = (frame) => {
     const frameRate = 30; // TPS
     const milliseconds = (frame / frameRate) * 1000;
@@ -52,19 +51,31 @@ LBB_Main.msToTimeStr = (ms) => {
     return "" + minutes + ":" + (seconds < 10 ? "0" : "") + seconds + "." + milliSeconds;
 };
 
-// !---------------------------------Main Functions---------------------------------
+LBB_Main.isPlayerValid = (player) => {
+    if (player.level >= 20) {
+        return true;
+    }
+    
+    return false;
+}
+// #endregion
 
+// #region //!------------------Main Functions-----------------
 LBB_Main.sendFinishedMsg = (playerName, timeStr) => {
     bonkAPI.chat(LBB_Main.msgs.finishMsg.replaceAll("username", playerName).replaceAll("time", timeStr));
 };
+// #endregion
 
-// !---------------------------------Use bonkAPI as listener---------------------------------
-
+// #region //!------------------Use bonkAPI as listener-----------------
 bonkAPI.addEventListener("userJoin", (e) => {
     let playerName = e.userData.userName;
 
     if (true) {
         bonkAPI.chat(LBB_Main.msgs.welcomeMsg.replaceAll("username", playerName));
+    }
+    
+    if (LBB_Main.isPlayerValid(e.userData)) {
+        LBB_LDB.addPlayer(e.userData);
     }
 });
 
@@ -79,9 +90,9 @@ bonkAPI.addEventListener("mapSwitch", (e) => {
     
     console.log(bonkAPI.decodeMap(e.mapData));
 });
+// #endregion
 
-// !---------------------------------Use LBB_Injector as listener---------------------------------
-
+// #region //!------------------Use LBB_Injector as listener-----------------
 LBB_Main.gameStartListener = (playerData) => {
     playerData.forEach((player, playerID) => {
         LBB_Main.processedFinishEvents[playerID] = {};
@@ -101,3 +112,4 @@ LBB_Main.playerFinishListener = (playerID, finalFrame, processFrame) => {
         LBB_Main.sendFinishedMsg(playerName, timeStr);
     }
 };
+// #endregion
