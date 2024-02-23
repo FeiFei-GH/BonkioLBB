@@ -101,10 +101,11 @@ LBB_Main.gameStartListener = (playerData) => {
 };
 
 LBB_Main.playerFinishListener = (playerID, finalFrame, processFrame) => {
+    console.log("player: " + bonkAPI.getPlayerNameByID(playerID) + " finalFrame: " + finalFrame + " processFrame: " + processFrame);
+    
     // Check if the spawn frame ID already printed to prevent output again
     if (LBB_Main.processedFinishEvents[playerID].previousProcessFrame != processFrame) {
         LBB_Main.processedFinishEvents[playerID].previousProcessFrame = processFrame;
-        console.log("playerID: " + playerID + " finalFrame: " + finalFrame);
 
         let playerName = bonkAPI.getPlayerNameByID(playerID);
         let timeStr = LBB_Main.msToTimeStr(LBB_Main.frameToMS(finalFrame));

@@ -10,7 +10,7 @@
 // @grant        none
 // ==/UserScript==
 
-window.LBB_UI = {}; // Namespace for encapsulating the UI functions and variables
+window.bonkHUD = {}; // Namespace for encapsulating the UI functions and variables
 
 // Use 'strict' mode for safer code by managing silent errors
 'use strict';
@@ -20,6 +20,8 @@ const left = "0";
 const top = "0";
 const width = "172px";
 const height = "100px";
+
+bonkHUD.readingPlayer = "";
 
 // Variable to track the most recent key input by the user
 window.latestInput = 0;
@@ -57,13 +59,13 @@ window.setKeyTableOpacity = (opacity) => {
 };
 
 // !Use bonkAPI as listener
-bonkAPI.addEventListener("sendInputs", (e) => {
-    //console.log(e);
-    let jsonObj = JSON.parse(e.match(/\{.*\}/)[0]);
-    window.latestInput = jsonObj.i;
-    window.updateKeyStyles();
+bonkAPI.addEventListener("gameInputs", (e) => {
+    let readingPlayerID = bonkAPI.getPlayerIDByName(bonkHUD.readingPlayer);
     
-    
+    if (e.userID == readingPlayerID) {
+        window.latestInput = e.rawInput;
+        window.updateKeyStyles();
+    }
 });
 
 // Save the current state of the UI settings to local storage
@@ -77,12 +79,12 @@ function saveUISettings() {
         right: dragContainer.style.right,
         display: dragContainer.style.display
     };
-    localStorage.setItem('LBB_UI_Settings', JSON.stringify(settings));
+    localStorage.setItem('bonkHUD_Settings', JSON.stringify(settings));
 }
 
 // Load the UI settings from local storage and apply them
 function loadUISettings() {
-    let settings = JSON.parse(localStorage.getItem('LBB_UI_Settings'));
+    let settings = JSON.parse(localStorage.getItem('bonkHUD_Settings'));
     if (settings) {
         let dragContainer = document.getElementById("drag-container");
         let opacitySlider = document.getElementById("opacity-slider");

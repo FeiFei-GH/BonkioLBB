@@ -544,12 +544,7 @@ bonkAPI.receive_Inputs = function (args) {
             sequence: jsonargs[2]["c"],
         };
         bonkAPI.events.fireEvent("gameInputs", sendObj);
-    } //example
-    /*if(bonkAPI.bonkAPI.events.hasEvent["receiveRawInput"]) {
-        obj here
-        bonkAPI.bonkAPI.events.fireEvent("receiveRawInput", sendObj);
     }
-    */
 
     return args;
 };
@@ -2088,10 +2083,14 @@ bonkAPI.getPlayerNameByID = function (id) {
  * @returns {number} ID of player
  */
 bonkAPI.getPlayerIDByName = function (name) {
-    for (let i = 0; i < bonkAPI.playerList.length; i++) {
-        if (name == bonkAPI.playerList[i].userName) {
-            return i;
+    try {
+        for (let i = 0; i < bonkAPI.playerList.length; i++) {
+            if (name == bonkAPI.playerList[i].userName) {
+                return i;
+            }
         }
+    } catch (error) {
+        
     }
 };
 
