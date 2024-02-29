@@ -392,7 +392,6 @@ window.XMLHttpRequest.prototype.open = function (_, url) {
 window.XMLHttpRequest.prototype.send = function (data) {
     if (bonkAPI.isLoggingIn) {
         this.onreadystatechange = function () {
-            console.log(this.readyState);
             if (this.readyState == 4) {
                 bonkAPI.myToken = JSON.parse(this.response)["token"];
             }
@@ -1048,8 +1047,6 @@ bonkAPI.send_MapSwitch = function (args) {
      * @type {object}
      * @property {string} mapData - String with the data of the map
      */
-    console.log("send map switch");
-    console.log(this);
     if (bonkAPI.events.hasEvent["mapSwitch"]) {
         var sendObj = { mapData: jsonargs[1]["m"] };
         bonkAPI.events.fireEvent("mapSwitch", sendObj);
