@@ -369,7 +369,7 @@ bonkAPI.receivePacket = function (packet) {
 // #region //!------------------Receive Handler Functions------------------
 bonkAPI.receive_PingUpdate = function (args) {
     //  TODO: Finish implement of function
-
+    
     return args;
 };
 
@@ -1960,6 +1960,20 @@ bonkAPI.checkDocumentReady();
 // #endregion
 
 // #region //!------------------Public API Functions------------------
+
+bonkAPI.isPlayerIDExists = function (id) {
+    return id >= 0 && id < bonkAPI.playerList.length;
+}
+
+bonkAPI.isPlayerNameExists = function (name) {
+    for (let i = 0; i < bonkAPI.playerList.length; i++) {
+        if (name == bonkAPI.playerList[i].userName) {
+            return true;
+        }
+    }
+    return false;
+}
+
 /**
  * Sends message in game's public chat.
  * @function chat
@@ -2083,14 +2097,10 @@ bonkAPI.getPlayerNameByID = function (id) {
  * @returns {number} ID of player
  */
 bonkAPI.getPlayerIDByName = function (name) {
-    try {
-        for (let i = 0; i < bonkAPI.playerList.length; i++) {
-            if (name == bonkAPI.playerList[i].userName) {
-                return i;
-            }
+    for (let i = 0; i < bonkAPI.playerList.length; i++) {
+        if (name == bonkAPI.playerList[i].userName) {
+            return i;
         }
-    } catch (error) {
-        
     }
 };
 

@@ -75,7 +75,8 @@ bonkAPI.addEventListener("userJoin", (e) => {
     }
     
     if (LBB_Main.isPlayerValid(e.userData)) {
-        LBB_LDB.addPlayer(e.userData);
+        console.log("add player to database");
+        // LBB_LDB.addPlayer(e.userData);
     }
 });
 
