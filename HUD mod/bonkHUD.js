@@ -17,12 +17,6 @@ bonkHUD.windowHold = [];
 //! not used but will be
 // *Style Store
 bonkHUD.styleHold = [];
-bonkHUD.styleHold.backgroundColor = "#cfd8cd";
-bonkHUD.styleHold.borderColor = "#b4b8ae";
-bonkHUD.styleHold.headerColor = "";
-bonkHUD.styleHold.titleTextColor = "#ffffff";
-bonkHUD.styleHold.windowTextColor = "#000000";
-bonkHUD.styleHold.chatTextColor = "#ffffff";
 
 //! styles added do not include color, to be added/changed by user
 //! some innercss using these classes still has not been deleted(will do it)
@@ -58,6 +52,7 @@ bonkHUD.initialize = function () {
 
     let settingsMenu = document.createElement("div");
     settingsMenu.id = "bonkhud-settings";
+    settingsMenu.classList.add("bonkhud-background-color");
     settingsMenu.classList.add("windowShadow");
     settingsMenu.style.position = "absolute";
     settingsMenu.style.top = "0";
@@ -66,7 +61,6 @@ bonkHUD.initialize = function () {
     settingsMenu.style.bottom = "0";
     settingsMenu.style.width = "60%";//bonkHUD.pxTorem(450) + "rem";
     settingsMenu.style.height = "75%";//bonkHUD.pxTorem(385) + "rem";
-    settingsMenu.style.backgroundColor = "#cfd8cd";
     settingsMenu.style.fontFamily = "futurept_b1";
     settingsMenu.style.margin = "auto";
     settingsMenu.style.borderRadius = "8px";
@@ -79,36 +73,39 @@ bonkHUD.initialize = function () {
     let header = document.createElement("div");
     header.classList.add("newbonklobby_boxtop");
     header.classList.add("newbonklobby_boxtop_classic");
+    header.classList.add("bonkhud-header-color");
 
     // Create the title span
     let title = document.createElement("span");
+    title.classList.add("bonkhud-title-color");
     title.textContent = "BonkHUD Settings";
     title.style.flexGrow = "1";
     title.style.textAlign = "center";
 
     let closeButton = document.createElement("div");
     closeButton.classList.add("bonkhud-header-button");
+    closeButton.classList.add("bonkhud-title-color");
     closeButton.innerText = "_"; // Use an appropriate icon or text
     closeButton.style.lineHeight = "9px";
     closeButton.style.right = "3px";
     closeButton.style.cursor = "pointer";
-    closeButton.style.color = "white";
 
     let containerContainer = document.createElement("div");
+    containerContainer.classList.add("bonkhud-text-color");
     containerContainer.style.overflowX = "hidden";
     containerContainer.style.overflowY = "hidden";
     containerContainer.style.display = "flex";
     containerContainer.style.width = "100%";
     containerContainer.style.height = "calc(100% - 32px)"; // Adjusted height for header
-    containerContainer.style.color = "#000000";
 
     let windowSettingsContainer = document.createElement("div");
     windowSettingsContainer.id = "bonkhud-window-settings-container";
+    windowSettingsContainer.classList.add("bonkhud-border-color");
     windowSettingsContainer.style.overflowY = "auto";
     windowSettingsContainer.style.flexGrow = "1.5";
     //windowSettingsContainer.style.minWidth = "30%";
     windowSettingsContainer.style.height = "100%";
-    windowSettingsContainer.style.borderRight = "1px solid #b4b8ae";
+    windowSettingsContainer.style.borderRight = "1px solid";
 
     let settingsContainer = document.createElement("div");
     settingsContainer.id = "bonkhud-settings-container";
@@ -118,12 +115,66 @@ bonkHUD.initialize = function () {
     settingsContainer.style.height = "100%";
 
     let mainSettingsDiv = document.createElement("div");
+    mainSettingsDiv.classList.add("bonkhud-border-color")
     mainSettingsDiv.classList.add("bonkhud-settings-row");
-    mainSettingsDiv.style.borderBottom = "1px solid #b4b8ae";
-    mainSettingsDiv.style.padding = "10px";
 
-    let settingsHeading = document.createElement("span");
-    settingsHeading.innerText = "General Settings";
+    let mainSettingsHeading = document.createElement("div");
+    mainSettingsHeading.classList.add("bonkhud-text-color");
+    mainSettingsHeading.textContent = "General Settings";
+    mainSettingsHeading.style.marginBottom = "5px";
+    mainSettingsHeading.style.fontSize = "1.2rem";
+
+    let windowResetDiv = document.createElement("div");
+    
+    let windowResetLabel = document.createElement("label");
+    windowResetLabel.classList.add("bonkhud-text-color");
+    windowResetLabel.classList.add("bonkhud-settings-label");
+    windowResetLabel.style.marginRight = "5px";
+    windowResetLabel.innerText = "Reset Window";
+
+    let windowResetButton = bonkHUD.generateButton("Reset");
+    windowResetButton.style.paddingLeft = "5px";
+    windowResetButton.style.paddingRight = "5px";
+    windowResetButton.style.display = "inline-block";
+
+    let styleResetDiv = document.createElement("div");
+
+    let styleResetLabel = document.createElement("label");
+    styleResetLabel.classList.add("bonkhud-text-color");
+    styleResetLabel.classList.add("bonkhud-settings-label");
+    styleResetLabel.style.marginRight = "5px";
+    styleResetLabel.innerText = "Reset Style";
+
+    let styleResetButton = bonkHUD.generateButton("Reset");
+    styleResetButton.style.paddingLeft = "5px";
+    styleResetButton.style.paddingRight = "5px";
+    styleResetButton.style.display = "inline-block";
+
+    let styleSettingsDiv = document.createElement("div");
+    styleSettingsDiv.classList.add("bonkhud-border-color")
+    styleSettingsDiv.classList.add("bonkhud-settings-row");
+
+    let styleSettingsHeading = document.createElement("div");
+    styleSettingsHeading.classList.add("bonkhud-text-color");
+    styleSettingsHeading.style.fontSize = "1.2rem";
+    styleSettingsHeading.style.marginBottom = "5px";
+    styleSettingsHeading.textContent = "Style Settings";
+
+    // Append children of style settings to rows
+    styleSettingsDiv.appendChild(styleSettingsHeading);
+
+    for(let i = 0; i < bonkHUD.styleHold.length; i++) {
+        let colorEdit = document.createElement("input");
+        colorEdit.setAttribute('type', 'color');
+        colorEdit.value = bonkHUD.styleHold[i];
+        colorEdit.style.display = "inline-block";
+        styleSettingsDiv.appendChild(colorEdit);
+        colorEdit.addEventListener('change', (e) => {
+            bonkHUD.styleHold[i] = e.target.value;
+            bonkHUD.saveStyleSettings();
+            bonkHUD.updateStyleSettings();
+        });
+    }
 
     //Create element in top bar
     let topBarOption = document.createElement("div");
@@ -149,12 +200,20 @@ bonkHUD.initialize = function () {
     // Append Header
     header.appendChild(title);
     header.appendChild(closeButton)
+
+    windowResetDiv.appendChild(windowResetLabel);
+    windowResetDiv.appendChild(windowResetButton);
+    styleResetDiv.appendChild(styleResetLabel);
+    styleResetDiv.appendChild(styleResetButton);
     
     // Append children of general settings to rows
-    mainSettingsDiv.appendChild(settingsHeading);
+    mainSettingsDiv.appendChild(mainSettingsHeading);
+    mainSettingsDiv.appendChild(windowResetDiv);
+    mainSettingsDiv.appendChild(styleResetDiv);
 
     // Append general setting rows to general settings container
     settingsContainer.appendChild(mainSettingsDiv);
+    settingsContainer.appendChild(styleSettingsDiv);
     
     // Append everything to main container (HUD window)
     containerContainer.appendChild(windowSettingsContainer);
@@ -180,14 +239,23 @@ bonkHUD.initialize = function () {
             settingsMenu.style.visibility = "hidden";
         }
     });
+
+    windowResetButton.addEventListener('click', (e) => {
+        bonkHUD.resetUISettings();
+        bonkHUD.loadUISettings();
+        //window.location.reload();
+    });
+    styleResetButton.addEventListener('click', (e) => {
+        bonkHUD.resetStyleSettings();
+        bonkHUD.updateStyleSettings();
+    });
 };
 
 bonkHUD.createWindowControl = function(name, ind) {
     // Create container for the opacity controls with initial styles
     let sliderRow = document.createElement("div");
     sliderRow.classList.add("bonkhud-settings-row");
-    sliderRow.style.borderBottom = "1px solid #b4b8ae";
-    sliderRow.style.padding = "10px"; // Inner spacing around the contents
+    sliderRow.classList.add("bonkhud-border-color");
 
     // Add a title to the slider row for visual clarity
     let sliderTitle = document.createElement("div");
@@ -205,9 +273,6 @@ bonkHUD.createWindowControl = function(name, ind) {
     let opacityLabel = document.createElement("label");
     opacityLabel.classList.add("bonkhud-settings-label");
     opacityLabel.textContent = "Opacity";
-    opacityLabel.style.fontSize = "0.9rem"; // Consistent font size with the title
-    opacityLabel.style.fontWeight = "bold"; // Emphasize the label text
-    //opacityLabel.style.display = "inline-block"; // Allows margin-top adjustment
     holdLeft.appendChild(opacityLabel); // Add the label to the slider container
 
     // Create the opacity slider input, configuring its range and appearance
@@ -233,8 +298,6 @@ bonkHUD.createWindowControl = function(name, ind) {
     let visibilityLabel = document.createElement("label");
     visibilityLabel.classList.add("bonkhud-settings-label");
     visibilityLabel.textContent = "Visible";
-    visibilityLabel.style.fontSize = "0.9rem"; // Consistent font size with the title
-    visibilityLabel.style.fontWeight = "bold"; // Emphasize the label text
     visibilityLabel.style.marginRight = "5px"; // Space between label and slider
     visibilityLabel.style.display = "inline-block"; // Allows margin-top adjustment
     visibilityLabel.style.verticalAlign = "middle";
@@ -283,6 +346,7 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     // Create the main container 'dragItem'
     let dragItem = document.createElement("div");
     dragItem.classList.add("bonkhud-window-container");
+    dragItem.classList.add("bonkhud-background-color");
     dragItem.classList.add("windowShadow");
     dragItem.id = id + "-drag";
     dragItem.style.bottom = bonkHUD.windowHold[found].bottom; //top ? top : "0";
@@ -292,17 +356,18 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     //dragItem.style.minHeight = minHeight; // Minimum height to prevent deformation
     dragItem.style.visibility = bonkHUD.windowHold[found].visibility;
     dragItem.style.opacity = bonkHUD.windowHold[found].opacity;
-    dragItem.style.backgroundColor = "#cfd8cd";
 
     // Create the header
     let header = document.createElement("div");
     header.classList.add("bonkhud-drag-header");
     header.classList.add("newbonklobby_boxtop");
     header.classList.add("newbonklobby_boxtop_classic");
+    header.classList.add("bonkhud-header-color");
 
     // Create the title span
     let title = document.createElement("span");
     title.classList.add("bonkhud-drag-header");
+    title.classList.add("bonkhud-title-color");
     title.textContent = name;
     title.style.flexGrow = "1";
     title.style.textAlign = "center";
@@ -310,19 +375,20 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     // Create the resize button
     let resizeButton = document.createElement("div");
     resizeButton.classList.add("bonkhud-header-button");
+    resizeButton.classList.add("bonkhud-title-color");
     resizeButton.classList.add("bonkhud-resize");
     resizeButton.innerText = ":::"; // Use an appropriate icon or text
     resizeButton.style.lineHeight = "22px";
     resizeButton.style.textIndent = "5px";
-    resizeButton.style.color = "white";
+    resizeButton.style.cursor = "nwse-resize";
 
     let closeButton = document.createElement("div");
     closeButton.classList.add("bonkhud-header-button");
+    closeButton.classList.add("bonkhud-title-color");
     closeButton.innerText = "_"; // Use an appropriate icon or text
     closeButton.style.lineHeight = "9px";
     closeButton.style.right = "3px";
     closeButton.style.cursor = "pointer";
-    closeButton.style.color = "white";
 
     // Append the title and resize button to the header
     header.appendChild(title);
@@ -334,12 +400,12 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
 
     // Create the key table
     bodyHTML.id = id;
+    bodyHTML.classList.add("bonkhud-text-color");
     bodyHTML.style.overflowX = "hidden";
     bodyHTML.style.overflowY = "auto";
     bodyHTML.style.padding = "5px";
     bodyHTML.style.width = "calc(100% - 10px)";
     bodyHTML.style.height = "calc(100% - 42px)"; // Adjusted height for header
-    bodyHTML.style.color = "#000000";
 
     // Append the keyTable to the dragItem
     dragItem.appendChild(bodyHTML);
@@ -364,6 +430,8 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
 
     // Add event listeners for resizing
     resizeButton.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem));
+
+    bonkHUD.updateStyleSettings(); //! probably slow but it works, its not like someone will have 100's of windows
 };
 
 bonkHUD.saveUISettings = function () {
@@ -377,11 +445,95 @@ bonkHUD.loadUISettings = function () {
             bonkHUD.windowHold.push(settings[i]);
         }
     }
+    else {
+        for(let i = 0; i < bonkHUD.windowHold.length; i++) {
+            let tempWindow = bonkHUD.windowHold[i];
+            bonkHUD.windowHold[i] = {
+                id: tempWindow.id,
+                width: "154px",
+                height: "154px",
+                bottom: "0rem",
+                right: "0rem",
+                opacity: tempWindow.opacity,
+                visibility: tempWindow.visibility,
+            }
+        }
+    }
 };
 
 bonkHUD.resetUISettings = function () {
     localStorage.removeItem('bonkHUD_Settings');
+};
+
+bonkHUD.saveStyleSettings = function () {
+    localStorage.setItem('bonkHUD_Style_Settings', JSON.stringify(bonkHUD.styleHold));
+};
+
+bonkHUD.loadStyleSettings = function () {
+    let settings = JSON.parse(localStorage.getItem('bonkHUD_Style_Settings'));
+    if(settings) {
+        for(let i = 0; i < settings.length; i++) {
+            bonkHUD.styleHold.push(settings[i]);
+        }
+    } 
+    else {
+        bonkHUD.resetStyleSettings();
+    }
+};
+
+bonkHUD.resetStyleSettings = function () {
+    localStorage.removeItem('bonkHUD_Style_Settings');
+    bonkHUD.styleHold = [];
+    //bonkhud-background-color
+    bonkHUD.styleHold.push("#cfd8cd");
+    //bonkhud-border-color
+    bonkHUD.styleHold.push("#b4b8ae");
+    //bonkhud-header-color
+    bonkHUD.styleHold.push("#009688");
+    //bonkhud-title-color
+    bonkHUD.styleHold.push("#ffffff");
+    //bonkhud-text-color
+    bonkHUD.styleHold.push("#000000");
+    //bonkhud-button-color
+    bonkHUD.styleHold.push("#795548");
+    //bonkhud-button-color hover
+    bonkHUD.styleHold.push("#8a6355");
 }
+
+//! dk if this needs optimizing & not being semi hardcoded
+bonkHUD.updateStyleSettings = function () {
+    let c = 0;
+    let elements = document.getElementsByClassName('bonkhud-background-color');
+    for(let j = 0; j < elements.length; j++) {
+        elements[j].style.backgroundColor = bonkHUD.styleHold[c];
+    }
+    c++;
+    elements = document.getElementsByClassName('bonkhud-border-color');
+    for(let j = 0; j < elements.length; j++) {
+        elements[j].style.borderColor = bonkHUD.styleHold[c];
+    }
+    c++;
+    elements = document.getElementsByClassName('bonkhud-header-color');
+    for(let j = 0; j < elements.length; j++) {
+        elements[j].style.setProperty("background-color", bonkHUD.styleHold[c], "important");
+    }
+    c++;
+    elements = document.getElementsByClassName('bonkhud-title-color');
+    for(let j = 0; j < elements.length; j++) {
+        elements[j].style.color = bonkHUD.styleHold[c];
+    }
+    c++;
+    elements = document.getElementsByClassName('bonkhud-text-color');
+    for(let j = 0; j < elements.length; j++) {
+        elements[j].style.color = bonkHUD.styleHold[c];
+    }
+    c++;
+    elements = document.getElementsByClassName('bonkhud-button-color');
+    for(let j = 0; j < elements.length; j++) {
+        elements[j].style.backgroundColor = bonkHUD.styleHold[c];
+    }
+    c += 2; // skip hover color
+};
 
 bonkHUD.dragStart = function (e, dragItem) {
     bonkHUD.focusWindow(dragItem);
@@ -480,6 +632,8 @@ bonkHUD.getWindowIndexByID = function (id) {
     return -1;
 };
 
+// ================HELPER METHODS=====================
+
 bonkHUD.clamp = function (val, min, max) {
     //? supposedly faster than Math.max/min
     if (val > min) {
@@ -497,6 +651,30 @@ bonkHUD.pxTorem = function (px) {
     return px / parseFloat(getComputedStyle(document.documentElement).fontSize);
 };
 
-bonkHUD.initialize();
+//? might make more of these for use in the main settings window
+//? and so others can use these to make a unified look of bonkhud
+//? windows
+bonkHUD.generateButton = function (name) {
+    let newButton = document.createElement("div");
+    newButton.classList.add("bonkhud-button-color");
+    newButton.classList.add("bonkhud-text-color");
+    newButton.style.cursor = "pointer";
+    newButton.style.borderRadius = "3px";
+    newButton.style.textAlign = "center";
+    newButton.innerText = name;
+
+    newButton.addEventListener('mouseover', (e) => {
+        e.target.style.backgroundColor = bonkHUD.styleHold[6];
+    });
+    newButton.addEventListener('mouseleave', (e) => {
+        e.target.style.backgroundColor = bonkHUD.styleHold[5];
+    });
+    return newButton;
+}
 
 bonkHUD.loadUISettings();
+
+bonkHUD.loadStyleSettings();
+bonkHUD.updateStyleSettings();
+
+bonkHUD.initialize();
