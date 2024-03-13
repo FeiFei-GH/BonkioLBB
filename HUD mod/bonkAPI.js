@@ -115,6 +115,10 @@ bonkAPI.hostID = -1;
 bonkAPI.events = new bonkAPI.EventHandler();
 
 bonkAPI.isLoggingIn = false;
+bonkAPI.blockedPackets = [];
+bonkAPI.events.addEventListener('block', (e) => {
+    bonkAPI.blockedPackets[e.packet] = true;
+});
 
 // MGF vars
 bonkAPI.bonkWSS = 0;
@@ -276,6 +280,8 @@ window.WebSocket.prototype.send = function (args) {
                 case "42[12": // *Create Room
                     args = bonkAPI.send_CreateRoom(args);
                     break;
+                case "42[13": // *Room Join Information
+                    args = bonkAPI.send_RoomJoin(args);
                 case "42[14": // *Return To Lobby
                     args = bonkAPI.send_LobbyReturn(args);
                     break;
@@ -983,6 +989,47 @@ bonkAPI.send_CreateRoom = function (args) {
 
     bonkAPI.myID = 0;
     bonkAPI.hostID = 0;
+
+    return args;
+};
+
+/**
+ * Called as to send inital user data when joining a room.
+ * @function send_RoomJoin
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
+bonkAPI.send_RoomJoin = function (args) {
+    let jsonargs = JSON.parse(args.substring(2));
+
+    if(typeof jsonargs[2] != 'undefined') {
+        return args;
+    }
+
+    //! DONT KNOW WHAT TO DO FOR NAMING
+    //! Possibly get rid of XMLhttp thing since this gives the login token
+    /**
+     * When inputs are received from other players.
+     * @event sendJoin
+     * @type {object}
+     * @property {string} password - Room password
+     * @property {object} avatar - User's avatar
+     * @property {string} token - Login token
+     * @property {string} packet - Editable packet
+     */
+    if (bonkAPI.events.hasEvent["sendJoin"]) {
+        var sendObj = {
+            //password: jsonargs[1]["roomPassword"],
+            //avatar: JSON.parse(jsonargs[1]["avatar"]),
+            //token: jsonargs[1]["token"] ? jsonargs[1]["token"] : null,
+            packet: args,
+        };
+        bonkAPI.events.fireEvent("sendJoin", sendObj);
+    }
+
+    if(bonkAPI.blockedPackets["42[13"]) {
+        return "";
+    }
 
     return args;
 };
@@ -2098,7 +2145,7 @@ bonkAPI.getPlayer = function (ref) {
         return Object.assign({}, bonkAPI.playerList[ref]);
     } else if (typeof ref === "string") {
         for (let i = 0; i < bonkAPI.playerList.length; i++) {
-            if (ref == bonkAPI.playerList[i].userName) {
+            if (bonkAPI.playerList[i] == null && ref == bonkAPI.playerList[i].userName) {
                 return Object.assign({}, bonkAPI.playerList[i]);
             }
         }
@@ -2129,7 +2176,7 @@ bonkAPI.getPlayerByID = function (id) {
  */
 bonkAPI.getPlayerByName = function (name) {
     for (let i = 0; i < bonkAPI.playerList.length; i++) {
-        if (name == bonkAPI.playerList[i].userName) {
+        if (bonkAPI.playerList[i] == null && name == bonkAPI.playerList[i].userName) {
             return Object.assign({}, bonkAPI.playerList[i]);
         }
     }
@@ -2157,7 +2204,7 @@ bonkAPI.getPlayerNameByID = function (id) {
  */
 bonkAPI.getPlayerIDByName = function (name) {
     for (let i = 0; i < bonkAPI.playerList.length; i++) {
-        if (name == bonkAPI.playerList[i].userName) {
+        if (bonkAPI.playerList[i] == null && name == bonkAPI.playerList[i].userName) {
             return i;
         }
     }
