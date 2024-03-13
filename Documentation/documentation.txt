@@ -1,0 +1,38 @@
+Bonk Version 48:
+
+2 Step Functions:
+N is football
+J is normal
+
+J["globalStepVars"] = {
+                    discs: M1j[8],
+                    shakeVectorThisStep: M1j[18],
+                    soundsThisStep: M1j[13],
+                    capEvent: E3,
+                    teamGoalEvent: E1,
+                    inputState: M1j[0][0],
+                    gameSettings: M1j[0][4],
+                    swingCollideDestroyEvents: M1j[33],
+                };
+
+Useful Vars:
+E3 is called when player touches capzone
+? seems to be the call back function
+? is get called every animation update
+J["prototype"]["step"] is the step function
+? seems to handle things when game ends
+
+
+
+Game mode IDs:
+Classic: b
+Arrows: ar
+Death Arrows: ard
+Grapple: sp
+Football: f
+VTOL: v
+Simple (inaccessible): bs
+
+Inside inputState, there is discDeaths.
+Useful to get when players spawned.
+
