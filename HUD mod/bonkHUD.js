@@ -125,7 +125,7 @@ bonkHUD.initialize = function () {
     mainSettingsHeading.style.fontSize = "1.2rem";
 
     let windowResetDiv = document.createElement("div");
-    
+
     let windowResetLabel = document.createElement("label");
     windowResetLabel.classList.add("bonkhud-text-color");
     windowResetLabel.classList.add("bonkhud-settings-label");
@@ -163,7 +163,7 @@ bonkHUD.initialize = function () {
     // Append children of style settings to rows
     styleSettingsDiv.appendChild(styleSettingsHeading);
 
-    for(let i = 0; i < bonkHUD.styleHold.length; i++) {
+    for (let i = 0; i < bonkHUD.styleHold.length; i++) {
         let colorEdit = document.createElement("input");
         colorEdit.setAttribute('type', 'color');
         colorEdit.value = bonkHUD.styleHold[i];
@@ -205,7 +205,7 @@ bonkHUD.initialize = function () {
     windowResetDiv.appendChild(windowResetButton);
     styleResetDiv.appendChild(styleResetLabel);
     styleResetDiv.appendChild(styleResetButton);
-    
+
     // Append children of general settings to rows
     mainSettingsDiv.appendChild(mainSettingsHeading);
     mainSettingsDiv.appendChild(windowResetDiv);
@@ -214,7 +214,7 @@ bonkHUD.initialize = function () {
     // Append general setting rows to general settings container
     settingsContainer.appendChild(mainSettingsDiv);
     settingsContainer.appendChild(styleSettingsDiv);
-    
+
     // Append everything to main container (HUD window)
     containerContainer.appendChild(windowSettingsContainer);
     containerContainer.appendChild(settingsContainer);
@@ -232,7 +232,7 @@ bonkHUD.initialize = function () {
         settingsMenu.style.visibility = "hidden";
     })
     topBarOption.addEventListener('click', (e) => {
-        if(settingsMenu.style.visibility == "hidden") {
+        if (settingsMenu.style.visibility == "hidden") {
             settingsMenu.style.visibility = "visible";
         }
         else {
@@ -251,7 +251,7 @@ bonkHUD.initialize = function () {
     });
 };
 
-bonkHUD.createWindowControl = function(name, ind) {
+bonkHUD.createWindowControl = function (name, ind) {
     // Create container for the opacity controls with initial styles
     let sliderRow = document.createElement("div");
     sliderRow.classList.add("bonkhud-settings-row");
@@ -306,7 +306,7 @@ bonkHUD.createWindowControl = function(name, ind) {
     let visiblityCheck = document.createElement("input");
     visiblityCheck.id = bonkHUD.windowHold[ind].id + "-visibility-check";
     visiblityCheck.type = "checkbox"; // Slider type for range selection
-    if(bonkHUD.windowHold[ind].visibility == "visible") {
+    if (bonkHUD.windowHold[ind].visibility == "visible") {
         visiblityCheck.checked = true;
     }
     else {
@@ -321,7 +321,7 @@ bonkHUD.createWindowControl = function(name, ind) {
         bonkHUD.saveUISettings();
     };
     holdRight.appendChild(visiblityCheck); // Place the slider into the slider container
-    
+
     sliderRow.appendChild(holdLeft);
     sliderRow.appendChild(holdRight);
 
@@ -330,7 +330,7 @@ bonkHUD.createWindowControl = function(name, ind) {
 
 bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     let found = bonkHUD.getWindowIndexByID(id);
-    if(found == -1) {
+    if (found == -1) {
         bonkHUD.windowHold.push({
             id: id,
             width: "154px",
@@ -441,12 +441,12 @@ bonkHUD.saveUISettings = function () {
 bonkHUD.loadUISettings = function () {
     let settings = JSON.parse(localStorage.getItem('bonkHUD_Settings'));
     if (settings) {
-        for(let i = 0; i < settings.length; i++) {
+        for (let i = 0; i < settings.length; i++) {
             bonkHUD.windowHold.push(settings[i]);
         }
     }
     else {
-        for(let i = 0; i < bonkHUD.windowHold.length; i++) {
+        for (let i = 0; i < bonkHUD.windowHold.length; i++) {
             let tempWindow = bonkHUD.windowHold[i];
             bonkHUD.windowHold[i] = {
                 id: tempWindow.id,
@@ -471,11 +471,11 @@ bonkHUD.saveStyleSettings = function () {
 
 bonkHUD.loadStyleSettings = function () {
     let settings = JSON.parse(localStorage.getItem('bonkHUD_Style_Settings'));
-    if(settings) {
-        for(let i = 0; i < settings.length; i++) {
+    if (settings) {
+        for (let i = 0; i < settings.length; i++) {
             bonkHUD.styleHold.push(settings[i]);
         }
-    } 
+    }
     else {
         bonkHUD.resetStyleSettings();
     }
@@ -504,32 +504,32 @@ bonkHUD.resetStyleSettings = function () {
 bonkHUD.updateStyleSettings = function () {
     let c = 0;
     let elements = document.getElementsByClassName('bonkhud-background-color');
-    for(let j = 0; j < elements.length; j++) {
+    for (let j = 0; j < elements.length; j++) {
         elements[j].style.backgroundColor = bonkHUD.styleHold[c];
     }
     c++;
     elements = document.getElementsByClassName('bonkhud-border-color');
-    for(let j = 0; j < elements.length; j++) {
+    for (let j = 0; j < elements.length; j++) {
         elements[j].style.borderColor = bonkHUD.styleHold[c];
     }
     c++;
     elements = document.getElementsByClassName('bonkhud-header-color');
-    for(let j = 0; j < elements.length; j++) {
+    for (let j = 0; j < elements.length; j++) {
         elements[j].style.setProperty("background-color", bonkHUD.styleHold[c], "important");
     }
     c++;
     elements = document.getElementsByClassName('bonkhud-title-color');
-    for(let j = 0; j < elements.length; j++) {
+    for (let j = 0; j < elements.length; j++) {
         elements[j].style.color = bonkHUD.styleHold[c];
     }
     c++;
     elements = document.getElementsByClassName('bonkhud-text-color');
-    for(let j = 0; j < elements.length; j++) {
+    for (let j = 0; j < elements.length; j++) {
         elements[j].style.color = bonkHUD.styleHold[c];
     }
     c++;
     elements = document.getElementsByClassName('bonkhud-button-color');
-    for(let j = 0; j < elements.length; j++) {
+    for (let j = 0; j < elements.length; j++) {
         elements[j].style.backgroundColor = bonkHUD.styleHold[c];
     }
     c += 2; // skip hover color
@@ -545,7 +545,7 @@ bonkHUD.dragStart = function (e, dragItem) {
         let startBottom = parseInt(window.getComputedStyle(dragItem).bottom, 10);
         const boundDragMove = bonkHUD.dragMove.bind(null, startX, startY, startRight, startBottom, dragItem);
         document.addEventListener('mousemove', boundDragMove);
-        document.addEventListener('mouseup', () => bonkHUD.dragEnd(boundDragMove, dragItem), {once: true});
+        document.addEventListener('mouseup', () => bonkHUD.dragEnd(boundDragMove, dragItem), { once: true });
     }
 };
 
@@ -553,7 +553,7 @@ bonkHUD.dragMove = function (startX, startY, startRight, startBottom, dragItem, 
     let w = parseFloat(window.getComputedStyle(dragItem).width) / 2;
     let h = parseFloat(window.getComputedStyle(dragItem).height) / 2;
     let moveX = bonkHUD.clamp(startRight + startX - e.clientX, -w, window.innerWidth - w);
-    let moveY = bonkHUD.clamp(startBottom + startY - e.clientY, -h, window.innerHeight - h*2 + 15);
+    let moveY = bonkHUD.clamp(startBottom + startY - e.clientY, -h, window.innerHeight - h * 2 + 15);
     dragItem.style.right = bonkHUD.pxTorem(moveX) + "rem";
     dragItem.style.bottom = bonkHUD.pxTorem(moveY) + "rem";
 };
@@ -616,16 +616,16 @@ bonkHUD.resizeEnd = function (resizeMoveFn, dragItem) {
 bonkHUD.focusWindow = function (focusItem) {
     let elements = document.getElementsByClassName("bonkhud-window-container");
     focusItem.style.zIndex = "9991";
-    for(let i = 0; i < elements.length; i++) {
-        if(focusItem.id != elements[i].id) {
+    for (let i = 0; i < elements.length; i++) {
+        if (focusItem.id != elements[i].id) {
             elements[i].style.zIndex = "9990";
         }
     }
 };
 
 bonkHUD.getWindowIndexByID = function (id) {
-    for(let i = 0; i < bonkHUD.windowHold.length; i++) {
-        if(bonkHUD.windowHold[i].id == id) {
+    for (let i = 0; i < bonkHUD.windowHold.length; i++) {
+        if (bonkHUD.windowHold[i].id == id) {
             return i;
         }
     }

@@ -1,16 +1,16 @@
 // ==UserScript==
-// @name         bonkHUD
-// @version      1.3.48
+// @name         KeyTable
+// @version      1.2.48
 // @description  Add a customizable key table overlay to the bonk.io game
-// @author       BZD + FeiFei
+// @author       BZD
 // @namespace    http://tampermonkey.net/
 // @license      MIT
 // @match        https://bonk.io/gameframe-release.html
-// @run-at       document-end
+// @run-at       document-body
 // @grant        none
 // ==/UserScript==
 
-window.LBB_UI = {}; // Namespace for encapsulating the UI functions and variables
+window.KeyTable_UI = {}; // Namespace for encapsulating the UI functions and variables
 
 // Use 'strict' mode for safer code by managing silent errors
 'use strict';
@@ -20,6 +20,8 @@ const left = "0";
 const top = "0";
 const width = "172px";
 const height = "100px";
+
+bonkHUD.readingPlayer = "";
 
 // Variable to track the most recent key input by the user
 window.latestInput = 0;
@@ -56,14 +58,14 @@ window.setKeyTableOpacity = (opacity) => {
     saveUISettings(); // Save the new setting to local storage
 };
 
-// !Use bonkAPI as listener
-bonkAPI.addEventListener("sendInputs", (e) => {
-    console.log(e);
-    let jsonObj = JSON.parse(e.match(/\{.*\}/)[0]);
-    window.latestInput = jsonObj.i;
-    window.updateKeyStyles();
+// Process input data and invoke style updates
+bonkAPI.addEventListener("gameInputs", (e) => {
+    let readingPlayerID = bonkAPI.getPlayerIDByName(bonkHUD.readingPlayer);
 
-
+    if (e.userID == readingPlayerID) {
+        window.latestInput = e.rawInput;
+        window.updateKeyStyles();
+    }
 });
 
 // Save the current state of the UI settings to local storage
@@ -77,12 +79,12 @@ function saveUISettings() {
         right: dragContainer.style.right,
         display: dragContainer.style.display
     };
-    localStorage.setItem('LBB_UI_Settings', JSON.stringify(settings));
+    localStorage.setItem('KeyTable_UI_Settings', JSON.stringify(settings));
 }
 
 // Load the UI settings from local storage and apply them
 function loadUISettings() {
-    let settings = JSON.parse(localStorage.getItem('LBB_UI_Settings'));
+    let settings = JSON.parse(localStorage.getItem('KeyTable_UI_Settings'));
     if (settings) {
         let dragContainer = document.getElementById("drag-container");
         let opacitySlider = document.getElementById("opacity-slider");
@@ -363,3 +365,4 @@ if (document.readyState === "complete" || document.readyState === "interactive")
         loadUISettings(); // Load settings after DOM content has loaded
     });
 }
+
