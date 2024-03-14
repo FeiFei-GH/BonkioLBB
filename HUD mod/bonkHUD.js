@@ -349,6 +349,8 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     dragItem.classList.add("bonkhud-background-color");
     dragItem.classList.add("windowShadow");
     dragItem.id = id + "-drag";
+    dragItem.style.overflowX = "hidden";
+    dragItem.style.overflowY = "auto";
     dragItem.style.bottom = bonkHUD.windowHold[found].bottom; //top ? top : "0";
     dragItem.style.right = bonkHUD.windowHold[found].right; //left ? left : "0";
     dragItem.style.width = bonkHUD.windowHold[found].width; //width ? width : "172";
@@ -401,8 +403,6 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     // Create the key table
     bodyHTML.id = id;
     bodyHTML.classList.add("bonkhud-text-color");
-    bodyHTML.style.overflowX = "hidden";
-    bodyHTML.style.overflowY = "auto";
     bodyHTML.style.padding = "5px";
     bodyHTML.style.width = "calc(100% - 10px)";
     bodyHTML.style.height = "calc(100% - 42px)"; // Adjusted height for header
@@ -500,7 +500,8 @@ bonkHUD.resetStyleSettings = function () {
     bonkHUD.styleHold.push("#8a6355");
 }
 
-//! dk if this needs optimizing & not being semi hardcoded
+//! i will change styleHold to be an object that has the classname as
+//! a key, then has the color and property inside an object
 bonkHUD.updateStyleSettings = function () {
     let c = 0;
     let elements = document.getElementsByClassName('bonkhud-background-color');
@@ -672,9 +673,21 @@ bonkHUD.generateButton = function (name) {
     return newButton;
 }
 
-bonkHUD.loadUISettings();
 
-bonkHUD.loadStyleSettings();
-bonkHUD.updateStyleSettings();
+if (document.readyState === "complete" || document.readyState === "interactive") {
+    bonkHUD.loadUISettings();
 
-bonkHUD.initialize();
+    bonkHUD.loadStyleSettings();
+    bonkHUD.updateStyleSettings();
+
+    bonkHUD.initialize();
+} else {
+    document.addEventListener("DOMContentLoaded", () => {
+        bonkHUD.loadUISettings();
+
+        bonkHUD.loadStyleSettings();
+        bonkHUD.updateStyleSettings();
+
+        bonkHUD.initialize();
+    });
+}
