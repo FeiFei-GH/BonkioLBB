@@ -2145,7 +2145,7 @@ bonkAPI.getPlayer = function (ref) {
         return Object.assign({}, bonkAPI.playerList[ref]);
     } else if (typeof ref === "string") {
         for (let i = 0; i < bonkAPI.playerList.length; i++) {
-            if (bonkAPI.playerList[i] == null && ref == bonkAPI.playerList[i].userName) {
+            if (bonkAPI.playerList[i] != null && ref == bonkAPI.playerList[i].userName) {
                 return Object.assign({}, bonkAPI.playerList[i]);
             }
         }
@@ -2176,7 +2176,7 @@ bonkAPI.getPlayerByID = function (id) {
  */
 bonkAPI.getPlayerByName = function (name) {
     for (let i = 0; i < bonkAPI.playerList.length; i++) {
-        if (bonkAPI.playerList[i] == null && name == bonkAPI.playerList[i].userName) {
+        if (bonkAPI.playerList[i] != null && name == bonkAPI.playerList[i].userName) {
             return Object.assign({}, bonkAPI.playerList[i]);
         }
     }
@@ -2204,7 +2204,7 @@ bonkAPI.getPlayerNameByID = function (id) {
  */
 bonkAPI.getPlayerIDByName = function (name) {
     for (let i = 0; i < bonkAPI.playerList.length; i++) {
-        if (bonkAPI.playerList[i] == null && name == bonkAPI.playerList[i].userName) {
+        if (bonkAPI.playerList[i] != null && name == bonkAPI.playerList[i].userName) {
             return i;
         }
     }
