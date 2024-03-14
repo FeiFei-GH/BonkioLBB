@@ -673,7 +673,6 @@ bonkHUD.generateButton = function (name) {
     return newButton;
 }
 
-
 if (document.readyState === "complete" || document.readyState === "interactive") {
     bonkHUD.loadUISettings();
 
