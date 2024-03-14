@@ -21,7 +21,7 @@ const top = "0";
 const width = "172px";
 const height = "100px";
 
-bonkHUD.readingPlayer = "";
+bonkHUD.readingPlayer = "BZD233";
 
 // Variable to track the most recent key input by the user
 window.latestInput = 0;
@@ -51,13 +51,6 @@ window.keyTableReset = () => {
     });
 };
 
-// Adjust the UI's opacity based on user input
-window.setKeyTableOpacity = (opacity) => {
-    let dragContainer = document.getElementById("drag-container");
-    dragContainer.style.opacity = opacity;
-    saveUISettings(); // Save the new setting to local storage
-};
-
 // Process input data and invoke style updates
 bonkAPI.addEventListener("gameInputs", (e) => {
     let readingPlayerID = bonkAPI.getPlayerIDByName(bonkHUD.readingPlayer);
@@ -70,14 +63,13 @@ bonkAPI.addEventListener("gameInputs", (e) => {
 
 // Save the current state of the UI settings to local storage
 function saveUISettings() {
-    let dragContainer = document.getElementById("drag-container");
+    let keytable_window = document.getElementById("keytable_window");
     let settings = {
-        width: dragContainer.style.width,
-        height: dragContainer.style.height,
-        opacity: dragContainer.style.opacity,
-        bottom: dragContainer.style.bottom,
-        right: dragContainer.style.right,
-        display: dragContainer.style.display
+        width: keytable_window.style.width,
+        height: keytable_window.style.height,
+        opacity: keytable_window.style.opacity,
+        bottom: keytable_window.style.bottom,
+        right: keytable_window.style.right
     };
     localStorage.setItem('KeyTable_UI_Settings', JSON.stringify(settings));
 }
@@ -86,178 +78,49 @@ function saveUISettings() {
 function loadUISettings() {
     let settings = JSON.parse(localStorage.getItem('KeyTable_UI_Settings'));
     if (settings) {
-        let dragContainer = document.getElementById("drag-container");
-        let opacitySlider = document.getElementById("opacity-slider");
+        let keytable_window = document.getElementById("keytable_window");
         // Apply the saved settings to the UI elements
-        Object.assign(dragContainer.style, settings);
+        Object.assign(keytable_window.style, settings);
         // Set the slider's position to reflect the current opacity
-        if (opacitySlider) {
-            opacitySlider.value = settings.opacity;
-        }
     }
-}
-
-// Toggle the visibility of the slider row and adjust the UI dimensions
-function toggleSliderDisplay() {
-    let dragContainer = document.getElementById("drag-container");
-    let sliderRow = document.getElementById("slider-row");
-    let keyTable = document.getElementById("bonk_keytable");
-    let isVisible = sliderRow.style.display !== 'none';
-    // Calculate and adjust the heights when showing or hiding the slider
-    keyTable.style.height = `calc(100% - ${isVisible ? '30px' : '100px'})`;
-    dragContainer.style.height = `calc(${dragContainer.style.height} ${isVisible ? '-' : '+'} 50px)`;
-    sliderRow.style.display = isVisible ? 'none' : 'block'; // Toggle display
-    saveUISettings(); // Persist the changes
-}
-
-// Function to handle the drag event
-function dragStart(e, dragItem) {
-    // Prevents dragging from starting on the opacity slider
-    if (e.target.id !== "opacity-slider") {
-        let startX = e.clientX;
-        let startY = e.clientY;
-        let startRight = parseInt(window.getComputedStyle(dragItem).right, 10);
-        let startBottom = parseInt(window.getComputedStyle(dragItem).bottom, 10);
-        const boundDragMove = dragMove.bind(null, startX, startY, startRight, startBottom, dragItem);
-        document.addEventListener('mousemove', boundDragMove);
-        document.addEventListener('mouseup', () => dragEnd(boundDragMove));
-    }
-}
-
-// Function to move the draggable element
-function dragMove(startX, startY, startRight, startBottom, dragItem, e) {
-    let moveX = startX - e.clientX;
-    let moveY = startY - e.clientY;
-    dragItem.style.right = (startRight + moveX) + "px";
-    dragItem.style.bottom = (startBottom + moveY) + "px";
-}
-
-// Function to stop the dragging
-function dragEnd(dragMoveFn) {
-    document.removeEventListener('mousemove', dragMoveFn);
-    saveUISettings();
-}
-
-// Function to start resizing the UI
-function startResizing(e, dragItem) {
-    e.stopPropagation(); // Prevent triggering dragStart for dragItem
-
-    let startX = e.clientX;
-    let startY = e.clientY;
-    let startWidth = parseInt(window.getComputedStyle(dragItem).width, 10);
-    let startHeight = parseInt(window.getComputedStyle(dragItem).height, 10);
-
-    function doResize(e) {
-        resizeMove(e, startX, startY, startWidth, startHeight, dragItem);
-    }
-
-    function stopResizing() {
-        resizeEnd(doResize);
-    }
-
-    document.addEventListener('mousemove', doResize);
-    document.addEventListener('mouseup', stopResizing);
-}
-
-// Function to handle the resize event
-function resizeMove(e, startX, startY, startWidth, startHeight, dragItem) {
-    let newWidth = startWidth - (e.clientX - startX);
-    let newHeight = startHeight - (e.clientY - startY);
-
-    // Enforce minimum dimensions
-    newWidth = Math.max(200, newWidth);
-    newHeight = Math.max(100, newHeight);
-
-    dragItem.style.width = newWidth + 'px';
-    dragItem.style.height = newHeight + 'px';
-}
-
-// Function to stop the resize event
-function resizeEnd(resizeMoveFn) {
-    document.removeEventListener('mousemove', resizeMoveFn);
-    document.removeEventListener('mouseup', resizeEnd);
-    saveUISettings();
-}
-
-// Function to toggle the UI's visibility
-function toggleUIDisplay() {
-    const dragContainer = document.getElementById("drag-container");
-    if (dragContainer) {
-        dragContainer.style.display = dragContainer.style.display === 'none' ? 'block' : 'none';
-        saveUISettings(); // Save the settings whenever the display changes
-    }
-}
-
-// Factory function to create the slider row for opacity control
-function createOpacityControl() {
-    // Create container for the opacity controls with initial styles
-    let sliderRow = document.createElement("div");
-    sliderRow.id = "slider-row";
-    sliderRow.style.display = "none"; // Set to hidden until toggled
-    sliderRow.style.marginTop = "10px"; // Space above the slider
-    sliderRow.style.backgroundColor = "#2d2d2d"; // Dark theme background
-    sliderRow.style.borderRadius = "5px"; // Smoothed corners for aesthetics
-    sliderRow.style.padding = "10px"; // Inner spacing around the contents
-    sliderRow.style.boxSizing = "border-box"; // Ensures padding is included in total width/height
-    sliderRow.style.position = "relative"; // Enables absolute positioning of child elements
-
-    // Add a title to the slider row for visual clarity
-    let sliderTitle = document.createElement("div");
-    sliderTitle.textContent = "UI";
-    sliderTitle.style.position = "absolute"; // Positioned relative to sliderRow
-    sliderTitle.style.top = "0"; // Align to the top of sliderRow
-    sliderTitle.style.left = "10px"; // Horizontal position within sliderRow
-    sliderTitle.style.fontSize = "12px"; // Text size for readability
-    sliderTitle.style.fontWeight = "bold"; // Make the title text bold
-    sliderTitle.style.color = "#fff"; // White text for contrast
-    sliderRow.appendChild(sliderTitle); // Insert the title into the slider container
-
-    // Create a label for the opacity slider for accessibility
-    let opacityLabel = document.createElement("label");
-    opacityLabel.textContent = "Opacity";
-    opacityLabel.setAttribute("for", "opacity-slider"); // Associate with the slider
-    opacityLabel.style.fontSize = "12px"; // Consistent font size with the title
-    opacityLabel.style.fontWeight = "bold"; // Emphasize the label text
-    opacityLabel.style.marginRight = "5px"; // Space between label and slider
-    opacityLabel.style.display = "inline-block"; // Allows margin-top adjustment
-    opacityLabel.style.color = "#fff"; // White color for visibility
-    opacityLabel.style.marginTop = "25px"; // Vertical alignment with the slider
-    sliderRow.appendChild(opacityLabel); // Add the label to the slider container
-
-    // Create the opacity slider input, configuring its range and appearance
-    let opacitySlider = document.createElement("input");
-    opacitySlider.type = "range"; // Slider type for range selection
-    opacitySlider.id = "opacity-slider"; // Unique identifier for the slider
-    opacitySlider.min = "0.1"; // Minimum opacity value
-    opacitySlider.max = "1"; // Maximum opacity value (fully opaque)
-    opacitySlider.step = "0.1"; // Incremental steps for opacity adjustment
-    opacitySlider.value = "1"; // Default value set to fully opaque
-    opacitySlider.style.width = "calc(100% - 60px)"; // Width adjusted for the label
-    opacitySlider.style.verticalAlign = "middle"; // Center align with the label text
-    opacitySlider.oninput = function () {
-        window.setKeyTableOpacity(this.value); // Update the UI opacity in real-time
-    };
-    sliderRow.appendChild(opacitySlider); // Place the slider into the slider container
-
-    return sliderRow; // Return the fully constructed slider row element
 }
 
 // Main function to construct and add the key table UI to the DOM
 const addKeyTable = () => {
-    // Create the main container 'dragItem'
-    let dragItem = document.createElement("div");
-    dragItem.id = "drag-container";
-    dragItem.style.position = "fixed";
-    dragItem.style.bottom = top;
-    dragItem.style.right = left;
-    dragItem.style.width = width;
-    dragItem.style.minWidth = "200px"; // Minimum width to prevent deformation
-    dragItem.style.height = height;
-    dragItem.style.minHeight = "100px"; // Minimum height to prevent deformation
-    dragItem.style.backgroundColor = "#3c3c3c";
-    dragItem.style.overflow = "hidden";
-    dragItem.style.zIndex = "9999";
-    dragItem.style.borderRadius = "8px"; // Rounded corners
+    // Create the key table
+    let keyTable = document.createElement("table");
+    keyTable.id = "bonk_keytable";
+    keyTable.style.width = "100%";
+    keyTable.style.height = "calc(100% - 30px)"; // Adjusted height for header
+    keyTable.style.color = "#ccc";
+    keyTable.innerHTML = `
+        <tbody>
+            <tr>
+                <td id="Special" style="width: 34%; text-align: center;">Special</td>
+                <td id="↑" style="width: 34%; text-align: center;">↑</td>
+                <td id="Heavy" style="width: 34%; text-align: center;">Heavy</td>
+            </tr>
+            <tr>
+                <td id="←" style="width: 34%; text-align: center;">←</td>
+                <td id="↓" style="width: 34%; text-align: center;">↓</td>
+                <td id="→" style="width: 34%; text-align: center;">→</td>
+            </tr>
+        </tbody>`;
+
+    bonkHUD.createWindow("KeyTable", "keytable_window", keyTableHTML, "100px");
+
+    let keytable_window = document.getElementById("keytable_window");
+    keytable_window.style.position = "fixed";
+    keytable_window.style.bottom = top;
+    keytable_window.style.right = left;
+    keytable_window.style.width = width;
+    keytable_window.style.minWidth = "200px"; // Minimum width to prevent deformation
+    keytable_window.style.height = height;
+    keytable_window.style.minHeight = "100px"; // Minimum height to prevent deformation
+    keytable_window.style.backgroundColor = "#3c3c3c";
+    keytable_window.style.overflow = "hidden";
+    keytable_window.style.zIndex = "9999";
+    keytable_window.style.borderRadius = "8px"; // Rounded corners
 
     // Create the header
     let header = document.createElement("div");
@@ -296,73 +159,23 @@ const addKeyTable = () => {
     header.appendChild(resizeButton);
 
     // Append the header to the dragItem
-    dragItem.appendChild(header);
-
-    // Create the key table
-    let keyTable = document.createElement("table");
-    keyTable.id = "bonk_keytable";
-    keyTable.style.width = "100%";
-    keyTable.style.height = "calc(100% - 30px)"; // Adjusted height for header
-    keyTable.style.color = "#ccc";
-    keyTable.innerHTML = `
-        <tbody>
-            <tr>
-                <td id="Special" style="width: 34%; text-align: center;">Special</td>
-                <td id="↑" style="width: 34%; text-align: center;">↑</td>
-                <td id="Heavy" style="width: 34%; text-align: center;">Heavy</td>
-            </tr>
-            <tr>
-                <td id="←" style="width: 34%; text-align: center;">←</td>
-                <td id="↓" style="width: 34%; text-align: center;">↓</td>
-                <td id="→" style="width: 34%; text-align: center;">→</td>
-            </tr>
-        </tbody>`;
-
-    // Append the keyTable to the dragItem
-    dragItem.appendChild(keyTable);
-
-    // Append the opacity control to the dragItem
-    let opacityControl = createOpacityControl();
-    dragItem.appendChild(opacityControl);
-
-    // Append the dragItem to the body of the page
-    document.body.appendChild(dragItem);
+    keytable_window.appendChild(header);
 
     // Initialize the key styles
     window.updateKeyStyles();
 
-    // Add event listeners for dragging
-    dragItem.addEventListener('mousedown', (e) => dragStart(e, dragItem));
-
-    // Add event listeners for resizing
-    resizeButton.addEventListener('mousedown', (e) => startResizing(e, dragItem));
-
-    // Event listener for toggling the slider display
-    document.addEventListener('keydown', (e) => {
-        if (e.shiftKey && e.key === 'O') {
-            toggleSliderDisplay();
-        }
-    });
-
-    // Event listener for toggling the UI display
-    document.addEventListener('keydown', (e) => {
-        if (e.shiftKey && e.key === 'H') {
-            toggleUIDisplay();
-        }
-    });
-
     // Call loadUISettings when the script is loaded
-    document.addEventListener("DOMContentLoaded", loadUISettings);
+    // document.addEventListener("DOMContentLoaded", loadUISettings);
 };
 
 // Initialization logic to set up the UI once the document is ready
 if (document.readyState === "complete" || document.readyState === "interactive") {
     addKeyTable();
-    loadUISettings(); // Immediately load settings if the document is ready
+    // loadUISettings(); // Immediately load settings if the document is ready
 } else {
     document.addEventListener("DOMContentLoaded", () => {
         addKeyTable();
-        loadUISettings(); // Load settings after DOM content has loaded
+        // loadUISettings(); // Load settings after DOM content has loaded
     });
 }
 
