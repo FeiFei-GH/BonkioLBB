@@ -100,6 +100,7 @@ const addKeyTable = () => {
     keytable_window_drag.style.zIndex = "9999";
     keytable_window_drag.style.borderRadius = "8px"; // Rounded corners
 
+    bonkHUD.loadUISetting("keytable_window");
     // Initialize the key styles
     window.updateKeyStyles();
 };

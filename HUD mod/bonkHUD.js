@@ -2,7 +2,7 @@
 // @name         bonkHUD
 // @version      1.4.48
 // @description  Add a customizable key table overlay to the bonk.io game
-// @author       BZD + FeiFei
+// @author       BZD + FeiFei + Bag
 // @namespace    http://tampermonkey.net/
 // @license      MIT
 // @match        https://bonk.io/gameframe-release.html
@@ -461,6 +461,25 @@ bonkHUD.loadUISettings = function () {
     }
 };
 
+bonkHUD.loadUISetting = function (windowID) {
+    let settings = JSON.parse(localStorage.getItem('bonkHUD_Settings'));
+    if (settings && Array.isArray(settings)) {
+        let ind = bonkHUD.getWindowIndexByID(windowID);
+        if (ind !== -1 && settings[ind]) {
+            let windowElement = document.getElementById(windowID + "-drag");
+            if (windowElement) {
+                Object.assign(windowElement.style, settings[ind]);
+            } else {
+                console.log(`Window element not found for windowID: ${windowID}. Please ensure the window has been created.`);
+            }
+        } else {
+            console.log(`No settings found for windowID: ${windowID} in the saved settings.`);
+        }
+    } else {
+        console.log(`No saved settings found in localStorage.`);
+    }
+};
+
 bonkHUD.resetUISettings = function () {
     localStorage.removeItem('bonkHUD_Settings');
 };
@@ -672,6 +691,7 @@ bonkHUD.generateButton = function (name) {
     });
     return newButton;
 }
+
 
 if (document.readyState === "complete" || document.readyState === "interactive") {
     bonkHUD.loadUISettings();
