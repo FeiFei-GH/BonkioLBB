@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         bonkAPI
+// @name         BonkAPI
 // @namespace    http://tampermonkey.net/
 // @version      4.0.48
 // @description  bonkAPI
@@ -99,15 +99,33 @@ bonkAPI.EventHandler;
  * @property {boolean} tabbed - Is tabbed
  * @property {JSON} avatar - Avatar data
  */
+
+/**
+ * Contains data of a single friend
+ *
+ * @typedef {object} Friend
+ * @property {string} userName - Username of friend
+ * @property {string} roomID - Room ID of the lobby that the friend is in
+ */
+
 bonkAPI.playerList = [];
 bonkAPI.myID = -1;
+bonkAPI.myToken = -1;
 bonkAPI.hostID = -1;
 bonkAPI.events = new bonkAPI.EventHandler();
+
+bonkAPI.isLoggingIn = false;
+bonkAPI.blockedPackets = [];
+bonkAPI.events.addEventListener('block', (e) => {
+    bonkAPI.blockedPackets[e.packet] = true;
+});
 
 // MGF vars
 bonkAPI.bonkWSS = 0;
 bonkAPI.originalSend = window.WebSocket.prototype.send;
 bonkAPI.originalRequestAnimationFrame = window.requestAnimationFrame;
+bonkAPI.originalXMLOpen = window.XMLHttpRequest.prototype.open;
+bonkAPI.originalXMLSend = window.XMLHttpRequest.prototype.send;
 
 // #endregion
 
@@ -262,6 +280,8 @@ window.WebSocket.prototype.send = function (args) {
                 case "42[12": // *Create Room
                     args = bonkAPI.send_CreateRoom(args);
                     break;
+                case "42[13": // *Room Join Information
+                    args = bonkAPI.send_RoomJoin(args);
                 case "42[14": // *Return To Lobby
                     args = bonkAPI.send_LobbyReturn(args);
                     break;
@@ -366,10 +386,32 @@ bonkAPI.receivePacket = function (packet) {
 };
 // #endregion
 
+// #region //!-----------------Overriding HTTPRequest------------------
+window.XMLHttpRequest.prototype.open = function (_, url) {
+    if (url.includes("scripts/login_legacy")) {
+        bonkAPI.isLoggingIn = true;
+    }
+    //? Could check for other post requests but not necessary
+
+    bonkAPI.originalXMLOpen.call(this, ...arguments);
+}
+window.XMLHttpRequest.prototype.send = function (data) {
+    if (bonkAPI.isLoggingIn) {
+        this.onreadystatechange = function () {
+            if (this.readyState == 4) {
+                bonkAPI.myToken = JSON.parse(this.response)["token"];
+            }
+        }
+        bonkAPI.isLoggingIn = false;
+    }
+    bonkAPI.originalXMLSend.call(this, ...arguments);
+}
+// #endregion
+
 // #region //!------------------Receive Handler Functions------------------
 bonkAPI.receive_PingUpdate = function (args) {
     //  TODO: Finish implement of function
-    
+
     return args;
 };
 
@@ -544,7 +586,12 @@ bonkAPI.receive_Inputs = function (args) {
             sequence: jsonargs[2]["c"],
         };
         bonkAPI.events.fireEvent("gameInputs", sendObj);
+    } //example
+    /*if(bonkAPI.bonkAPI.events.hasEvent["receiveRawInput"]) {
+        obj here
+        bonkAPI.bonkAPI.events.fireEvent("receiveRawInput", sendObj);
     }
+    */
 
     return args;
 };
@@ -946,6 +993,47 @@ bonkAPI.send_CreateRoom = function (args) {
     return args;
 };
 
+/**
+ * Called as to send inital user data when joining a room.
+ * @function send_RoomJoin
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
+bonkAPI.send_RoomJoin = function (args) {
+    let jsonargs = JSON.parse(args.substring(2));
+
+    if(typeof jsonargs[2] != 'undefined') {
+        return args;
+    }
+
+    //! DONT KNOW WHAT TO DO FOR NAMING
+    //! Possibly get rid of XMLhttp thing since this gives the login token
+    /**
+     * When inputs are received from other players.
+     * @event sendJoin
+     * @type {object}
+     * @property {string} password - Room password
+     * @property {object} avatar - User's avatar
+     * @property {string} token - Login token
+     * @property {string} packet - Editable packet
+     */
+    if (bonkAPI.events.hasEvent["sendJoin"]) {
+        var sendObj = {
+            //password: jsonargs[1]["roomPassword"],
+            //avatar: JSON.parse(jsonargs[1]["avatar"]),
+            //token: jsonargs[1]["token"] ? jsonargs[1]["token"] : null,
+            packet: args,
+        };
+        bonkAPI.events.fireEvent("sendJoin", sendObj);
+    }
+
+    if(bonkAPI.blockedPackets["42[13"]) {
+        return "";
+    }
+
+    return args;
+};
+
 bonkAPI.send_LobbyReturn = function (args) {
     //  TODO: Finish implement of function
 
@@ -1006,8 +1094,6 @@ bonkAPI.send_MapSwitch = function (args) {
      * @type {object}
      * @property {string} mapData - String with the data of the map
      */
-    console.log("send map switch");
-    console.log(this);
     if (bonkAPI.events.hasEvent["mapSwitch"]) {
         var sendObj = { mapData: jsonargs[1]["m"] };
         bonkAPI.events.fireEvent("mapSwitch", sendObj);
@@ -1960,20 +2046,6 @@ bonkAPI.checkDocumentReady();
 // #endregion
 
 // #region //!------------------Public API Functions------------------
-
-bonkAPI.isPlayerIDExists = function (id) {
-    return id >= 0 && id < bonkAPI.playerList.length;
-}
-
-bonkAPI.isPlayerNameExists = function (name) {
-    for (let i = 0; i < bonkAPI.playerList.length; i++) {
-        if (name == bonkAPI.playerList[i].userName) {
-            return true;
-        }
-    }
-    return false;
-}
-
 /**
  * Sends message in game's public chat.
  * @function chat
@@ -1992,6 +2064,40 @@ bonkAPI.chat = function (message) {
 bonkAPI.banPlayerByID = function (id, kick = false) {
     bonkAPI.sendPacket('42[9,{"banshortid":' + id + ',"kickonly":' + kick + "}]");
 };
+
+
+
+/**
+ * Gets all online friends.
+ * @function getOnlineFriendList
+ * @param {function} callback - Callback function
+ * @returns {Array.<Friend>} Array of {@linkcode Friend} objects
+ */
+bonkAPI.getOnlineFriendList = function (callback) {
+    let req = new window.XMLHttpRequest();
+    req.onreadystatechange = () => {
+        if (req.readyState == 4) {
+            let friends = [];
+            let data = JSON.parse(req.response)["friends"];
+            for (let i = 0; i < data.length; i++) {
+                let rid = data[i]["roomid"]
+                if (rid != null) {
+                    friends.push({ userName: data[i]["name"], roomID: rid });
+                }
+            }
+            callback(friends);
+        }
+    };
+    try {
+        req.open("POST", "https://bonk2.io/scripts/friends.php");
+        req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+        //! maybe make a function to automatically build this stuff, but not necessary and probably worse
+        req.send('token=' + bonkAPI.myToken + '&task=getfriends');
+    } catch (e) {
+        console.log(e);
+        callback([]);
+    }
+}
 
 /**
  * Adds a listener to {@linkcode EventHandler} to call the method.
@@ -2039,7 +2145,7 @@ bonkAPI.getPlayer = function (ref) {
         return Object.assign({}, bonkAPI.playerList[ref]);
     } else if (typeof ref === "string") {
         for (let i = 0; i < bonkAPI.playerList.length; i++) {
-            if (ref == bonkAPI.playerList[i].userName) {
+            if (bonkAPI.playerList[i] != null && ref == bonkAPI.playerList[i].userName) {
                 return Object.assign({}, bonkAPI.playerList[i]);
             }
         }
@@ -2070,7 +2176,7 @@ bonkAPI.getPlayerByID = function (id) {
  */
 bonkAPI.getPlayerByName = function (name) {
     for (let i = 0; i < bonkAPI.playerList.length; i++) {
-        if (name == bonkAPI.playerList[i].userName) {
+        if (bonkAPI.playerList[i] != null && name == bonkAPI.playerList[i].userName) {
             return Object.assign({}, bonkAPI.playerList[i]);
         }
     }
@@ -2098,10 +2204,11 @@ bonkAPI.getPlayerNameByID = function (id) {
  */
 bonkAPI.getPlayerIDByName = function (name) {
     for (let i = 0; i < bonkAPI.playerList.length; i++) {
-        if (name == bonkAPI.playerList[i].userName) {
+        if (bonkAPI.playerList[i] != null && name == bonkAPI.playerList[i].userName) {
             return i;
         }
     }
+    return -1;
 };
 
 /**

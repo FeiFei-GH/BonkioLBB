@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         bonkHUD
+// @name         BonkHUD
 // @version      1.3.48
 // @description  Add a customizable key table overlay to the bonk.io game
 // @author       BZD + FeiFei
