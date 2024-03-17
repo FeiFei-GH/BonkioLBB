@@ -1,5 +1,7 @@
-require("dotenv").config(); // Put sensitive infos in this please!
-const { Client, IntentsBitField, EmbedBuilder } = require("discord.js");
+import * as dotenv from "dotenv";
+dotenv.config(); // loads .env file
+import {downloadMaps} from "./modules/maps.js";
+import { Client, IntentsBitField, EmbedBuilder } from "discord.js";
 
 const client = new Client({
     intents: [
@@ -13,19 +15,25 @@ const client = new Client({
 // Global Variables
 let DCBotReady = false;
 let bonkLoginToken = process.env.BonkLoginToken_LB;
+let downloadDataLocal = true;   // let bot update local data with cloud upon startup
+
+void client.login(process.env.DCBOTTOKEN); // let bot login
 
 client.on("ready", (c) => {
     DCBotReady = true;
-    console.log(`${c.user.username} is online.`);
-    
-    sendBonkInfo(); // call it 1st so I don't have to wait
+    console.log(`${c.user.username} is Online.`);
+    if (downloadDataLocal) {
+        console.log("Downloading Map data");
+        downloadMaps("src").then(r => updateData());
+    } else {
+        updateData();
+    }
 });
 
 client.on("messageCreate", (msg) => {
     if (msg.author.bot) {
         return;
     }
-    
     // ?Things to deal with messages in channel can go here
 });
 
@@ -34,7 +42,6 @@ client.on("messageCreate", (msg) => {
 const bonkGetRoomsJSON = async () => {
     try {
         const fetchRoomURL = "https://bonk2.io/scripts/getrooms.php";
-
         const fetchRoomHeaders = {
             "accept": "*/*",
             "accept-language": "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7",
@@ -48,15 +55,12 @@ const bonkGetRoomsJSON = async () => {
             "Referer": "https://bonk.io/",
             "Referrer-Policy": "strict-origin-when-cross-origin"
         }
-
         const fetchRoomData = `version=48&gl=n&token=${bonkLoginToken}`;
-
         const response = await fetch(fetchRoomURL, {
             headers: fetchRoomHeaders,
             body: fetchRoomData,
             method: "POST",
         });
-        
         const responseJSON = await response.json();
         return responseJSON;
     } catch (err) {
@@ -65,11 +69,11 @@ const bonkGetRoomsJSON = async () => {
     }
 }
 
-// Get new login token if expired(using remember token)
+// Get new login token if expired (using remember token)
 const getNewBLT = async () => {
     try {
+        // All game info must be up to-date to fetch
         const fetchRoomURL = "https://bonk2.io/scripts/login_auto.php";
-
         const fetchRoomHeaders = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/113.0',
             'Accept': '*/*',
@@ -84,9 +88,9 @@ const getNewBLT = async () => {
             'Sec-Fetch-Site': 'cross-site',
             'TE': 'trailers'
         }
-
         const fetchRoomData = `rememberToken=${process.env.BonkRemberToken_LB}`;
 
+        // Fetch request for room data
         const response = await fetch(fetchRoomURL, {
             headers: fetchRoomHeaders,
             body: fetchRoomData,
@@ -101,10 +105,9 @@ const getNewBLT = async () => {
     }
 }
 
-// Print those infos in the channel
-printBonkPkrRooms = (roomsJSON) => {
+// Prints Room info into Discord Channel
+let printBonkPkrRooms = (roomsJSON) => {
     let roomsArray = roomsJSON.rooms;
-    
     let roomsEmbed = new EmbedBuilder()
         .setColor(0x0099FF)
         .setTitle("Live Bonk Parkour Rooms:")
@@ -149,9 +152,9 @@ printBonkPkrRooms = (roomsJSON) => {
     return roomsEmbed;
 }
 
-sendBonkInfo = async () => {
+let updateData = async () => {
     let updateMsg = "Sending Bonk Info ";
-    setTimeout(sendBonkInfo, 10000); // too fast and the bot will get rate-limited by the bonk.io server
+    setTimeout(updateData, 10000); // too fast and the bot will get rate-limited by the server
     const now = new Date();
     console.log(updateMsg.concat(now.getHours(),":", now.getMinutes(),":", now.getSeconds(),".",now.getMilliseconds()));
     let roomsEmbed = new EmbedBuilder()
@@ -165,7 +168,6 @@ sendBonkInfo = async () => {
     
     try {
         let roomsJSON = await bonkGetRoomsJSON();
-        console.log(JSON.stringify(roomsJSON,null));
         if (roomsJSON.r === 'fail' && roomsJSON.e === 'token') {
             console.log("Token Expired");
             bonkLoginToken = await getNewBLT();
@@ -176,7 +178,6 @@ sendBonkInfo = async () => {
         console.log("failed getting bonk rooms");
         console.error(err);
     }
-    
     if (DCBotReady) {
         try {
             const channel = client.channels.cache.get('1122510728331542579');
@@ -190,6 +191,4 @@ sendBonkInfo = async () => {
     }
 };
 
-void client.login(process.env.DCBOTTOKEN); // Let the discord bot login
-
-let sendBonkInfoID = sendBonkInfo;
+// let sendBonkInfoID = updateData;
