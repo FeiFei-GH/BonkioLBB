@@ -1,7 +1,7 @@
 'use strict';
 
-const { messageLink } = require('@discordjs/builders');
 const { Collection } = require('@discordjs/collection');
+const { messageLink } = require('@discordjs/formatters');
 const { DiscordSnowflake } = require('@sapphire/snowflake');
 const {
   InteractionType,
@@ -25,7 +25,7 @@ const { createComponent } = require('../util/Components');
 const { NonSystemMessageTypes, MaxBulkDeletableMessageAge, DeletableMessageTypes } = require('../util/Constants');
 const MessageFlagsBitField = require('../util/MessageFlagsBitField');
 const PermissionsBitField = require('../util/PermissionsBitField');
-const { cleanContent, resolvePartialEmoji } = require('../util/Util');
+const { cleanContent, resolvePartialEmoji, transformResolved } = require('../util/Util');
 
 /**
  * Represents a message on Discord.
@@ -141,19 +141,19 @@ class Message extends Base {
        * in a guild for messages that do not mention the client.</info>
        * @type {Embed[]}
        */
-      this.embeds = data.embeds.map(e => new Embed(e));
+      this.embeds = data.embeds.map(embed => new Embed(embed));
     } else {
       this.embeds = this.embeds?.slice() ?? [];
     }
 
     if ('components' in data) {
       /**
-       * An array of of action rows in the message.
+       * An array of action rows in the message.
        * <info>This property requires the {@link GatewayIntentBits.MessageContent} privileged intent
        * in a guild for messages that do not mention the client.</info>
        * @type {ActionRow[]}
        */
-      this.components = data.components.map(c => createComponent(c));
+      this.components = data.components.map(component => createComponent(component));
     } else {
       this.components = this.components?.slice() ?? [];
     }
@@ -181,7 +181,7 @@ class Message extends Base {
        * @type {Collection<Snowflake, Sticker>}
        */
       this.stickers = new Collection(
-        (data.sticker_items ?? data.stickers)?.map(s => [s.id, new Sticker(this.client, s)]),
+        (data.sticker_items ?? data.stickers)?.map(sticker => [sticker.id, new Sticker(this.client, sticker)]),
       );
     } else {
       this.stickers = new Collection(this.stickers);
@@ -221,6 +221,19 @@ class Message extends Base {
       };
     } else {
       this.roleSubscriptionData ??= null;
+    }
+
+    if ('resolved' in data) {
+      /**
+       * Resolved data from auto-populated select menus.
+       * @typedef {Object} CommandInteractionResolvedData
+       */
+      this.resolved = transformResolved(
+        { client: this.client, guild: this.guild, channel: this.channel },
+        data.resolved,
+      );
+    } else {
+      this.resolved ??= null;
     }
 
     // Discord sends null if the message has not been edited
