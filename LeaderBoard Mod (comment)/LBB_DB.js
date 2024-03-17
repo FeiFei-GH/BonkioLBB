@@ -11,7 +11,7 @@
 // ==/UserScript==
 
 // Create a new script element
-var LBB_DBJS = document.createElement('script');
+let LBB_DBJS = document.createElement('script');
 // Inside this script, log a message and then interact with Firebase (a popular Backend-as-a-Service)
 LBB_DBJS.textContent = `
 console.log("MEOW");
