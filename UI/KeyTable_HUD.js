@@ -21,8 +21,6 @@ const top = "0";
 const width = "172px";
 const height = "100px";
 
-bonkHUD.readingPlayer = "BZD2333";
-
 // Variable to track the most recent key input by the user
 window.latestInput = 0;
 
@@ -53,11 +51,10 @@ window.keyTableReset = () => {
 
 // Process input data and invoke style updates
 bonkAPI.addEventListener("gameInputs", (e) => {
-    console.log("gameInputs event received", e);
-    let readingPlayerID = bonkAPI.getPlayerIDByName(bonkHUD.readingPlayer);
+    // console.log("gameInputs event received", e);
 
-    if (e.userID == readingPlayerID) {
-        console.log("Updating latestInput for player", readingPlayerID, "with input", e.rawInput);
+    if (e.userID == bonkAPI.getMyID()) {
+        // console.log("Updating latestInput for player", readingPlayerID, "with input", e.rawInput);
         window.latestInput = e.rawInput;
         window.updateKeyStyles();
     }
