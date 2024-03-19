@@ -5,7 +5,7 @@
 // @description  bonkAPI
 // @author       FeiFei + Clarifi
 // @license      MIT
-// @match        https://*.bonk.io/gameframe-release.html
+// @match        https://*bonk.io/gameframe-release.html
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=bonk.io
 // @run-at       document-start
 // @grant        none
@@ -115,10 +115,6 @@ bonkAPI.hostID = -1;
 bonkAPI.events = new bonkAPI.EventHandler();
 
 bonkAPI.isLoggingIn = false;
-bonkAPI.blockedPackets = [];
-bonkAPI.events.addEventListener('block', (e) => {
-    bonkAPI.blockedPackets[e.packet] = true;
-});
 
 // MGF vars
 bonkAPI.bonkWSS = 0;
@@ -1002,10 +998,6 @@ bonkAPI.send_CreateRoom = function (args) {
 bonkAPI.send_RoomJoin = function (args) {
     let jsonargs = JSON.parse(args.substring(2));
 
-    if(typeof jsonargs[2] != 'undefined') {
-        return args;
-    }
-
     //! DONT KNOW WHAT TO DO FOR NAMING
     //! Possibly get rid of XMLhttp thing since this gives the login token
     /**
@@ -1025,10 +1017,6 @@ bonkAPI.send_RoomJoin = function (args) {
             packet: args,
         };
         bonkAPI.events.fireEvent("sendJoin", sendObj);
-    }
-
-    if(bonkAPI.blockedPackets["42[13"]) {
-        return "";
     }
 
     return args;
