@@ -673,9 +673,20 @@ bonkHUD.generateButton = function (name) {
     return newButton;
 }
 
-bonkHUD.loadUISettings();
+if (document.readyState === "complete" || document.readyState === "interactive") {
+    bonkHUD.loadUISettings();
 
-bonkHUD.loadStyleSettings();
-bonkHUD.updateStyleSettings();
+    bonkHUD.loadStyleSettings();
+    bonkHUD.updateStyleSettings();
 
-bonkHUD.initialize();
+    bonkHUD.initialize();
+} else {
+    document.addEventListener("DOMContentLoaded", () => {
+        bonkHUD.loadUISettings();
+
+        bonkHUD.loadStyleSettings();
+        bonkHUD.updateStyleSettings();
+
+        bonkHUD.initialize();
+    });
+}
