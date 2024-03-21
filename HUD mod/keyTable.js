@@ -48,8 +48,11 @@ let keyTableReset = () => {
 
 // !Use bonkAPI as listener
 bonkAPI.addEventListener("gameInputs", (e) => {
+    if(keyTable.readingPlayer == "") {
+        return;
+    }
     let readingPlayerID = bonkAPI.getPlayerIDByName(keyTable.readingPlayer);
-    
+
     if (e.userID == readingPlayerID) {
         latestInput = e.rawInput;
         updateKeyStyles();
@@ -73,7 +76,7 @@ let addKeyTable = () => {
             </tr>
         </tbody>`;
                                                                // ↓ kind of ignored
-    bonkHUD.createWindow("Keytable", "bonk-keytable", keyTable, "100"); 
+    bonkHUD.createWindow("Keytable", "bonk-keytable", keyTable, "100");
     //! Might get rid of some of the automatic styling so this doesnt need to be here later
     let finalTable = document.getElementById("bonk-keytable");
     finalTable.style.padding = "0";
@@ -83,4 +86,10 @@ let addKeyTable = () => {
     updateKeyStyles();
 };
 
-addKeyTable();
+if (document.readyState === "complete" || document.readyState === "interactive") {
+    addKeyTable();
+} else {
+    document.addEventListener("DOMContentLoaded", () => {
+        addKeyTable();
+    });
+}
