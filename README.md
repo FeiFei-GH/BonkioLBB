@@ -4,3 +4,6 @@ This should be the stable branch, containing the most recent, production-ready v
 
 Dev Branch:
 When working on new feature, create new feature branch with dev branch as base, do NOT directly work in dev branch.
+
+Feature Branch:
+Work in feature branch, when feel ready, push to dev.

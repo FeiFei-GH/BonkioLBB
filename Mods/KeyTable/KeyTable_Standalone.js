@@ -1,11 +1,6 @@
 // ==UserScript==
-<<<<<<<< HEAD:KeyTable/KeyTable.js
 // @name         KeyTable
 // @version      1.2.48
-========
-// @name         BonkHUD
-// @version      1.3.48
->>>>>>>> Fei's-Dev:BonkLIB/BonkHUD.js
 // @description  Add a customizable key table overlay to the bonk.io game
 // @author       BZD
 // @namespace    http://tampermonkey.net/
@@ -370,4 +365,3 @@ if (document.readyState === "complete" || document.readyState === "interactive")
         loadUISettings(); // Load settings after DOM content has loaded
     });
 }
-
