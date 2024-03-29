@@ -32,7 +32,7 @@ window.keyStyle = (keyname) => {
     };
     // Change the key's background color if it's currently pressed
     let keyElement = document.getElementById(keyname);
-    keyElement.style.backgroundColor = window.latestInput & inputValues[keyname] ? bonkHUD.styleHold[6] : bonkHUD.styleHold[5];
+    keyElement.style.backgroundColor = window.latestInput & inputValues[keyname] ? bonkHUD.styleHold.buttonColorHover : bonkHUD.styleHold.buttonColor;
 };
 
 // Refresh the styles for all keys on the UI
@@ -45,7 +45,7 @@ window.updateKeyStyles = () => {
 window.keyTableReset = () => {
     let keys = ['←', '↑', '→', '↓', 'Heavy', 'Special'];
     keys.forEach(key => {
-        document.getElementById(key).style.backgroundColor = bonkHUD.styleHold[5];
+        document.getElementById(key).style.backgroundColor = bonkHUD.styleHold.buttonColor;
     });
 };
 
