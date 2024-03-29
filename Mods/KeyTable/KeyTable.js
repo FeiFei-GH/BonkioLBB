@@ -32,7 +32,7 @@ window.keyStyle = (keyname) => {
     };
     // Change the key's background color if it's currently pressed
     let keyElement = document.getElementById(keyname);
-    keyElement.style.backgroundColor = window.latestInput & inputValues[keyname] ? '#808080' : '#333333';
+    keyElement.style.backgroundColor = window.latestInput & inputValues[keyname] ? bonkHUD.styleHold[6] : bonkHUD.styleHold[5];
 };
 
 // Refresh the styles for all keys on the UI
@@ -45,7 +45,7 @@ window.updateKeyStyles = () => {
 window.keyTableReset = () => {
     let keys = ['←', '↑', '→', '↓', 'Heavy', 'Special'];
     keys.forEach(key => {
-        document.getElementById(key).style.backgroundColor = '#333333';
+        document.getElementById(key).style.backgroundColor = bonkHUD.styleHold[5];
     });
 };
 
@@ -67,14 +67,14 @@ const addKeyTable = () => {
     keyTable.innerHTML = `
         <tbody>
             <tr>
-                <td id="Special" style="width: 34%; text-align: center;">Special</td>
-                <td id="↑" style="width: 34%; text-align: center;">↑</td>
-                <td id="Heavy" style="width: 34%; text-align: center;">Heavy</td>
+                <td id="Special" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">Special</td>
+                <td id="↑" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">↑</td>
+                <td id="Heavy" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">Heavy</td>
             </tr>
             <tr>
-                <td id="←" style="width: 34%; text-align: center;">←</td>
-                <td id="↓" style="width: 34%; text-align: center;">↓</td>
-                <td id="→" style="width: 34%; text-align: center;">→</td>
+                <td id="←" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">←</td>
+                <td id="↓" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">↓</td>
+                <td id="→" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">→</td>
             </tr>
         </tbody>`;
 
@@ -82,20 +82,7 @@ const addKeyTable = () => {
     let keytable_window = document.getElementById("keytable_window");
     keytable_window.style.width = "100%";
     keytable_window.style.height = "calc(100% - 30px)"; // Adjusted height for header
-    keytable_window.style.color = "#ccc";
-
-    let keytable_window_drag = document.getElementById("keytable_window-drag");
-    keytable_window_drag.style.position = "fixed";
-    keytable_window_drag.style.bottom = top;
-    keytable_window_drag.style.right = left;
-    keytable_window_drag.style.width = width;
-    keytable_window_drag.style.minWidth = "200px"; // Minimum width to prevent deformation
-    keytable_window_drag.style.height = height;
-    keytable_window_drag.style.minHeight = "100px"; // Minimum height to prevent deformation
-    keytable_window_drag.style.backgroundColor = "#3c3c3c";
-    keytable_window_drag.style.overflow = "hidden";
-    keytable_window_drag.style.zIndex = "9999";
-    keytable_window_drag.style.borderRadius = "8px"; // Rounded corners
+    keytable_window.style.padding = "0";
 
     bonkHUD.loadUISetting("keytable_window");
     // Initialize the key styles
