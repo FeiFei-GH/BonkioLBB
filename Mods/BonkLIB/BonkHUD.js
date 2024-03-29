@@ -125,6 +125,7 @@ bonkHUD.initialize = function () {
     mainSettingsHeading.style.fontSize = "1.2rem";
 
     let styleResetDiv = document.createElement("div");
+    styleResetDiv.style.marginTop = "5px";
 
     let styleResetLabel = document.createElement("label");
     styleResetLabel.classList.add("bonkhud-text-color");
@@ -138,6 +139,7 @@ bonkHUD.initialize = function () {
     styleResetButton.style.display = "inline-block";
 
     let styleExportDiv = document.createElement("div");
+    styleExportDiv.style.marginTop = "5px";
 
     let styleExportLabel = document.createElement("label");
     styleExportLabel.classList.add("bonkhud-text-color");
@@ -149,6 +151,26 @@ bonkHUD.initialize = function () {
     styleExportButton.style.paddingLeft = "5px";
     styleExportButton.style.paddingRight = "5px";
     styleExportButton.style.display = "inline-block";
+
+    let styleImportDiv = document.createElement("div");
+    styleImportDiv.style.marginTop = "5px";
+    
+    let styleImportLabel = document.createElement("label");
+    styleImportLabel.classList.add("bonkhud-text-color");
+    styleImportLabel.classList.add("bonkhud-settings-label");
+    styleImportLabel.style.marginRight = "5px";
+    styleImportLabel.innerText = "Import Style";
+
+    let styleImportButton = bonkHUD.generateButton("Import");
+    styleImportButton.style.paddingLeft = "5px";
+    styleImportButton.style.paddingRight = "5px";
+    styleImportButton.style.display = "inline-block";
+
+    let styleImportInput = document.createElement("input");
+    styleImportInput.setAttribute("type", "file");
+    styleImportInput.setAttribute("accept", ".style");
+    styleImportInput.setAttribute("onChange", "bonkHUD.importStyleSettings(event)");
+    styleImportInput.style.display = "none";
 
     let styleSettingsDiv = document.createElement("div");
     styleSettingsDiv.classList.add("bonkhud-border-color")
@@ -165,13 +187,18 @@ bonkHUD.initialize = function () {
     styleResetDiv.appendChild(styleResetButton);
     styleExportDiv.appendChild(styleExportLabel);
     styleExportDiv.appendChild(styleExportButton);
+    styleImportDiv.appendChild(styleImportLabel);
+    styleImportDiv.appendChild(styleImportButton);
+    styleImportDiv.appendChild(styleImportInput);
 
     styleSettingsDiv.appendChild(styleSettingsHeading);
     styleSettingsDiv.appendChild(styleResetDiv);
     styleSettingsDiv.appendChild(styleExportDiv)
+    styleSettingsDiv.appendChild(styleImportDiv);
 
     for (let prop in bonkHUD.styleHold) {
         let colorDiv = document.createElement("div");
+        colorDiv.style.marginTop="5px";
         
         let colorLabel = document.createElement("label");
         colorLabel.classList.add("bonkhud-text-color");
@@ -225,7 +252,7 @@ bonkHUD.initialize = function () {
     //mainSettingsDiv.appendChild(mainSettingsHeading);
 
     // Append general setting rows to general settings container
-    settingsContainer.appendChild(mainSettingsDiv);
+    //settingsContainer.appendChild(mainSettingsDiv);
     settingsContainer.appendChild(styleSettingsDiv);
 
     // Append everything to main container (HUD window)
@@ -255,6 +282,13 @@ bonkHUD.initialize = function () {
     styleResetButton.addEventListener('click', (e) => {
         bonkHUD.resetStyleSettings();
         bonkHUD.updateStyleSettings();
+    });
+    styleExportButton.addEventListener('click', (e) => {
+        bonkHUD.updateStyleSettings();
+        bonkHUD.exportStyleSettings();
+    });
+    styleImportButton.addEventListener('click', (e) => {
+        styleImportInput.click();
     });
 };
 
@@ -489,15 +523,44 @@ bonkHUD.saveStyleSettings = function () {
 };
 
 bonkHUD.exportStyleSettings = function() {
-    JSON.stringify(bonkHUD.styleHold);
+    let out = JSON.stringify(bonkHUD.styleHold);
+    let save = new File([out], "bonkHUDStyle-" + Date.now() + ".style", {type: 'text/plain',});
+    
+    let url = URL.createObjectURL(save);
+    let link = document.createElement("a");
+    link.href = url;
+    link.download = save.name;
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
 }
 
-bonkHUD.loadStyleSettings = function (settings = JSON.parse(localStorage.getItem('bonkHUD_Style_Settings'))) {
+bonkHUD.importStyleSettings = function(event) {
+    if(!event || !event.target || !event.target.files || event.target.files.length === 0) {
+        return;
+    }
+    let fileReader = new FileReader();
+    fileReader.addEventListener("load", (e) => {
+        //! No error handling for incorrect file, only protection is that it is in .style file
+        console.log(e.target.result);
+        bonkHUD.loadStyleSettings(JSON.parse(e.target.result));
+        bonkHUD.updateStyleSettings();
+        bonkHUD.saveStyleSettings();
+    }, false);
+    //let file = event.target.files[0];
+    fileReader.readAsText(event.target.files[0]);
+}
+
+bonkHUD.loadStyleSettings = function (settings) {
+    if(!settings) {
+        settings = JSON.parse(localStorage.getItem('bonkHUD_Style_Settings'));
+    }
     if (settings) {
+        bonkHUD.styleHold = {};
         for (let prop in settings) {
-            if(!bonkHUD.styleHold[prop]) {
-                bonkHUD.styleHold[prop] = settings[prop];
-            }
+            bonkHUD.styleHold[prop] = settings[prop];
         }
     }
     else {
