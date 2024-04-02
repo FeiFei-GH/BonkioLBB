@@ -382,7 +382,7 @@ bonkAPI.receivePacket = function (packet) {
 };
 // #endregion
 
-// #region //!-----------------Overriding HTTPRequest------------------
+// #region //!------------------Overriding HTTPRequest------------------
 window.XMLHttpRequest.prototype.open = function (_, url) {
     if (url.includes("scripts/login_legacy")) {
         bonkAPI.isLoggingIn = true;
@@ -1184,10 +1184,7 @@ bonkAPI.send_NoHostSwap = function (args) {
 bonkAPI.onLoaded = () => {
     console.log("Document loaded complete");
     
-    
-    
-    
-    
+    // TODO: Maybe for more things when the page is loaded
     
     bonkAPI.LZString = window.LZString;
     bonkAPI.PSON = window.dcodeIO.PSON;
@@ -2058,8 +2055,6 @@ bonkAPI.banPlayerByID = function (id, kick = false) {
     bonkAPI.sendPacket('42[9,{"banshortid":' + id + ',"kickonly":' + kick + "}]");
 };
 
-
-
 /**
  * Gets all online friends.
  * @function getOnlineFriendList
@@ -2238,4 +2233,85 @@ bonkAPI.getMyID = function () {
 bonkAPI.getHostID = function () {
     return bonkAPI.hostID;
 };
+// #endregion
+
+// #region //!------------------Injector------------------
+// *Injecting code into src
+function injector(src) {
+    let newSrc = src;
+    
+    //! Inject capZoneEvent fire
+    let orgCode = `N$w[5]=N$w[0][0][N$w[9][138]]()[N$w[9][115]];`;
+    let newCode = `
+        N$w[5]=N$w[0][0][N$w[9][138]]()[N$w[9][115]];
+        
+        capZoneEventTry: try {
+            let currentFrame = M1j[0][0].rl;
+            let playerID = N$w[0][0].m_userData.arrayID;
+            let capID = N$w[7];
+            
+            if (window.bonkAPI.events.hasEvent["capZoneEvent"]) {
+                var sendObj = { capID: capID, playerID: playerID, currentFrame: currentFrame };
+                
+                window.bonkAPI.events.fireEvent("capZoneEvent", sendObj);
+            }
+        } catch(err) {
+            console.log("ERROR: capZoneEvent");
+            console.log(err);
+        }`;
+
+    newSrc = newSrc.replace(orgCode, newCode);
+    
+    //! Inject stepEvent fire
+    orgCode = `return M1j[945];`;
+    newCode = `
+        stepEventTry: try {
+            let inputStateClone = JSON.parse(JSON.stringify(M1j[0][0]));
+            let currentFrame = inputStateClone.rl;
+            let gameStateClone = JSON.parse(JSON.stringify(M1j[945]));
+            
+            if (window.bonkAPI.events.hasEvent["stepEvent"]) {
+                var sendObj = { inputState: inputStateClone, gameState: gameStateClone, currentFrame: currentFrame };
+                
+                window.bonkAPI.events.fireEvent("stepEvent", sendObj);
+            }
+        } catch(err) {
+            console.log("ERROR: stepEvent");
+            console.log(err);
+        }
+        
+        return M1j[945];`;
+
+    newSrc = newSrc.replace(orgCode, newCode);
+    
+    //! Inject frameIncEvent fire
+    orgCode = `Y3z[8]++;`;
+    newCode = `
+        Y3z[8]++;
+        
+        frameIncEventTry: try {
+            if (window.bonkAPI.events.hasEvent["frameIncEvent"]) {
+                var sendObj = { frame: Y3z[8], gameStates: o3x[7] };
+                
+                window.bonkAPI.events.fireEvent("frameIncEvent", sendObj);
+            }
+        } catch(err) {
+            console.log("ERROR: frameIncEvent");
+            console.log(err);
+        }`;
+
+    newSrc = newSrc.replace(orgCode, newCode);
+    return newSrc;
+}
+
+// Compatibility with Excigma's code injector userscript
+if (!window.bonkCodeInjectors) window.bonkCodeInjectors = [];
+window.bonkCodeInjectors.push((bonkCode) => {
+    try {
+        return injector(bonkCode);
+    } catch (error) {
+        alert(`Injecting failed, BonkAPI may lose some functionality. This may be due to an update by Chaz.`);
+        throw error;
+    }
+});
 // #endregion
