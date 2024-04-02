@@ -1,12 +1,12 @@
 // ==UserScript==
-// @name         KeyTable_HUD
+// @name         KeyTable
 // @version      1.3.48
 // @description  Add a customizable key table overlay to the bonk.io game
 // @author       BZD
 // @namespace    http://tampermonkey.net/
 // @license      MIT
 // @match        https://bonk.io/gameframe-release.html
-// @run-at       document-body
+// @run-at       document-end
 // @grant        none
 // ==/UserScript==
 
