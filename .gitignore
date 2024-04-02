@@ -1,5 +1,7 @@
-DiscordBot/.env
+.env
 .idea
 BonkioLBB.iml
 DiscordBot/data
-DiscordBot/node_modules
+node_modules
+DiscordBot/test.bat
+DiscordBot/test.js
