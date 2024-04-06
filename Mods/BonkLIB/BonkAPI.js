@@ -115,6 +115,7 @@ bonkAPI.hostID = -1;
 bonkAPI.events = new bonkAPI.EventHandler();
 
 bonkAPI.isLoggingIn = false;
+bonkAPI.inGame = false;
 
 // MGF vars
 bonkAPI.bonkWSS = 0;
@@ -600,6 +601,7 @@ bonkAPI.receive_ReadyChange = function (args) {
 
 bonkAPI.receive_GameEnd = function (args) {
     //  TODO: Finish implement of function
+    bonkAPI.inGame = false;
 
     return args;
 };
@@ -613,6 +615,8 @@ bonkAPI.receive_GameEnd = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.receive_GameStart = function (args) {
+    bonkAPI.inGame = true;
+
     // *Dont need to send args if it doesnt have usefull information
     /**
      * When game has started
@@ -2233,6 +2237,16 @@ bonkAPI.getMyID = function () {
 bonkAPI.getHostID = function () {
     return bonkAPI.hostID;
 };
+
+/**
+ * Returns whether the game is running after
+ * you have first joined a lobby.
+ * @function isInGame
+ * @returns {boolean} Whether in game or not
+ */
+bonkAPI.isInGame = function () {
+    return bonkAPI.inGame;
+}
 // #endregion
 
 // #region //!------------------Injector------------------
