@@ -45,6 +45,12 @@ bonkHUD.bonkHUDCSS.innerHTML = `
     height: 25px;
     border-radius: 3px;
 }
+.bonkhud-scrollbar-kit::-webkit-scrollbar {
+    display: none;
+}
+.bonkhud-scrollbar-other {
+    scrollbar-width: none;
+}
 `;
 document.getElementsByTagName("head")[0].appendChild(bonkHUD.bonkHUDCSS);
 
@@ -101,15 +107,17 @@ bonkHUD.initialize = function () {
     let windowSettingsContainer = document.createElement("div");
     windowSettingsContainer.id = "bonkhud-window-settings-container";
     windowSettingsContainer.classList.add("bonkhud-border-color");
-    windowSettingsContainer.style.overflowY = "auto";
+    windowSettingsContainer.classList.add("bonkhud-scrollbar-kit");
+    windowSettingsContainer.classList.add("bonkhud-scrollbar-other");
     windowSettingsContainer.style.flexGrow = "1.5";
     //windowSettingsContainer.style.minWidth = "30%";
     windowSettingsContainer.style.height = "100%";
     windowSettingsContainer.style.borderRight = "1px solid";
 
     let settingsContainer = document.createElement("div");
+    settingsContainer.classList.add("bonkhud-scrollbar-kit");
+    settingsContainer.classList.add("bonkhud-scrollbar-other");
     settingsContainer.id = "bonkhud-settings-container";
-    settingsContainer.style.overflowY = "auto";
     settingsContainer.style.flexGrow = "3";
     settingsContainer.style.float = "right";
     settingsContainer.style.height = "100%";
@@ -389,9 +397,10 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     dragItem.classList.add("bonkhud-window-container");
     dragItem.classList.add("bonkhud-background-color");
     dragItem.classList.add("windowShadow");
+    dragItem.classList.add("bonkhud-scrollbar-kit");
+    dragItem.classList.add("bonkhud-scrollbar-other");
     dragItem.id = id + "-drag";
     dragItem.style.overflowX = "hidden";
-    dragItem.style.overflowY = "auto";
     dragItem.style.bottom = bonkHUD.windowHold[ind].bottom; //top ? top : "0";
     dragItem.style.right = bonkHUD.windowHold[ind].right; //left ? left : "0";
     dragItem.style.width = bonkHUD.windowHold[ind].width; //width ? width : "172";
@@ -700,7 +709,6 @@ bonkHUD.getWindowIndexByID = function (id) {
 };
 
 // ================HELPER METHODS=====================
-
 bonkHUD.clamp = function (val, min, max) {
     //? supposedly faster than Math.max/min
     if (val > min) {
@@ -738,7 +746,6 @@ bonkHUD.generateButton = function (name) {
     });
     return newButton;
 }
-
 
 if (document.readyState === "complete" || document.readyState === "interactive") {
     bonkHUD.loadStyleSettings();
