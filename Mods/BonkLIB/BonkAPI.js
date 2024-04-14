@@ -990,6 +990,11 @@ bonkAPI.send_CreateRoom = function (args) {
     bonkAPI.myID = 0;
     bonkAPI.hostID = 0;
 
+    if (bonkAPI.events.hasEvent["createRoom"]) {
+        var sendObj = { userID: 0, userData: bonkAPI.playerList[0] };
+        bonkAPI.events.fireEvent("createRoom", sendObj);
+    }
+
     return args;
 };
 

@@ -162,7 +162,7 @@ bonkHUD.initialize = function () {
 
     let styleImportDiv = document.createElement("div");
     styleImportDiv.style.marginTop = "5px";
-    
+
     let styleImportLabel = document.createElement("label");
     styleImportLabel.classList.add("bonkhud-text-color");
     styleImportLabel.classList.add("bonkhud-settings-label");
@@ -207,7 +207,7 @@ bonkHUD.initialize = function () {
     for (let prop in bonkHUD.styleHold) {
         let colorDiv = document.createElement("div");
         colorDiv.style.marginTop="5px";
-        
+
         let colorLabel = document.createElement("label");
         colorLabel.classList.add("bonkhud-text-color");
         colorLabel.classList.add("bonkhud-settings-label");
@@ -534,7 +534,7 @@ bonkHUD.saveStyleSettings = function () {
 bonkHUD.exportStyleSettings = function() {
     let out = JSON.stringify(bonkHUD.styleHold);
     let save = new File([out], "bonkHUDStyle-" + Date.now() + ".style", {type: 'text/plain',});
-    
+
     let url = URL.createObjectURL(save);
     let link = document.createElement("a");
     link.href = url;
@@ -709,7 +709,6 @@ bonkHUD.getWindowIndexByID = function (id) {
 };
 
 // ================HELPER METHODS=====================
-
 bonkHUD.clamp = function (val, min, max) {
     //? supposedly faster than Math.max/min
     if (val > min) {
@@ -747,7 +746,6 @@ bonkHUD.generateButton = function (name) {
     });
     return newButton;
 }
-
 
 if (document.readyState === "complete" || document.readyState === "interactive") {
     bonkHUD.loadStyleSettings();

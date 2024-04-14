@@ -355,6 +355,81 @@ const addKeyTable = () => {
     document.addEventListener("DOMContentLoaded", loadUISettings);
 };
 
+const container = document.createElement('div');
+Object.assign(container.style, {
+    width: '320px',
+    maxHeight: '300px',
+    position: 'fixed',
+    top: '20px',
+    right: '20px',
+    backgroundColor: '#f0f0f0',
+    border: '1px solid #ccc',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+});
+document.body.appendChild(container);
+
+const header = document.createElement('div');
+Object.assign(header.style, {
+    padding: '10px',
+    backgroundColor: '#ddd',
+    color: '#333',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+});
+header.textContent = 'Player IDs';
+container.appendChild(header);
+
+const hideButton = document.createElement('button');
+hideButton.textContent = 'Hide';
+hideButton.onclick = () => container.style.display = 'none';
+header.appendChild(hideButton);
+
+const scrollMenu = document.createElement('div');
+Object.assign(scrollMenu.style, {
+    flexGrow: '1',
+    overflowY: 'auto',
+});
+container.appendChild(scrollMenu);
+
+const input = document.createElement('input');
+Object.assign(input.style, {
+    type: 'text',
+    placeholder: 'Enter Player ID',
+    width: 'calc(100% - 20px)',
+    margin: '10px',
+});
+container.appendChild(input);
+
+const submitButton = document.createElement('button');
+submitButton.textContent = 'Add Player';
+submitButton.onclick = () => addPlayer(input.value);
+container.appendChild(submitButton);
+
+function addPlayer(playerId) {
+    if (playerId.trim() === '') return;
+    const playerItem = document.createElement('div');
+    Object.assign(playerItem.style, {
+        display: 'flex',
+        justifyContent: 'space-between',
+        padding: '5px',
+    });
+
+    playerItem.textContent = playerId;
+
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.onclick = () => scrollMenu.removeChild(playerItem);
+    playerItem.appendChild(deleteButton);
+
+    scrollMenu.appendChild(playerItem);
+    input.value = '';
+}
+
 // Initialization logic to set up the UI once the document is ready
 if (document.readyState === "complete" || document.readyState === "interactive") {
     addKeyTable();
