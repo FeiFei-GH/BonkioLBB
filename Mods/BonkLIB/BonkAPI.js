@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bonkAPI
 // @namespace    http://tampermonkey.net/
-// @version      4.0.48
+// @version      4.1.49
 // @description  bonkAPI
 // @author       FeiFei + Clarifi
 // @license      MIT
@@ -10,7 +10,7 @@
 // @run-at       document-start
 // @grant        none
 // ==/UserScript==
-// ! Compitable with Bonk Version 48
+// ! Compitable with Bonk Version 49
 
 // Everything should be inside this object to prevent conflict with other prgrams.
 window.bonkAPI = {};
@@ -97,7 +97,7 @@ bonkAPI.EventHandler;
  * @property {number} team - Integer of what team from 0 to 5
  * @property {boolean} ready - Is ready
  * @property {boolean} tabbed - Is tabbed
- * @property {JSON} avatar - Avatar data
+ * @property {JSON} avatar - Skin data
  */
 
 /**
@@ -108,10 +108,11 @@ bonkAPI.EventHandler;
  * @property {string} roomID - Room ID of the lobby that the friend is in
  */
 
-bonkAPI.playerList = [];
-bonkAPI.myID = -1;
-bonkAPI.myToken = -1;
-bonkAPI.hostID = -1;
+// *Global Variables
+bonkAPI.playerList = []; // History list of players in the room
+bonkAPI.myID = -1; // Client's ID
+bonkAPI.myToken = -1; // Client's token
+bonkAPI.hostID = -1; // Host's ID
 bonkAPI.events = new bonkAPI.EventHandler();
 
 bonkAPI.isLoggingIn = false;
@@ -123,7 +124,6 @@ bonkAPI.originalSend = window.WebSocket.prototype.send;
 bonkAPI.originalRequestAnimationFrame = window.requestAnimationFrame;
 bonkAPI.originalXMLOpen = window.XMLHttpRequest.prototype.open;
 bonkAPI.originalXMLSend = window.XMLHttpRequest.prototype.send;
-
 // #endregion
 
 // #region //!------------------Overriding bonkWSS------------------
@@ -137,6 +137,7 @@ window.WebSocket.prototype.send = function (args) {
             // This function intercepts incoming packets
             this.onmessage = function (args) {
                 // &Receiving incoming packets
+                // !All function names follow verb_noun[verb] format
                 switch (args.data.substring(0, 5)) {
                     case "42[1,": //*Update other players' pings
                         args = bonkAPI.receive_PingUpdate(args);
@@ -226,7 +227,7 @@ window.WebSocket.prototype.send = function (args) {
                         args = bonkAPI.receive_PlayerLevelUp(args);
                         break;
                     case "42[46": // *Local Gained XP
-                        args = bonkAPI.receive_LocalGainXP(args);
+                        args = bonkAPI.receive_LocalXPGain(args);
                         break;
                     case "42[49": // *Created Room Share Link
                         args = bonkAPI.receive_RoomShareLink(args);
@@ -251,13 +252,14 @@ window.WebSocket.prototype.send = function (args) {
                 return originalClose.call(this);
             };
         } else {
+            // !All function names follow verb_noun[verb] format
             // &Sending outgoing packets
             switch (args.substring(0, 5)) {
                 case "42[4,": // *Send Inputs
-                    args = bonkAPI.send_SendInputs(args);
+                    args = bonkAPI.send_Inputs(args);
                     break;
                 case "42[5,": // *Trigger Start
-                    args = bonkAPI.send_TriggerStart(args);
+                    args = bonkAPI.send_GameStart(args);
                     break;
                 case "42[6,": // *Change Own Team
                     args = bonkAPI.send_TeamChange(args);
@@ -266,19 +268,20 @@ window.WebSocket.prototype.send = function (args) {
                     args = bonkAPI.send_TeamLock(args);
                     break;
                 case "42[9,": // *Kick/Ban Player
-                    args = bonkAPI.send_KickBanPlayer(args);
+                    args = bonkAPI.send_PlayerKickBan(args);
                     break;
                 case "42[10": // *Chat Message
-                    args = bonkAPI.send_ChatMsg(args);
+                    args = bonkAPI.send_ChatMessage(args);
                     break;
                 case "42[11": // *Inform In Lobby
                     args = bonkAPI.send_LobbyInform(args);
                     break;
                 case "42[12": // *Create Room
-                    args = bonkAPI.send_CreateRoom(args);
+                    args = bonkAPI.send_RoomCreate(args);
                     break;
                 case "42[13": // *Room Join Information
                     args = bonkAPI.send_RoomJoin(args);
+                    break;
                 case "42[14": // *Return To Lobby
                     args = bonkAPI.send_LobbyReturn(args);
                     break;
@@ -331,16 +334,16 @@ window.WebSocket.prototype.send = function (args) {
                     args = bonkAPI.send_CountdownAbort(args);
                     break;
                 case "42[38": // *Send Req XP
-                    args = bonkAPI.send_RequestXP(args);
+                    args = bonkAPI.send_XPRequest(args);
                     break;
                 case "42[39": // *Send Map Vote
                     args = bonkAPI.send_MapVote(args);
                     break;
                 case "42[40": // *Inform In Game
-                    args = bonkAPI.send_InformInGame(args);
+                    args = bonkAPI.send_InGameInform(args);
                     break;
                 case "42[41": // *Get Pre Vote
-                    args = bonkAPI.send_GetPreVote(args);
+                    args = bonkAPI.send_PreVoteGet(args);
                     break;
                 case "42[44": // *Tabbed
                     args = bonkAPI.send_Tabbed(args);
@@ -391,23 +394,47 @@ window.XMLHttpRequest.prototype.open = function (_, url) {
     //? Could check for other post requests but not necessary
 
     bonkAPI.originalXMLOpen.call(this, ...arguments);
-}
+};
 window.XMLHttpRequest.prototype.send = function (data) {
     if (bonkAPI.isLoggingIn) {
         this.onreadystatechange = function () {
             if (this.readyState == 4) {
                 bonkAPI.myToken = JSON.parse(this.response)["token"];
             }
-        }
+        };
         bonkAPI.isLoggingIn = false;
     }
     bonkAPI.originalXMLSend.call(this, ...arguments);
-}
+};
 // #endregion
 
 // #region //!------------------Receive Handler Functions------------------
+/**
+ * Triggered when recieving ping updates.
+ * @function receive_PingUpdate
+ * @fires pingUpdate
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.receive_PingUpdate = function (args) {
-    //  TODO: Finish implement of function
+    var jsonargs = JSON.parse(args.data.substring(2));
+    let pingList = jsonargs[1];
+    let ehcoTo = jsonargs[2];
+
+    /**
+     * When the user receives ping update.
+     * @event pingUpdate
+     * @type {object}
+     * @property {object} pingList - Other players' ping
+     * @property {number} echoTo - The ID of the player to echo to
+     */
+    if (bonkAPI.events.hasEvent["pingUpdate"]) {
+        var sendObj = {
+            pingList: pingList,
+            ehcoTo: ehcoTo,
+        };
+        bonkAPI.events.fireEvent("pingUpdate", sendObj);
+    }
 
     return args;
 };
@@ -421,7 +448,7 @@ bonkAPI.receive_Unknow2 = function (args) {
 /**
  * Triggered when the user joins a lobby.
  * @function receive_RoomJoin
- * @fires onJoin
+ * @fires joinRoom
  * @param {string} args - Packet received by websocket.
  * @returns {string} arguements
  */
@@ -438,22 +465,21 @@ bonkAPI.receive_RoomJoin = function (args) {
     }
     /**
      * When the user joins a lobby.
-     * @event onJoin
+     * @event joinRoom
      * @type {object}
      * @property {number} hostID - ID of the host
      * @property {Array.<Player>} userData - List of players currently in the room
      * @property {*} roomID - ID of the lobby joined
      * @property {string} bypass
      */
-    // TODO: this name isnt descriptive
-    if (bonkAPI.events.hasEvent["onJoin"]) {
+    if (bonkAPI.events.hasEvent["joinRoom"]) {
         var sendObj = {
             hostID: jsonargs[2],
             userData: bonkAPI.playerList, // !May or may not be immutable
             roomID: jsonargs[6],
             bypass: jsonargs[7],
         };
-        bonkAPI.events.fireEvent("onJoin", sendObj);
+        bonkAPI.events.fireEvent("joinRoom", sendObj);
     }
 
     return args;
@@ -856,7 +882,7 @@ bonkAPI.receive_PlayerLevelUp = function (args) {
     return args;
 };
 
-bonkAPI.receive_LocalGainXP = function (args) {
+bonkAPI.receive_LocalXPGain = function (args) {
     //  TODO: Finish implement of function
 
     return args;
@@ -890,11 +916,11 @@ bonkAPI.receive_RoomPassword = function (args) {
 // #region //!------------------Send Handler Functions------------------
 /**
  * Called when sending inputs out.
- * @function send_SendInputs
+ * @function send_Inputs
  * @param {string} args - Packet received by websocket.
  * @returns {string} arguements
  */
-bonkAPI.send_SendInputs = function (args) {
+bonkAPI.send_Inputs = function (args) {
     var jsonargs = JSON.parse(args.substring(2));
 
     /**
@@ -921,11 +947,11 @@ bonkAPI.send_SendInputs = function (args) {
 
 /**
  * Called when started the game.
- * @function send_TriggerStart
+ * @function send_GameStart
  * @param {string} args - Packet received by websocket.
  * @returns {string} arguements
  */
-bonkAPI.send_TriggerStart = function (args) {
+bonkAPI.send_GameStart = function (args) {
     var jsonargs = JSON.parse(args.substring(2));
 
     //args = "42" + JSON.stringify(jsonargs);
@@ -944,13 +970,13 @@ bonkAPI.send_TeamLock = function (args) {
     return args;
 };
 
-bonkAPI.send_KickBanPlayer = function (args) {
+bonkAPI.send_PlayerKickBan = function (args) {
     //  TODO: Finish implement of function
 
     return args;
 };
 
-bonkAPI.send_ChatMsg = function (args) {
+bonkAPI.send_ChatMessage = function (args) {
     //  TODO: Finish implement of function
 
     return args;
@@ -964,11 +990,11 @@ bonkAPI.send_LobbyInform = function (args) {
 
 /**
  * Called when created a room.
- * @function send_CreateRoom
+ * @function send_RoomCreate
  * @param {string} args - Packet received by websocket.
  * @returns {string} arguements
  */
-bonkAPI.send_CreateRoom = function (args) {
+bonkAPI.send_RoomCreate = function (args) {
     bonkAPI.playerList = [];
     var jsonargs2 = JSON.parse(args.substring(2));
     var jsonargs = jsonargs2[1];
@@ -1152,7 +1178,7 @@ bonkAPI.send_CountdownAbort = function (args) {
     return args;
 };
 
-bonkAPI.send_RequestXP = function (args) {
+bonkAPI.send_XPRequest = function (args) {
     //  TODO: Finish implement of function
 
     return args;
@@ -1164,13 +1190,13 @@ bonkAPI.send_MapVote = function (args) {
     return args;
 };
 
-bonkAPI.send_InformInGame = function (args) {
+bonkAPI.send_InGameInform = function (args) {
     //  TODO: Finish implement of function
 
     return args;
 };
 
-bonkAPI.send_GetPreVote = function (args) {
+bonkAPI.send_PreVoteGet = function (args) {
     //  TODO: Finish implement of function
 
     return args;
@@ -1191,10 +1217,10 @@ bonkAPI.send_NoHostSwap = function (args) {
 
 // #region //!------------------Load Complete Detection------------------
 bonkAPI.onLoaded = () => {
-    console.log("Document loaded complete");
-    
+    //console.log("Document loaded complete");
+
     // TODO: Maybe for more things when the page is loaded
-    
+
     bonkAPI.LZString = window.LZString;
     bonkAPI.PSON = window.dcodeIO.PSON;
     bonkAPI.bytebuffer = window.dcodeIO.ByteBuffer;
@@ -1465,7 +1491,7 @@ bonkAPI.onLoaded = () => {
 
     bonkAPI.encodeMap = function (W2A) {
         var M3n = [arguments];
-        M3n[1] = new bonkAPI_bytebuffer();
+        M3n[1] = new bytebuffer2();
         M3n[9] = M3n[0][0].physics;
         M3n[0][0].v = 15;
         M3n[1].writeShort(M3n[0][0].v);
@@ -1670,21 +1696,30 @@ bonkAPI.onLoaded = () => {
                 M3n[1].writeDouble(M3n[5].sf);
                 M3n[1].writeDouble(M3n[5].slen);
             }
-            M3n[1].writeShort(M3n[5].ba);
-            M3n[1].writeShort(M3n[5].bb);
-            M3n[1].writeBoolean(M3n[5].d.cc);
-            M3n[1].writeDouble(M3n[5].d.bf);
-            M3n[1].writeBoolean(M3n[5].d.dl);
+            if (M3n[5].type == "g") {
+                M3n[1].writeShort(5);
+                M3n[1].writeUTF(M3n[5].n);
+                M3n[1].writeShort(M3n[5].ja);
+                M3n[1].writeShort(M3n[5].jb);
+                M3n[1].writeDouble(M3n[5].r);
+            }
+            if (M3n[5].type != "g") {
+                M3n[1].writeShort(M3n[5].ba);
+                M3n[1].writeShort(M3n[5].bb);
+                M3n[1].writeBoolean(M3n[5].d.cc);
+                M3n[1].writeDouble(M3n[5].d.bf);
+                M3n[1].writeBoolean(M3n[5].d.dl);
+            }
         }
         M3n[32] = M3n[1].toBase64();
-        M3n[77] = bonkAPI.LZString.compressToEncodedURIComponent(M3n[32]);
+        M3n[77] = LZString.compressToEncodedURIComponent(M3n[32]);
         return M3n[77];
     };
 
     bonkAPI.decodeMap = function (map) {
         var F5W = [arguments];
-        var b64mapdata = bonkAPI.LZString.decompressFromEncodedURIComponent(map);
-        var binaryReader = new bonkAPI_bytebuffer();
+        var b64mapdata = LZString.decompressFromEncodedURIComponent(map);
+        var binaryReader = new bytebuffer2();
         binaryReader.fromBase64(b64mapdata, false);
         map = {
             v: 1,
@@ -2016,11 +2051,21 @@ bonkAPI.onLoaded = () => {
                 F5W[44].sf = binaryReader.readDouble();
                 F5W[44].slen = binaryReader.readDouble();
             }
-            map.physics.joints[F5W[19]].ba = binaryReader.readShort();
-            map.physics.joints[F5W[19]].bb = binaryReader.readShort();
-            map.physics.joints[F5W[19]].d.cc = binaryReader.readBoolean();
-            map.physics.joints[F5W[19]].d.bf = binaryReader.readDouble();
-            map.physics.joints[F5W[19]].d.dl = binaryReader.readBoolean();
+            if (F5W[31] == 5) {
+                map.physics.joints[F5W[19]] = { type: "g", n: "", ja: -1, jb: -1, r: 1 };
+                F5W[91] = map.physics.joints[F5W[19]];
+                F5W[91].n = binaryReader.readUTF();
+                F5W[91].ja = binaryReader.readShort();
+                F5W[91].jb = binaryReader.readShort();
+                F5W[91].r = binaryReader.readDouble();
+            }
+            if (F5W[31] != 5) {
+                map.physics.joints[F5W[19]].ba = binaryReader.readShort();
+                map.physics.joints[F5W[19]].bb = binaryReader.readShort();
+                map.physics.joints[F5W[19]].d.cc = binaryReader.readBoolean();
+                map.physics.joints[F5W[19]].d.bf = binaryReader.readDouble();
+                map.physics.joints[F5W[19]].d.dl = binaryReader.readBoolean();
+            }
         }
         return map;
     };
@@ -2077,7 +2122,7 @@ bonkAPI.getOnlineFriendList = function (callback) {
             let friends = [];
             let data = JSON.parse(req.response)["friends"];
             for (let i = 0; i < data.length; i++) {
-                let rid = data[i]["roomid"]
+                let rid = data[i]["roomid"];
                 if (rid != null) {
                     friends.push({ userName: data[i]["name"], roomID: rid });
                 }
@@ -2089,12 +2134,12 @@ bonkAPI.getOnlineFriendList = function (callback) {
         req.open("POST", "https://bonk2.io/scripts/friends.php");
         req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
         //! maybe make a function to automatically build this stuff, but not necessary and probably worse
-        req.send('token=' + bonkAPI.myToken + '&task=getfriends');
+        req.send("token=" + bonkAPI.myToken + "&task=getfriends");
     } catch (e) {
         console.log(e);
         callback([]);
     }
-}
+};
 
 /**
  * Adds a listener to {@linkcode EventHandler} to call the method.
@@ -2251,59 +2296,62 @@ bonkAPI.getHostID = function () {
  */
 bonkAPI.isInGame = function () {
     return bonkAPI.inGame;
-}
+};
 // #endregion
 
 // #region //!------------------Injector------------------
 // *Injecting code into src
-function injector(src) {
+bonkAPI.injector = function (src) {
     let newSrc = src;
-    
+
     //! Inject capZoneEvent fire
-    let orgCode = `N$w[5]=N$w[0][0][N$w[9][138]]()[N$w[9][115]];`;
+    let orgCode = `K$h[9]=K$h[0][0][K$h[2][138]]()[K$h[2][115]];`;
     let newCode = `
-        N$w[5]=N$w[0][0][N$w[9][138]]()[N$w[9][115]];
+        K$h[9]=K$h[0][0][K$h[2][138]]()[K$h[2][115]];
         
         capZoneEventTry: try {
-            let currentFrame = M1j[0][0].rl;
-            let playerID = N$w[0][0].m_userData.arrayID;
-            let capID = N$w[7];
+            // Initialize
+            let inputState = z0M[0][0];
+            let currentFrame = inputState.rl;
+            let playerID = K$h[0][0].m_userData.arrayID;
+            let capID = K$h[1];
+            
+            let sendObj = { capID: capID, playerID: playerID, currentFrame: currentFrame };
             
             if (window.bonkAPI.events.hasEvent["capZoneEvent"]) {
-                var sendObj = { capID: capID, playerID: playerID, currentFrame: currentFrame };
-                
                 window.bonkAPI.events.fireEvent("capZoneEvent", sendObj);
             }
         } catch(err) {
-            console.log("ERROR: capZoneEvent");
-            console.log(err);
+            console.error("ERROR: capZoneEvent");
+            console.error(err);
         }`;
 
     newSrc = newSrc.replace(orgCode, newCode);
-    
+
     //! Inject stepEvent fire
-    orgCode = `return M1j[945];`;
+    orgCode = `return z0M[720];`;
     newCode = `
         stepEventTry: try {
-            let inputStateClone = JSON.parse(JSON.stringify(M1j[0][0]));
+            let inputStateClone = JSON.parse(JSON.stringify(z0M[0][0]));
             let currentFrame = inputStateClone.rl;
-            let gameStateClone = JSON.parse(JSON.stringify(M1j[945]));
+            let gameStateClone = JSON.parse(JSON.stringify(z0M[720]));
+            
+            let sendObj = { inputState: inputStateClone, gameState: gameStateClone, currentFrame: currentFrame };
             
             if (window.bonkAPI.events.hasEvent["stepEvent"]) {
-                var sendObj = { inputState: inputStateClone, gameState: gameStateClone, currentFrame: currentFrame };
-                
                 window.bonkAPI.events.fireEvent("stepEvent", sendObj);
             }
         } catch(err) {
-            console.log("ERROR: stepEvent");
-            console.log(err);
+            console.error("ERROR: stepEvent");
+            console.error(err);
         }
         
-        return M1j[945];`;
+        return z0M[720];`;
 
     newSrc = newSrc.replace(orgCode, newCode);
-    
+
     //! Inject frameIncEvent fire
+    //TODO: update to bonk 49
     orgCode = `Y3z[8]++;`;
     newCode = `
         Y3z[8]++;
@@ -2315,19 +2363,19 @@ function injector(src) {
                 window.bonkAPI.events.fireEvent("frameIncEvent", sendObj);
             }
         } catch(err) {
-            console.log("ERROR: frameIncEvent");
-            console.log(err);
+            console.error("ERROR: frameIncEvent");
+            console.error(err);
         }`;
 
-    newSrc = newSrc.replace(orgCode, newCode);
+    // newSrc = newSrc.replace(orgCode, newCode);
     return newSrc;
-}
+};
 
 // Compatibility with Excigma's code injector userscript
 if (!window.bonkCodeInjectors) window.bonkCodeInjectors = [];
 window.bonkCodeInjectors.push((bonkCode) => {
     try {
-        return injector(bonkCode);
+        return bonkAPI.injector(bonkCode);
     } catch (error) {
         alert(`Injecting failed, BonkAPI may lose some functionality. This may be due to an update by Chaz.`);
         throw error;
