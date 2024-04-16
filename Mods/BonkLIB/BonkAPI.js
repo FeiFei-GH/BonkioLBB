@@ -109,6 +109,7 @@ bonkAPI.EventHandler;
  */
 
 // *Global Variables
+bonkAPI.currentPlayers = []; //List of user IDs of players in the lobby
 bonkAPI.playerList = []; // History list of players in the room
 bonkAPI.myID = -1; // Client's ID
 bonkAPI.myToken = -1; // Client's token
@@ -116,7 +117,6 @@ bonkAPI.hostID = -1; // Host's ID
 bonkAPI.events = new bonkAPI.EventHandler();
 
 bonkAPI.isLoggingIn = false;
-bonkAPI.inGame = false;
 
 // MGF vars
 bonkAPI.bonkWSS = 0;
@@ -459,9 +459,10 @@ bonkAPI.receive_RoomJoin = function (args) {
     bonkAPI.hostID = jsonargs[2];
 
     for (var i = 0; i < jsonargs[3].length; i++) {
-        //if(jsonargs[3][i] != null){
         bonkAPI.playerList[i] = jsonargs[3][i];
-        //}
+        if(jsonargs[3][i] != null){
+            bonkAPI.currentPlayers.push(i);
+        }
     }
     /**
      * When the user joins a lobby.
@@ -504,6 +505,7 @@ bonkAPI.receive_PlayerJoin = function (args) {
         tabbed: false,
         avatar: jsonargs[7],
     };
+    bonkAPI.currentPlayers.push(jsonargs[1]);
 
     //? can:
     //? - send the bonkAPI.playerList as data
@@ -534,6 +536,13 @@ bonkAPI.receive_PlayerJoin = function (args) {
 bonkAPI.receive_PlayerLeave = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
 
+    // Remove player from current players
+    bonkAPI.currentPlayers.forEach((n, i) => {
+        if(n == jsonargs[1]) {
+            bonkAPI.currentPlayers.splice(i, 1);
+        }
+    });
+
     /**
      * When another player leaves the lobby.
      * @event userLeave
@@ -550,16 +559,24 @@ bonkAPI.receive_PlayerLeave = function (args) {
 };
 
 /**
- * Triggered when the host has changed.
+ * Triggered when the host has left.
  * @function receive_HostLeave
  * @fires hostChange
+ * @fires userLeave
  * @param {string} args - Packet received by websocket.
  * @returns {string} arguements
  */
 bonkAPI.receive_HostLeave = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
-
+    let lastHostID = bonkAPI.hostID;
     bonkAPI.hostID = jsonargs[2];
+
+    // Remove player from current players
+    bonkAPI.currentPlayers.forEach((n, i) => {
+        if(n == lastHostID) {
+            bonkAPI.currentPlayers.splice(i, 1);
+        }
+    });
 
     /**
      * When the host changes.
@@ -571,6 +588,17 @@ bonkAPI.receive_HostLeave = function (args) {
     if (bonkAPI.events.hasEvent["hostChange"]) {
         var sendObj = { userID: jsonargs[1] };
         bonkAPI.events.fireEvent("hostChange", sendObj);
+    }
+    /**
+     * When another player leaves the lobby.
+     * @event userLeave
+     * @type {object}
+     * @property {number} userID - ID of the player left
+     * @property {Player} userData - {@linkcode Player} object data of the player that left
+     */
+    if (bonkAPI.events.hasEvent["userLeave"]) {
+        var sendObj = { userID: lastHostID, userData: bonkAPI.playerList[lastHostID] };
+        bonkAPI.events.fireEvent("userLeave", sendObj);
     }
 
     return args;
@@ -627,7 +655,6 @@ bonkAPI.receive_ReadyChange = function (args) {
 
 bonkAPI.receive_GameEnd = function (args) {
     //  TODO: Finish implement of function
-    bonkAPI.inGame = false;
 
     return args;
 };
@@ -641,17 +668,21 @@ bonkAPI.receive_GameEnd = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.receive_GameStart = function (args) {
-    bonkAPI.inGame = true;
-
-    // *Dont need to send args if it doesnt have usefull information
+    var jsonargs = JSON.parse(args.data.substring(2));
     /**
      * When game has started
      * @event gameStart
      * @type {object}
-     * @property {string} extraData - Packet sent with the start of the game, contains data
+     * @property {string} mapData - Encoded map data, must decode it to use
+     * @property {object} startData - Extra game specific data
      */
     if (bonkAPI.events.hasEvent["gameStart"]) {
-        var sendObj = { extraData: args };
+        //! change name of mapdata since it is not map data, probably gamestate
+        //! do the same in triggerstart
+        var sendObj = {
+            mapData: jsonargs[2],
+            startData: jsonargs[3],
+        };
         bonkAPI.events.fireEvent("gameStart", sendObj);
     }
 
@@ -824,6 +855,7 @@ bonkAPI.receive_ReplaySave = function (args) {
 /**
  * Triggered when there is a new host.
  * @function receive_NewHost
+ * @fires hostChange
  * @param {string} args - Packet received by websocket.
  * @returns {string} arguements
  */
@@ -831,11 +863,16 @@ bonkAPI.receive_NewHost = function (args) {
     var jsonargs = JSON.parse(args.data.substring(2));
     bonkAPI.hostID = jsonargs[1]["newHost"];
 
-    // TODO: NO EVENT HERE YET
-    /* Leaving out for now since i dont know what this packet contains
+    /**
+     * When the host changes.
+     * @event hostChange
+     * @type {object}
+     * @property {number} userID - ID of the new host
+     */
     if(bonkAPI.bonkAPI.events.hasEvent["hostChange"]) {
-        bonkAPI.bonkAPI.events.fireEvent("hostChange", jsonargs[1]["newHost"]);
-    }*/
+        var sendObj = { userID: jsonargs[1]["newHost"] };
+        bonkAPI.bonkAPI.events.fireEvent("hostChange", sendObj);
+    }
 
     return args;
 };
@@ -953,8 +990,21 @@ bonkAPI.send_Inputs = function (args) {
  */
 bonkAPI.send_GameStart = function (args) {
     var jsonargs = JSON.parse(args.substring(2));
+    /**
+     * When game has started
+     * @event gameStart
+     * @type {object}
+     * @property {string} mapData - Encoded map data, must decode it to use
+     * @property {object} startData - Extra game specific data
+     */
+    if (bonkAPI.events.hasEvent["gameStart"]) {
+        var sendObj = {
+            mapData: bonkAPI.ISdecode(jsonargs[1]["is"]),
+            startData: jsonargs[1]["map"],
+        };
+        bonkAPI.events.fireEvent("gameStart", sendObj);
+    }
 
-    //args = "42" + JSON.stringify(jsonargs);
     return args;
 };
 
@@ -1012,6 +1062,7 @@ bonkAPI.send_RoomCreate = function (args) {
         tabbed: false,
         avatar: jsonargs["avatar"],
     };
+    bonkAPI.currentPlayers.push(0);
 
     bonkAPI.myID = 0;
     bonkAPI.hostID = 0;
@@ -2154,15 +2205,32 @@ bonkAPI.addEventListener = function (event, method, scope, context) {
 };
 
 /**
- * Returns the entire list of {@linkcode Player} objects in the lobby at time this
- * function was called.
+ * Returns the entire list of {@linkcode Player} objects that have joined
+ * since you have.
  * @function getPlayerList
  * @returns {Array.<Player>} Array of {@linkcode Player} objects
  */
 bonkAPI.getPlayerList = function () {
     // *Returns a copy of bonkAPI.playerList
-    return Object.assign([], bonkAPI.playerList);
+    return bonkAPI.playerList;
 };
+
+/**
+ * Returns list of {@linkcode Player} objects in the lobby at time this
+ * function was called.
+ * @function getPlayerLobbyList
+ * @returns {Array.<Player>} Array of {@linkcode Player} objects
+ */
+bonkAPI.getPlayerLobbyList = function () {
+    //! i want to make more playerlobby functions but dk what to name
+    //! or whether to join it with the other functions but add an arguement
+    //! to specify which to use
+    let list = [];
+    bonkAPI.currentPlayers.forEach((index) => {
+        list.push(bonkAPI.playerList[index]);
+    });
+    return list;
+}
 
 /**
  * Returns the amount of players that have been in the lobby.
@@ -2184,11 +2252,11 @@ bonkAPI.getPlayer = function (ref) {
         if (ref < 0 || ref >= bonkAPI.playerList.length) {
             return null;
         }
-        return Object.assign({}, bonkAPI.playerList[ref]);
+        return bonkAPI.playerList[ref];
     } else if (typeof ref === "string") {
         for (let i = 0; i < bonkAPI.playerList.length; i++) {
             if (bonkAPI.playerList[i] != null && ref == bonkAPI.playerList[i].userName) {
-                return Object.assign({}, bonkAPI.playerList[i]);
+                return bonkAPI.playerList[i];
             }
         }
         return null;
@@ -2207,7 +2275,7 @@ bonkAPI.getPlayerByID = function (id) {
     if (id < 0 || id >= bonkAPI.playerList.length) {
         return null;
     }
-    return Object.assign({}, bonkAPI.playerList[id]);
+    return bonkAPI.playerList[id];
 };
 
 /**
@@ -2219,7 +2287,7 @@ bonkAPI.getPlayerByID = function (id) {
 bonkAPI.getPlayerByName = function (name) {
     for (let i = 0; i < bonkAPI.playerList.length; i++) {
         if (bonkAPI.playerList[i] != null && name == bonkAPI.playerList[i].userName) {
-            return Object.assign({}, bonkAPI.playerList[i]);
+            return bonkAPI.playerList[i];
         }
     }
     return null;
@@ -2295,8 +2363,9 @@ bonkAPI.getHostID = function () {
  * @returns {boolean} Whether in game or not
  */
 bonkAPI.isInGame = function () {
-    return bonkAPI.inGame;
-};
+    let renderer = document.getElementById("gamerenderer");
+    return renderer.style.visibility == "visible";
+}
 // #endregion
 
 // #region //!------------------Injector------------------
