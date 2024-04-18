@@ -869,9 +869,9 @@ bonkAPI.receive_NewHost = function (args) {
      * @type {object}
      * @property {number} userID - ID of the new host
      */
-    if(bonkAPI.bonkAPI.events.hasEvent["hostChange"]) {
+    if(bonkAPI.events.hasEvent["hostChange"]) {
         var sendObj = { userID: jsonargs[1]["newHost"] };
-        bonkAPI.bonkAPI.events.fireEvent("hostChange", sendObj);
+        bonkAPI.events.fireEvent("hostChange", sendObj);
     }
 
     return args;
@@ -1078,6 +1078,7 @@ bonkAPI.send_RoomCreate = function (args) {
 /**
  * Called as to send inital user data when joining a room.
  * @function send_RoomJoin
+ * @fires roomJoin
  * @param {string} args - Packet received by websocket.
  * @returns {string} arguements
  */
@@ -1088,21 +1089,22 @@ bonkAPI.send_RoomJoin = function (args) {
     //! Possibly get rid of XMLhttp thing since this gives the login token
     /**
      * When inputs are received from other players.
-     * @event sendJoin
+     * @event roomJoin
      * @type {object}
      * @property {string} password - Room password
      * @property {object} avatar - User's avatar
      * @property {string} token - Login token
      * @property {string} packet - Editable packet
      */
-    if (bonkAPI.events.hasEvent["sendJoin"]) {
+    if (bonkAPI.events.hasEvent["roomJoin"]) {
         var sendObj = {
-            //password: jsonargs[1]["roomPassword"],
-            //avatar: JSON.parse(jsonargs[1]["avatar"]),
-            //token: jsonargs[1]["token"] ? jsonargs[1]["token"] : null,
+            password: jsonargs[1]["roomPassword"],
+            avatar: jsonargs[1]["avatar"],
+            token: jsonargs[1]["token"] ? jsonargs[1]["token"] : null,
             packet: args,
         };
-        bonkAPI.events.fireEvent("sendJoin", sendObj);
+        bonkAPI.events.fireEvent("roomJoin", sendObj);
+        args = sendObj.packet;
     }
 
     return args;
