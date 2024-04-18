@@ -1,4 +1,32 @@
-// ! Compitable with Bonk Version 49
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: BonkAPI.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: BonkAPI.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// ! Compitable with Bonk Version 49
 
 // Everything should be inside this object to prevent conflict with other prgrams.
 window.bonkAPI = {};
@@ -61,9 +89,9 @@ bonkAPI.EventHandler;
             return;
         }
         l = handlers.length;
-        for (let i = 0; i < l; i++) {
+        for (let i = 0; i &lt; l; i++) {
             handler = handlers[i];
-            if (typeof context !== "undefined" && context !== handler.context) {
+            if (typeof context !== "undefined" &amp;&amp; context !== handler.context) {
                 continue;
             }
             handler.method.call(handler.scope, data);
@@ -115,7 +143,7 @@ bonkAPI.originalXMLSend = window.XMLHttpRequest.prototype.send;
 
 // #region //!------------------Overriding bonkWSS------------------
 window.WebSocket.prototype.send = function (args) {
-    if (this.url.includes("socket.io/?EIO=3&transport=websocket&sid=")) {
+    if (this.url.includes("socket.io/?EIO=3&amp;transport=websocket&amp;sid=")) {
         if (!this.injectedAPI) {
             // initialize overriding receive listener (only run once)
             bonkAPI.bonkWSS = this;
@@ -123,7 +151,7 @@ window.WebSocket.prototype.send = function (args) {
             var originalReceive = this.onmessage;
             // This function intercepts incoming packets
             this.onmessage = function (args) {
-                // &Receiving incoming packets
+                // &amp;Receiving incoming packets
                 // !All function names follow verb_noun[verb] format
                 switch (args.data.substring(0, 5)) {
                     case "42[1,": //*Update other players' pings
@@ -240,7 +268,7 @@ window.WebSocket.prototype.send = function (args) {
             };
         } else {
             // !All function names follow verb_noun[verb] format
-            // &Sending outgoing packets
+            // &amp;Sending outgoing packets
             switch (args.substring(0, 5)) {
                 case "42[4,": // *Send Inputs
                     args = bonkAPI.send_Inputs(args);
@@ -445,7 +473,7 @@ bonkAPI.receive_RoomJoin = function (args) {
     bonkAPI.myID = jsonargs[1];
     bonkAPI.hostID = jsonargs[2];
 
-    for (var i = 0; i < jsonargs[3].length; i++) {
+    for (var i = 0; i &lt; jsonargs[3].length; i++) {
         bonkAPI.playerList[i] = jsonargs[3][i];
         if(jsonargs[3][i] != null){
             bonkAPI.currentPlayers.push(i);
@@ -456,7 +484,7 @@ bonkAPI.receive_RoomJoin = function (args) {
      * @event joinRoom
      * @type {object}
      * @property {number} hostID - ID of the host
-     * @property {Array.<Player>} userData - List of players currently in the room
+     * @property {Array.&lt;Player>} userData - List of players currently in the room
      * @property {*} roomID - ID of the lobby joined
      * @property {string} bypass
      */
@@ -1436,7 +1464,7 @@ bonkAPI.onLoaded = () => {
             d6I[7] = this.readByte();
             d6I[9] = d6I[8] * 256 + d6I[7];
             d6I[1] = new Uint8Array(d6I[9]);
-            for (d6I[6] = 0; d6I[6] < d6I[9]; d6I[6]++) {
+            for (d6I[6] = 0; d6I[6] &lt; d6I[9]; d6I[6]++) {
                 d6I[1][d6I[6]] = this.readByte();
             }
             return bonkAPI.textdecoder.decode(d6I[1]);
@@ -1461,7 +1489,7 @@ bonkAPI.onLoaded = () => {
             P4$[4] = "";
             P4$[9] = new Uint8Array(this.buffer);
             P4$[8] = this.index;
-            for (P4$[7] = 0; P4$[7] < P4$[8]; P4$[7]++) {
+            for (P4$[7] = 0; P4$[7] &lt; P4$[8]; P4$[7]++) {
                 P4$[4] += String.fromCharCode(P4$[9][P4$[7]]);
             }
             return window.btoa(P4$[4]);
@@ -1472,7 +1500,7 @@ bonkAPI.onLoaded = () => {
             o0n[6] = window.atob(o0n[0][0]);
             o0n[9] = o0n[6].length;
             o0n[4] = new Uint8Array(o0n[9]);
-            for (o0n[1] = 0; o0n[1] < o0n[9]; o0n[1]++) {
+            for (o0n[1] = 0; o0n[1] &lt; o0n[9]; o0n[1]++) {
                 o0n[4][o0n[1]] = o0n[6].charCodeAt(o0n[1]);
             }
             if (o0n[0][1] === true) {
@@ -1487,10 +1515,10 @@ bonkAPI.onLoaded = () => {
 
     bonkAPI.ISdecode = function (rawdata) {
         rawdata_caseflipped = "";
-        for (i = 0; i < rawdata.length; i++) {
-            if (i <= 100 && rawdata.charAt(i) === rawdata.charAt(i).toLowerCase()) {
+        for (i = 0; i &lt; rawdata.length; i++) {
+            if (i &lt;= 100 &amp;&amp; rawdata.charAt(i) === rawdata.charAt(i).toLowerCase()) {
                 rawdata_caseflipped += rawdata.charAt(i).toUpperCase();
-            } else if (i <= 100 && rawdata.charAt(i) === rawdata.charAt(i).toUpperCase()) {
+            } else if (i &lt;= 100 &amp;&amp; rawdata.charAt(i) === rawdata.charAt(i).toUpperCase()) {
                 rawdata_caseflipped += rawdata.charAt(i).toLowerCase();
             } else {
                 rawdata_caseflipped += rawdata.charAt(i);
@@ -1509,10 +1537,10 @@ bonkAPI.onLoaded = () => {
         lzd = bonkAPI.LZString.compressToEncodedURIComponent(b64);
 
         caseflipped = "";
-        for (i = 0; i < lzd.length; i++) {
-            if (i <= 100 && lzd.charAt(i) === lzd.charAt(i).toLowerCase()) {
+        for (i = 0; i &lt; lzd.length; i++) {
+            if (i &lt;= 100 &amp;&amp; lzd.charAt(i) === lzd.charAt(i).toLowerCase()) {
                 caseflipped += lzd.charAt(i).toUpperCase();
-            } else if (i <= 100 && lzd.charAt(i) === lzd.charAt(i).toUpperCase()) {
+            } else if (i &lt;= 100 &amp;&amp; lzd.charAt(i) === lzd.charAt(i).toUpperCase()) {
                 caseflipped += lzd.charAt(i).toLowerCase();
             } else {
                 caseflipped += lzd.charAt(i);
@@ -1549,7 +1577,7 @@ bonkAPI.onLoaded = () => {
         M3n[1].writeUint(M3n[0][0].m.vu);
         M3n[1].writeUint(M3n[0][0].m.vd);
         M3n[1].writeShort(M3n[0][0].m.cr.length);
-        for (M3n[84] = 0; M3n[84] < M3n[0][0].m.cr.length; M3n[84]++) {
+        for (M3n[84] = 0; M3n[84] &lt; M3n[0][0].m.cr.length; M3n[84]++) {
             M3n[1].writeUTF(M3n[0][0].m.cr[M3n[84]]);
         }
         M3n[1].writeUTF(M3n[0][0].m.mo);
@@ -1558,11 +1586,11 @@ bonkAPI.onLoaded = () => {
         M3n[1].writeInt(M3n[0][0].m.dbv);
         M3n[1].writeShort(M3n[9].ppm);
         M3n[1].writeShort(M3n[9].bro.length);
-        for (M3n[17] = 0; M3n[17] < M3n[9].bro.length; M3n[17]++) {
+        for (M3n[17] = 0; M3n[17] &lt; M3n[9].bro.length; M3n[17]++) {
             M3n[1].writeShort(M3n[9].bro[M3n[17]]);
         }
         M3n[1].writeShort(M3n[9].shapes.length);
-        for (M3n[80] = 0; M3n[80] < M3n[9].shapes.length; M3n[80]++) {
+        for (M3n[80] = 0; M3n[80] &lt; M3n[9].shapes.length; M3n[80]++) {
             M3n[2] = M3n[9].shapes[M3n[80]];
             if (M3n[2].type == "bx") {
                 M3n[1].writeShort(1);
@@ -1587,14 +1615,14 @@ bonkAPI.onLoaded = () => {
                 M3n[1].writeDouble(M3n[2].c[0]);
                 M3n[1].writeDouble(M3n[2].c[1]);
                 M3n[1].writeShort(M3n[2].v.length);
-                for (M3n[61] = 0; M3n[61] < M3n[2].v.length; M3n[61]++) {
+                for (M3n[61] = 0; M3n[61] &lt; M3n[2].v.length; M3n[61]++) {
                     M3n[1].writeDouble(M3n[2].v[M3n[61]][0]);
                     M3n[1].writeDouble(M3n[2].v[M3n[61]][1]);
                 }
             }
         }
         M3n[1].writeShort(M3n[9].fixtures.length);
-        for (M3n[20] = 0; M3n[20] < M3n[9].fixtures.length; M3n[20]++) {
+        for (M3n[20] = 0; M3n[20] &lt; M3n[9].fixtures.length; M3n[20]++) {
             M3n[7] = M3n[9].fixtures[M3n[20]];
             M3n[1].writeShort(M3n[7].sh);
             M3n[1].writeUTF(M3n[7].n);
@@ -1629,7 +1657,7 @@ bonkAPI.onLoaded = () => {
             M3n[1].writeBoolean(M3n[7].ig);
         }
         M3n[1].writeShort(M3n[9].bodies.length);
-        for (M3n[37] = 0; M3n[37] < M3n[9].bodies.length; M3n[37]++) {
+        for (M3n[37] = 0; M3n[37] &lt; M3n[9].bodies.length; M3n[37]++) {
             M3n[4] = M3n[9].bodies[M3n[37]];
             M3n[1].writeUTF(M3n[4].type);
             M3n[1].writeUTF(M3n[4].n);
@@ -1668,12 +1696,12 @@ bonkAPI.onLoaded = () => {
                 +M3n[1].writeDouble(M3n[4].fz.cf);
             }
             M3n[1].writeShort(M3n[4].fx.length);
-            for (M3n[28] = 0; M3n[28] < M3n[4].fx.length; M3n[28]++) {
+            for (M3n[28] = 0; M3n[28] &lt; M3n[4].fx.length; M3n[28]++) {
                 M3n[1].writeShort(M3n[4].fx[M3n[28]]);
             }
         }
         M3n[1].writeShort(M3n[0][0].spawns.length);
-        for (M3n[30] = 0; M3n[30] < M3n[0][0].spawns.length; M3n[30]++) {
+        for (M3n[30] = 0; M3n[30] &lt; M3n[0][0].spawns.length; M3n[30]++) {
             M3n[6] = M3n[0][0].spawns[M3n[30]];
             M3n[1].writeDouble(M3n[6].x);
             M3n[1].writeDouble(M3n[6].y);
@@ -1688,7 +1716,7 @@ bonkAPI.onLoaded = () => {
             M3n[1].writeUTF(M3n[6].n);
         }
         M3n[1].writeShort(M3n[0][0].capZones.length);
-        for (M3n[74] = 0; M3n[74] < M3n[0][0].capZones.length; M3n[74]++) {
+        for (M3n[74] = 0; M3n[74] &lt; M3n[0][0].capZones.length; M3n[74]++) {
             M3n[3] = M3n[0][0].capZones[M3n[74]];
             M3n[1].writeUTF(M3n[3].n);
             M3n[1].writeDouble(M3n[3].l);
@@ -1696,7 +1724,7 @@ bonkAPI.onLoaded = () => {
             M3n[1].writeShort(M3n[3].ty);
         }
         M3n[1].writeShort(M3n[9].joints.length);
-        for (M3n[89] = 0; M3n[89] < M3n[9].joints.length; M3n[89]++) {
+        for (M3n[89] = 0; M3n[89] &lt; M3n[9].joints.length; M3n[89]++) {
             M3n[5] = M3n[9].joints[M3n[89]];
             if (M3n[5].type == "rv") {
                 M3n[1].writeShort(1);
@@ -1793,7 +1821,7 @@ bonkAPI.onLoaded = () => {
         if (map.v >= 3) {
             map.s.pq = binaryReader.readShort();
         }
-        if (map.v >= 4 && map.v <= 12) {
+        if (map.v >= 4 &amp;&amp; map.v &lt;= 12) {
             map.s.gd = binaryReader.readShort();
         } else if (map.v >= 13) {
             map.s.gd = binaryReader.readFloat();
@@ -1813,7 +1841,7 @@ bonkAPI.onLoaded = () => {
         }
         if (map.v >= 4) {
             F5W[7] = binaryReader.readShort();
-            for (F5W[83] = 0; F5W[83] < F5W[7]; F5W[83]++) {
+            for (F5W[83] = 0; F5W[83] &lt; F5W[7]; F5W[83]++) {
                 map.m.cr.push(binaryReader.readUTF());
             }
         }
@@ -1829,11 +1857,11 @@ bonkAPI.onLoaded = () => {
         }
         map.physics.ppm = binaryReader.readShort();
         F5W[4] = binaryReader.readShort();
-        for (F5W[15] = 0; F5W[15] < F5W[4]; F5W[15]++) {
+        for (F5W[15] = 0; F5W[15] &lt; F5W[4]; F5W[15]++) {
             map.physics.bro[F5W[15]] = binaryReader.readShort();
         }
         F5W[6] = binaryReader.readShort();
-        for (F5W[28] = 0; F5W[28] < F5W[6]; F5W[28]++) {
+        for (F5W[28] = 0; F5W[28] &lt; F5W[6]; F5W[28]++) {
             F5W[5] = binaryReader.readShort();
             if (F5W[5] == 1) {
                 map.physics.shapes[F5W[28]] = { type: "bx", w: 10, h: 40, c: [0, 0], a: 0.0, sk: false };
@@ -1856,7 +1884,7 @@ bonkAPI.onLoaded = () => {
                 map.physics.shapes[F5W[28]].c = [binaryReader.readDouble(), binaryReader.readDouble()];
                 F5W[74] = binaryReader.readShort();
                 map.physics.shapes[F5W[28]].v = [];
-                for (F5W[27] = 0; F5W[27] < F5W[74]; F5W[27]++) {
+                for (F5W[27] = 0; F5W[27] &lt; F5W[74]; F5W[27]++) {
                     map.physics.shapes[F5W[28]].v.push([
                         binaryReader.readDouble(),
                         binaryReader.readDouble(),
@@ -1865,7 +1893,7 @@ bonkAPI.onLoaded = () => {
             }
         }
         F5W[71] = binaryReader.readShort();
-        for (F5W[17] = 0; F5W[17] < F5W[71]; F5W[17]++) {
+        for (F5W[17] = 0; F5W[17] &lt; F5W[71]; F5W[17]++) {
             map.physics.fixtures[F5W[17]] = {
                 sh: 0,
                 n: "Def Fix",
@@ -1913,7 +1941,7 @@ bonkAPI.onLoaded = () => {
             }
         }
         F5W[63] = binaryReader.readShort();
-        for (F5W[52] = 0; F5W[52] < F5W[63]; F5W[52]++) {
+        for (F5W[52] = 0; F5W[52] &lt; F5W[63]; F5W[52]++) {
             map.physics.bodies[F5W[52]] = {
                 type: "s",
                 n: "Unnamed",
@@ -1980,12 +2008,12 @@ bonkAPI.onLoaded = () => {
                 }
             }
             F5W[88] = binaryReader.readShort();
-            for (F5W[65] = 0; F5W[65] < F5W[88]; F5W[65]++) {
+            for (F5W[65] = 0; F5W[65] &lt; F5W[88]; F5W[65]++) {
                 map.physics.bodies[F5W[52]].fx.push(binaryReader.readShort());
             }
         }
         F5W[97] = binaryReader.readShort();
-        for (F5W[41] = 0; F5W[41] < F5W[97]; F5W[41]++) {
+        for (F5W[41] = 0; F5W[41] &lt; F5W[97]; F5W[41]++) {
             map.spawns[F5W[41]] = {
                 x: 400,
                 y: 300,
@@ -2013,7 +2041,7 @@ bonkAPI.onLoaded = () => {
             F5W[35].n = binaryReader.readUTF();
         }
         F5W[16] = binaryReader.readShort();
-        for (F5W[25] = 0; F5W[25] < F5W[16]; F5W[25]++) {
+        for (F5W[25] = 0; F5W[25] &lt; F5W[16]; F5W[25]++) {
             map.capZones[F5W[25]] = { n: "Cap Zone", ty: 1, l: 10, i: -1 };
             map.capZones[F5W[25]].n = binaryReader.readUTF();
             map.capZones[F5W[25]].l = binaryReader.readDouble();
@@ -2023,7 +2051,7 @@ bonkAPI.onLoaded = () => {
             }
         }
         F5W[98] = binaryReader.readShort();
-        for (F5W[19] = 0; F5W[19] < F5W[98]; F5W[19]++) {
+        for (F5W[19] = 0; F5W[19] &lt; F5W[98]; F5W[19]++) {
             F5W[31] = binaryReader.readShort();
             if (F5W[31] == 1) {
                 map.physics.joints[F5W[19]] = {
@@ -2153,7 +2181,7 @@ bonkAPI.banPlayerByID = function (id, kick = false) {
  * Gets all online friends.
  * @function getOnlineFriendList
  * @param {function} callback - Callback function
- * @returns {Array.<Friend>} Array of {@linkcode Friend} objects
+ * @returns {Array.&lt;Friend>} Array of {@linkcode Friend} objects
  */
 bonkAPI.getOnlineFriendList = function (callback) {
     let req = new window.XMLHttpRequest();
@@ -2161,7 +2189,7 @@ bonkAPI.getOnlineFriendList = function (callback) {
         if (req.readyState == 4) {
             let friends = [];
             let data = JSON.parse(req.response)["friends"];
-            for (let i = 0; i < data.length; i++) {
+            for (let i = 0; i &lt; data.length; i++) {
                 let rid = data[i]["roomid"];
                 if (rid != null) {
                     friends.push({ userName: data[i]["name"], roomID: rid });
@@ -2174,7 +2202,7 @@ bonkAPI.getOnlineFriendList = function (callback) {
         req.open("POST", "https://bonk2.io/scripts/friends.php");
         req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
         //! maybe make a function to automatically build this stuff, but not necessary and probably worse
-        req.send("token=" + bonkAPI.myToken + "&task=getfriends");
+        req.send("token=" + bonkAPI.myToken + "&amp;task=getfriends");
     } catch (e) {
         console.log(e);
         callback([]);
@@ -2197,7 +2225,7 @@ bonkAPI.addEventListener = function (event, method, scope, context) {
  * Returns the entire list of {@linkcode Player} objects that have joined
  * since you have.
  * @function getPlayerList
- * @returns {Array.<Player>} Array of {@linkcode Player} objects
+ * @returns {Array.&lt;Player>} Array of {@linkcode Player} objects
  */
 bonkAPI.getPlayerList = function () {
     // *Returns a copy of bonkAPI.playerList
@@ -2208,7 +2236,7 @@ bonkAPI.getPlayerList = function () {
  * Returns list of {@linkcode Player} objects in the lobby at time this
  * function was called.
  * @function getPlayerLobbyList
- * @returns {Array.<Player>} Array of {@linkcode Player} objects
+ * @returns {Array.&lt;Player>} Array of {@linkcode Player} objects
  */
 bonkAPI.getPlayerLobbyList = function () {
     //! i want to make more playerlobby functions but dk what to name
@@ -2238,13 +2266,13 @@ bonkAPI.getPlayerListLength = function () {
  */
 bonkAPI.getPlayer = function (ref) {
     if (typeof ref === "number") {
-        if (ref < 0 || ref >= bonkAPI.playerList.length) {
+        if (ref &lt; 0 || ref >= bonkAPI.playerList.length) {
             return null;
         }
         return bonkAPI.playerList[ref];
     } else if (typeof ref === "string") {
-        for (let i = 0; i < bonkAPI.playerList.length; i++) {
-            if (bonkAPI.playerList[i] != null && ref == bonkAPI.playerList[i].userName) {
+        for (let i = 0; i &lt; bonkAPI.playerList.length; i++) {
+            if (bonkAPI.playerList[i] != null &amp;&amp; ref == bonkAPI.playerList[i].userName) {
                 return bonkAPI.playerList[i];
             }
         }
@@ -2261,7 +2289,7 @@ bonkAPI.getPlayer = function (ref) {
  * @returns {Player} Player object
  */
 bonkAPI.getPlayerByID = function (id) {
-    if (id < 0 || id >= bonkAPI.playerList.length) {
+    if (id &lt; 0 || id >= bonkAPI.playerList.length) {
         return null;
     }
     return bonkAPI.playerList[id];
@@ -2274,8 +2302,8 @@ bonkAPI.getPlayerByID = function (id) {
  * @returns {Player} Player object
  */
 bonkAPI.getPlayerByName = function (name) {
-    for (let i = 0; i < bonkAPI.playerList.length; i++) {
-        if (bonkAPI.playerList[i] != null && name == bonkAPI.playerList[i].userName) {
+    for (let i = 0; i &lt; bonkAPI.playerList.length; i++) {
+        if (bonkAPI.playerList[i] != null &amp;&amp; name == bonkAPI.playerList[i].userName) {
             return bonkAPI.playerList[i];
         }
     }
@@ -2289,7 +2317,7 @@ bonkAPI.getPlayerByName = function (name) {
  * @returns {string} Name of player
  */
 bonkAPI.getPlayerNameByID = function (id) {
-    if (id < 0 || id >= bonkAPI.playerList.length) {
+    if (id &lt; 0 || id >= bonkAPI.playerList.length) {
         return "";
     }
     return bonkAPI.playerList[id].userName;
@@ -2302,8 +2330,8 @@ bonkAPI.getPlayerNameByID = function (id) {
  * @returns {number} ID of player
  */
 bonkAPI.getPlayerIDByName = function (name) {
-    for (let i = 0; i < bonkAPI.playerList.length; i++) {
-        if (bonkAPI.playerList[i] != null && name == bonkAPI.playerList[i].userName) {
+    for (let i = 0; i &lt; bonkAPI.playerList.length; i++) {
+        if (bonkAPI.playerList[i] != null &amp;&amp; name == bonkAPI.playerList[i].userName) {
             return i;
         }
     }
@@ -2315,11 +2343,11 @@ bonkAPI.getPlayerIDByName = function (name) {
  * team.
  * @function getPlayersByTeam
  * @param {number} team - Team of the player, from 0 to 5
- * @returns {Array.<Player>} List of {@linkcode Player} objects
+ * @returns {Array.&lt;Player>} List of {@linkcode Player} objects
  */
 bonkAPI.getPlayersByTeam = function (team) {
     var teamList = [];
-    for (let i = 0; i < bonkAPI.playerList.length; i++) {
+    for (let i = 0; i &lt; bonkAPI.playerList.length; i++) {
         if (team == bonkAPI.playerList[i].team) {
             teamList.push({ userID: i, userData: bonkAPI.playerList[i] });
         }
@@ -2440,3 +2468,26 @@ window.bonkCodeInjectors.push((bonkCode) => {
     }
 });
 // #endregion
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="EventHandler.html">EventHandler</a></li></ul><h3>Events</h3><ul><li><a href="global.html#event:chatIn">chatIn</a></li><li><a href="global.html#event:gameInputs">gameInputs</a></li><li><a href="global.html#event:gameStart">gameStart</a></li><li><a href="global.html#event:hostChange">hostChange</a></li><li><a href="global.html#event:joinRoom">joinRoom</a></li><li><a href="global.html#event:mapSwitch">mapSwitch</a></li><li><a href="global.html#event:modeChange">modeChange</a></li><li><a href="global.html#event:pingUpdate">pingUpdate</a></li><li><a href="global.html#event:receivedFriend">receivedFriend</a></li><li><a href="global.html#event:roomJoin">roomJoin</a></li><li><a href="global.html#event:teamChange">teamChange</a></li><li><a href="global.html#event:userJoin">userJoin</a></li><li><a href="global.html#event:userLeave">userLeave</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addEventListener">addEventListener</a></li><li><a href="global.html#banPlayerByID">banPlayerByID</a></li><li><a href="global.html#chat">chat</a></li><li><a href="global.html#getHostID">getHostID</a></li><li><a href="global.html#getMyID">getMyID</a></li><li><a href="global.html#getOnlineFriendList">getOnlineFriendList</a></li><li><a href="global.html#getPlayer">getPlayer</a></li><li><a href="global.html#getPlayerByID">getPlayerByID</a></li><li><a href="global.html#getPlayerByName">getPlayerByName</a></li><li><a href="global.html#getPlayerIDByName">getPlayerIDByName</a></li><li><a href="global.html#getPlayerList">getPlayerList</a></li><li><a href="global.html#getPlayerListLength">getPlayerListLength</a></li><li><a href="global.html#getPlayerLobbyList">getPlayerLobbyList</a></li><li><a href="global.html#getPlayerNameByID">getPlayerNameByID</a></li><li><a href="global.html#getPlayersByTeam">getPlayersByTeam</a></li><li><a href="global.html#isInGame">isInGame</a></li><li><a href="global.html#receive_ChatMessage">receive_ChatMessage</a></li><li><a href="global.html#receive_FriendReq">receive_FriendReq</a></li><li><a href="global.html#receive_GameStart">receive_GameStart</a></li><li><a href="global.html#receive_HostLeave">receive_HostLeave</a></li><li><a href="global.html#receive_Inputs">receive_Inputs</a></li><li><a href="global.html#receive_MapSwitch">receive_MapSwitch</a></li><li><a href="global.html#receive_ModeChange">receive_ModeChange</a></li><li><a href="global.html#receive_NewHost">receive_NewHost</a></li><li><a href="global.html#receive_PingUpdate">receive_PingUpdate</a></li><li><a href="global.html#receive_PlayerJoin">receive_PlayerJoin</a></li><li><a href="global.html#receive_PlayerLeave">receive_PlayerLeave</a></li><li><a href="global.html#receive_RoomJoin">receive_RoomJoin</a></li><li><a href="global.html#receive_TeamChange">receive_TeamChange</a></li><li><a href="global.html#send_GameStart">send_GameStart</a></li><li><a href="global.html#send_Inputs">send_Inputs</a></li><li><a href="global.html#send_MapSwitch">send_MapSwitch</a></li><li><a href="global.html#send_RoomCreate">send_RoomCreate</a></li><li><a href="global.html#send_RoomJoin">send_RoomJoin</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed Apr 17 2024 23:47:24 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

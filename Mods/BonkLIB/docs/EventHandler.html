@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Class: EventHandler</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Class: EventHandler</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2><span class="attribs"><span class="type-signature"></span></span>EventHandler</h2>
+        
+            <div class="class-description">Stores functions and events and can fire events with data.This class is already instantiated onto bonkAPI so if you dont need yourown event handler, ignore this class.</div>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="BonkAPI.js.html">BonkAPI.js</a>, <a href="BonkAPI.js.html#line8">line 8</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".addEventListener"><span class="type-signature">(static) </span>addEventListener<span class="signature">(event, method, scope<span class="signature-attributes">opt</span>, context<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Begins to listen for the given event to call the method later.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>event</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Event that is listened for</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>method</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Function that is called</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>scope</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Where the function should be called from, defaults to window</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>context</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">defaults to nothing</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="BonkAPI.js.html">BonkAPI.js</a>, <a href="BonkAPI.js.html#line28">line 28</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".fireEvent"><span class="type-signature">(static) </span>fireEvent<span class="signature">(event, data, context<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Fires the event given to call the methods linked to that event.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>event</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Event that is being fired</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Data sent along with the event</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>context</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="BonkAPI.js.html">BonkAPI.js</a>, <a href="BonkAPI.js.html#line55">line 55</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="EventHandler.html">EventHandler</a></li></ul><h3>Events</h3><ul><li><a href="global.html#event:chatIn">chatIn</a></li><li><a href="global.html#event:gameInputs">gameInputs</a></li><li><a href="global.html#event:gameStart">gameStart</a></li><li><a href="global.html#event:hostChange">hostChange</a></li><li><a href="global.html#event:joinRoom">joinRoom</a></li><li><a href="global.html#event:mapSwitch">mapSwitch</a></li><li><a href="global.html#event:modeChange">modeChange</a></li><li><a href="global.html#event:pingUpdate">pingUpdate</a></li><li><a href="global.html#event:receivedFriend">receivedFriend</a></li><li><a href="global.html#event:roomJoin">roomJoin</a></li><li><a href="global.html#event:teamChange">teamChange</a></li><li><a href="global.html#event:userJoin">userJoin</a></li><li><a href="global.html#event:userLeave">userLeave</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addEventListener">addEventListener</a></li><li><a href="global.html#banPlayerByID">banPlayerByID</a></li><li><a href="global.html#chat">chat</a></li><li><a href="global.html#getHostID">getHostID</a></li><li><a href="global.html#getMyID">getMyID</a></li><li><a href="global.html#getOnlineFriendList">getOnlineFriendList</a></li><li><a href="global.html#getPlayer">getPlayer</a></li><li><a href="global.html#getPlayerByID">getPlayerByID</a></li><li><a href="global.html#getPlayerByName">getPlayerByName</a></li><li><a href="global.html#getPlayerIDByName">getPlayerIDByName</a></li><li><a href="global.html#getPlayerList">getPlayerList</a></li><li><a href="global.html#getPlayerListLength">getPlayerListLength</a></li><li><a href="global.html#getPlayerLobbyList">getPlayerLobbyList</a></li><li><a href="global.html#getPlayerNameByID">getPlayerNameByID</a></li><li><a href="global.html#getPlayersByTeam">getPlayersByTeam</a></li><li><a href="global.html#isInGame">isInGame</a></li><li><a href="global.html#receive_ChatMessage">receive_ChatMessage</a></li><li><a href="global.html#receive_FriendReq">receive_FriendReq</a></li><li><a href="global.html#receive_GameStart">receive_GameStart</a></li><li><a href="global.html#receive_HostLeave">receive_HostLeave</a></li><li><a href="global.html#receive_Inputs">receive_Inputs</a></li><li><a href="global.html#receive_MapSwitch">receive_MapSwitch</a></li><li><a href="global.html#receive_ModeChange">receive_ModeChange</a></li><li><a href="global.html#receive_NewHost">receive_NewHost</a></li><li><a href="global.html#receive_PingUpdate">receive_PingUpdate</a></li><li><a href="global.html#receive_PlayerJoin">receive_PlayerJoin</a></li><li><a href="global.html#receive_PlayerLeave">receive_PlayerLeave</a></li><li><a href="global.html#receive_RoomJoin">receive_RoomJoin</a></li><li><a href="global.html#receive_TeamChange">receive_TeamChange</a></li><li><a href="global.html#send_GameStart">send_GameStart</a></li><li><a href="global.html#send_Inputs">send_Inputs</a></li><li><a href="global.html#send_MapSwitch">send_MapSwitch</a></li><li><a href="global.html#send_RoomCreate">send_RoomCreate</a></li><li><a href="global.html#send_RoomJoin">send_RoomJoin</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed Apr 17 2024 23:47:24 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
