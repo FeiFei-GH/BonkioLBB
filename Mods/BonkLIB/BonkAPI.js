@@ -111,239 +111,247 @@ bonkAPI.originalSend = window.WebSocket.prototype.send;
 bonkAPI.originalRequestAnimationFrame = window.requestAnimationFrame;
 bonkAPI.originalXMLOpen = window.XMLHttpRequest.prototype.open;
 bonkAPI.originalXMLSend = window.XMLHttpRequest.prototype.send;
-// #endregion
+bonkAPI.originalDrawCircle = window.
+    // #endregion
 
-// #region //!------------------Overriding bonkWSS------------------
-window.WebSocket.prototype.send = function (args) {
-    if (this.url.includes("socket.io/?EIO=3&transport=websocket&sid=")) {
-        if (!this.injectedAPI) {
-            // initialize overriding receive listener (only run once)
-            bonkAPI.bonkWSS = this;
-            this.injectedAPI = true;
-            var originalReceive = this.onmessage;
-            // This function intercepts incoming packets
-            this.onmessage = function (args) {
-                // &Receiving incoming packets
+    // #region //!------------------Overriding bonkWSS------------------
+    window.WebSocket.prototype.send = function (args) {
+        if (this.url.includes("socket.io/?EIO=3&transport=websocket&sid=")) {
+            if (!this.injectedAPI) {
+                // initialize overriding receive listener (only run once)
+                bonkAPI.bonkWSS = this;
+                this.injectedAPI = true;
+                var originalReceive = this.onmessage;
+                // This function intercepts incoming packets
+                this.onmessage = function (args) {
+                    // &Receiving incoming packets
+                    if(args.data.substring(0, 3) == "42[") {
+                        newArgs = JSON.parse(args.data.substring(2));
+                        // !All function names follow verb_noun[verb] format
+                        switch (parseInt(newArgs[0])) {
+                            case 1: //*Update other players' pings
+                                newArgs = bonkAPI.receive_PingUpdate(newArgs);
+                                break;
+                            case 2: // *UNKNOWN, received after sending create room packet
+                                newArgs = bonkAPI.receive_Unknow2(newArgs);
+                                break;
+                            case 3: // *Room Join
+                                newArgs = bonkAPI.receive_RoomJoin(newArgs);
+                                break;
+                            case 4: // *Player Join
+                                newArgs = bonkAPI.receive_PlayerJoin(newArgs);
+                                break;
+                            case 5: // *Player Leave
+                                newArgs = bonkAPI.receive_PlayerLeave(newArgs);
+                                break;
+                            case 6: // *Host Leave
+                                newArgs = bonkAPI.receive_HostLeave(newArgs);
+                                break;
+                            case 7: // *Receive Inputs
+                                newArgs = bonkAPI.receive_Inputs(newArgs);
+                                break;
+                            case 8: // *Ready Change
+                                newArgs = bonkAPI.receive_ReadyChange(newArgs);
+                                break;
+                            case 13: // *Game End
+                                newArgs = bonkAPI.receive_GameEnd(newArgs);
+                                break;
+                            case 15: // *Game Start
+                                newArgs = bonkAPI.receive_GameStart(newArgs);
+                                break;
+                            case 16: // *Error
+                                newArgs = bonkAPI.receive_Error(newArgs);
+                                break;
+                            case 18: // *Team Change
+                                newArgs = bonkAPI.receive_TeamChange(newArgs);
+                                break;
+                            case 19: // *Teamlock Toggle
+                                newArgs = bonkAPI.receive_TeamLockToggle(newArgs);
+                                break;
+                            case 20: // *Chat Message
+                                newArgs = bonkAPI.receive_ChatMessage(newArgs);
+                                break;
+                            case 21: // *Initial Data
+                                newArgs = bonkAPI.receive_InitialData(newArgs);
+                                break;
+                            case 24: // *Kicked
+                                newArgs = bonkAPI.receive_PlayerKick(newArgs);
+                                break;
+                            case 26: // *Change Mode
+                                newArgs = bonkAPI.receive_ModeChange(newArgs);
+                                break;
+                            case 27: // *Change Rounds
+                                newArgs = bonkAPI.receive_RoundsChange(newArgs);
+                                break;
+                            case 29: // *Map Switch
+                                newArgs = bonkAPI.receive_MapSwitch(newArgs);
+                                break;
+                            case 32: // *inactive?
+                                newArgs = bonkAPI.receive_Inactive(newArgs);
+                                break;
+                            case 33: // *Map Suggest
+                                newArgs = bonkAPI.receive_MapSuggest(newArgs);
+                                break;
+                            case 34: // *Map Suggest Client
+                                newArgs = bonkAPI.receive_MapSuggestClient(newArgs);
+                                break;
+                            case 36: // *Player Balance Change
+                                newArgs = bonkAPI.receive_PlayerBalance(newArgs);
+                                break;
+                            case 40: // *Save Replay
+                                newArgs = bonkAPI.receive_ReplaySave(newArgs);
+                                break;
+                            case 41: // *New Host
+                                newArgs = bonkAPI.receive_NewHost(newArgs);
+                                break;
+                            case 42: // *Friend Req
+                                newArgs = bonkAPI.receive_FriendRequest(newArgs);
+                                break;
+                            case 43: // *Game Starting Countdown
+                                newArgs = bonkAPI.receive_CountdownStart(newArgs);
+                                break;
+                            case 44: // *Abort Countdown
+                                newArgs = bonkAPI.receive_CountdownAbort(newArgs);
+                                break;
+                            case 45: // *Player Leveled Up
+                                newArgs = bonkAPI.receive_PlayerLevelUp(newArgs);
+                                break;
+                            case 46: // *Local Gained XP
+                                newArgs = bonkAPI.receive_LocalXPGain(newArgs);
+                                break;
+                            case 49: // *Created Room Share Link
+                                newArgs = bonkAPI.receive_RoomShareLink(newArgs);
+                                break;
+                            case 52: // *Tabbed
+                                newArgs = bonkAPI.receive_Tabbed(newArgs);
+                                break;
+                            case 58: // *Room Name Update
+                                newArgs = bonkAPI.receive_RoomName(newArgs);
+                                break;
+                            case 59: // *Room Password Update
+                                newArgs = bonkAPI.receive_RoomPassword(newArgs);
+                                break;
+                        }
+                        args.data = 42 + JSON.stringify(newArgs);
+                    }
+                    return originalReceive.call(this, args);
+                };
+
+                var originalClose = this.onclose;
+                this.onclose = function () {
+                    bonkAPI.bonkWSS = 0;
+                    return originalClose.call(this);
+                };
+            } else {
                 // !All function names follow verb_noun[verb] format
-                switch (args.data.substring(0, 5)) {
-                    case "42[1,": //*Update other players' pings
-                        args = bonkAPI.receive_PingUpdate(args);
-                        break;
-                    case "42[2,": // *UNKNOWN, received after sending create room packet
-                        args = bonkAPI.receive_Unknow2(args);
-                        break;
-                    case "42[3,": // *Room Join
-                        args = bonkAPI.receive_RoomJoin(args);
-                        break;
-                    case "42[4,": // *Player Join
-                        args = bonkAPI.receive_PlayerJoin(args);
-                        break;
-                    case "42[5,": // *Player Leave
-                        args = bonkAPI.receive_PlayerLeave(args);
-                        break;
-                    case "42[6,": // *Host Leave
-                        args = bonkAPI.receive_HostLeave(args);
-                        break;
-                    case "42[7,": // *Receive Inputs
-                        args = bonkAPI.receive_Inputs(args);
-                        break;
-                    case "42[8,": // *Ready Change
-                        args = bonkAPI.receive_ReadyChange(args);
-                        break;
-                    case "42[13": // *Game End
-                        args = bonkAPI.receive_GameEnd(args);
-                        break;
-                    case "42[15": // *Game Start
-                        args = bonkAPI.receive_GameStart(args);
-                        break;
-                    case "42[16": // *Error
-                        args = bonkAPI.receive_Error(args);
-                        break;
-                    case "42[18": // *Team Change
-                        args = bonkAPI.receive_TeamChange(args);
-                        break;
-                    case "42[19": // *Teamlock Toggle
-                        args = bonkAPI.receive_TeamLockToggle(args);
-                        break;
-                    case "42[20": // *Chat Message
-                        args = bonkAPI.receive_ChatMessage(args);
-                        break;
-                    case "42[21": // *Initial Data
-                        args = bonkAPI.receive_InitialData(args);
-                        break;
-                    case "42[24": // *Kicked
-                        args = bonkAPI.receive_PlayerKick(args);
-                        break;
-                    case "42[26": // *Change Mode
-                        args = bonkAPI.receive_ModeChange(args);
-                        break;
-                    case "42[27": // *Change Rounds
-                        args = bonkAPI.receive_RoundsChange(args);
-                        break;
-                    case "42[29": // *Map Switch
-                        args = bonkAPI.receive_MapSwitch(args);
-                        break;
-                    case "42[32": // *inactive?
-                        args = bonkAPI.receive_Inactive(args);
-                        break;
-                    case "42[33": // *Map Suggest
-                        args = bonkAPI.receive_MapSuggest(args);
-                        break;
-                    case "42[34": // *Map Suggest Client
-                        args = bonkAPI.receive_MapSuggestClient(args);
-                        break;
-                    case "42[36": // *Player Balance Change
-                        args = bonkAPI.receive_PlayerBalance(args);
-                        break;
-                    case "42[40": // *Save Replay
-                        args = bonkAPI.receive_ReplaySave(args);
-                        break;
-                    case "42[41": // *New Host
-                        args = bonkAPI.receive_NewHost(args);
-                        break;
-                    case "42[42": // *Friend Req
-                        args = bonkAPI.receive_FriendRequest(args);
-                        break;
-                    case "42[43": // *Game Starting Countdown
-                        args = bonkAPI.receive_CountdownStart(args);
-                        break;
-                    case "42[44": // *Abort Countdown
-                        args = bonkAPI.receive_CountdownAbort(args);
-                        break;
-                    case "42[45": // *Player Leveled Up
-                        args = bonkAPI.receive_PlayerLevelUp(args);
-                        break;
-                    case "42[46": // *Local Gained XP
-                        args = bonkAPI.receive_LocalXPGain(args);
-                        break;
-                    case "42[49": // *Created Room Share Link
-                        args = bonkAPI.receive_RoomShareLink(args);
-                        break;
-                    case "42[52": // *Tabbed
-                        args = bonkAPI.receive_Tabbed(args);
-                        break;
-                    case "42[58": // *Room Name Update
-                        args = bonkAPI.receive_RoomName(args);
-                        break;
-                    case "42[59": // *Room Password Update
-                        args = bonkAPI.receive_RoomPassword(args);
-                        break;
+                if(args.substring(0, 3) == "42[") {
+                    args = JSON.parse(args.substring(2));
+                    // &Sending outgoing packets
+                    switch (parseInt(args[0])) {
+                        case 4: // *Send Inputs
+                            args = bonkAPI.send_Inputs(args);
+                            break;
+                        case 5: // *Trigger Start
+                            args = bonkAPI.send_GameStart(args);
+                            break;
+                        case 6: // *Change Own Team
+                            args = bonkAPI.send_TeamChange(args);
+                            break;
+                        case 7: // *Team Lock
+                            args = bonkAPI.send_TeamLock(args);
+                            break;
+                        case 9: // *Kick/Ban Player
+                            args = bonkAPI.send_PlayerKickBan(args);
+                            break;
+                        case 10: // *Chat Message
+                            args = bonkAPI.send_ChatMessage(args);
+                            break;
+                        case 11: // *Inform In Lobby
+                            args = bonkAPI.send_LobbyInform(args);
+                            break;
+                        case 12: // *Create Room
+                            args = bonkAPI.send_RoomCreate(args);
+                            break;
+                        case 13: // *Room Join Information
+                            args = bonkAPI.send_RoomJoin(args);
+                            break;
+                        case 14: // *Return To Lobby
+                            args = bonkAPI.send_LobbyReturn(args);
+                            break;
+                        case 16: // *Set Ready
+                            args = bonkAPI.send_Ready(args);
+                            break;
+                        case 17: // *All Ready Reset
+                            args = bonkAPI.send_AllReadyReset(args);
+                            break;
+                        case 19: // *Send Map Reorder
+                            args = bonkAPI.send_MapReorder(args);
+                            break;
+                        case 20: // *Send Mode
+                            args = bonkAPI.send_ModeChange(args);
+                            break;
+                        case 21: // *Send WL (Rounds)
+                            args = bonkAPI.send_RoundsChange(args);
+                            break;
+                        case 22: // *Send Map Delete
+                            args = bonkAPI.send_MapDelete(args);
+                            break;
+                        case 23: // *Send Map Switch
+                            args = bonkAPI.send_MapSwitch(args);
+                            break;
+                        case 26: // *Change Other Team
+                            args = bonkAPI.send_OtherTeamChange(args);
+                            break;
+                        case 27: // *Send Map Suggest
+                            args = bonkAPI.send_MapSuggest(args);
+                            break;
+                        case 29: // *Send Balance
+                            args = bonkAPI.send_Balance(args);
+                            break;
+                        case 32: // *Send Team Settings Change
+                            args = bonkAPI.send_TeamSetting(args);
+                            break;
+                        case 33: // *Send Arm Record
+                            args = bonkAPI.send_ArmRecord(args);
+                            break;
+                        case 34: // *Send Host Change
+                            args = bonkAPI.send_HostChange(args);
+                            break;
+                        case 35: // *Send Friended
+                            args = bonkAPI.send_Friended(args);
+                            break;
+                        case 36: // *Send Start Countdown
+                            args = bonkAPI.send_CountdownStart(args);
+                            break;
+                        case 37: // *Send Abort Countdown
+                            args = bonkAPI.send_CountdownAbort(args);
+                            break;
+                        case 38: // *Send Req XP
+                            args = bonkAPI.send_XPRequest(args);
+                            break;
+                        case 39: // *Send Map Vote
+                            args = bonkAPI.send_MapVote(args);
+                            break;
+                        case 40: // *Inform In Game
+                            args = bonkAPI.send_InGameInform(args);
+                            break;
+                        case 41: // *Get Pre Vote
+                            args = bonkAPI.send_PreVoteGet(args);
+                            break;
+                        case 44: // *Tabbed
+                            args = bonkAPI.send_Tabbed(args);
+                            break;
+                        case 50: // *Send No Host Swap
+                            args = bonkAPI.send_NoHostSwap(args);
+                            break;
+                    }
+                    args = 42 + JSON.stringify(args);
                 }
-
-                return originalReceive.call(this, args);
-            };
-
-            var originalClose = this.onclose;
-            this.onclose = function () {
-                bonkAPI.bonkWSS = 0;
-                return originalClose.call(this);
-            };
-        } else {
-            // !All function names follow verb_noun[verb] format
-            // &Sending outgoing packets
-            switch (args.substring(0, 5)) {
-                case "42[4,": // *Send Inputs
-                    args = bonkAPI.send_Inputs(args);
-                    break;
-                case "42[5,": // *Trigger Start
-                    args = bonkAPI.send_GameStart(args);
-                    break;
-                case "42[6,": // *Change Own Team
-                    args = bonkAPI.send_TeamChange(args);
-                    break;
-                case "42[7,": // *Team Lock
-                    args = bonkAPI.send_TeamLock(args);
-                    break;
-                case "42[9,": // *Kick/Ban Player
-                    args = bonkAPI.send_PlayerKickBan(args);
-                    break;
-                case "42[10": // *Chat Message
-                    args = bonkAPI.send_ChatMessage(args);
-                    break;
-                case "42[11": // *Inform In Lobby
-                    args = bonkAPI.send_LobbyInform(args);
-                    break;
-                case "42[12": // *Create Room
-                    args = bonkAPI.send_RoomCreate(args);
-                    break;
-                case "42[13": // *Room Join Information
-                    args = bonkAPI.send_RoomJoin(args);
-                    break;
-                case "42[14": // *Return To Lobby
-                    args = bonkAPI.send_LobbyReturn(args);
-                    break;
-                case "42[16": // *Set Ready
-                    args = bonkAPI.send_Ready(args);
-                    break;
-                case "42[17": // *All Ready Reset
-                    args = bonkAPI.send_AllReadyReset(args);
-                    break;
-                case "42[19": // *Send Map Reorder
-                    args = bonkAPI.send_MapReorder(args);
-                    break;
-                case "42[20": // *Send Mode
-                    args = bonkAPI.send_ModeChange(args);
-                    break;
-                case "42[21": // *Send WL (Rounds)
-                    args = bonkAPI.send_RoundsChange(args);
-                    break;
-                case "42[22": // *Send Map Delete
-                    args = bonkAPI.send_MapDelete(args);
-                    break;
-                case "42[23": // *Send Map Switch
-                    args = bonkAPI.send_MapSwitch(args);
-                    break;
-                case "42[26": // *Change Other Team
-                    args = bonkAPI.send_OtherTeamChange(args);
-                    break;
-                case "42[27": // *Send Map Suggest
-                    args = bonkAPI.send_MapSuggest(args);
-                    break;
-                case "42[29": // *Send Balance
-                    args = bonkAPI.send_Balance(args);
-                    break;
-                case "42[32": // *Send Team Settings Change
-                    args = bonkAPI.send_TeamSetting(args);
-                    break;
-                case "42[33": // *Send Arm Record
-                    args = bonkAPI.send_ArmRecord(args);
-                    break;
-                case "42[34": // *Send Host Change
-                    args = bonkAPI.send_HostChange(args);
-                    break;
-                case "42[35": // *Send Friended
-                    args = bonkAPI.send_Friended(args);
-                    break;
-                case "42[36": // *Send Start Countdown
-                    args = bonkAPI.send_CountdownStart(args);
-                    break;
-                case "42[37": // *Send Abort Countdown
-                    args = bonkAPI.send_CountdownAbort(args);
-                    break;
-                case "42[38": // *Send Req XP
-                    args = bonkAPI.send_XPRequest(args);
-                    break;
-                case "42[39": // *Send Map Vote
-                    args = bonkAPI.send_MapVote(args);
-                    break;
-                case "42[40": // *Inform In Game
-                    args = bonkAPI.send_InGameInform(args);
-                    break;
-                case "42[41": // *Get Pre Vote
-                    args = bonkAPI.send_PreVoteGet(args);
-                    break;
-                case "42[44": // *Tabbed
-                    args = bonkAPI.send_Tabbed(args);
-                    break;
-                case "42[50": // *Send No Host Swap
-                    args = bonkAPI.send_NoHostSwap(args);
-                    break;
             }
         }
-    }
 
-    return bonkAPI.originalSend.call(this, args);
-};
+        return bonkAPI.originalSend.call(this, args);
+    };
 // #endregion
 
 // #region //!------------------Send and Receive Packets-----------------
@@ -404,9 +412,8 @@ window.XMLHttpRequest.prototype.send = function (data) {
  * @returns {string} arguements
  */
 bonkAPI.receive_PingUpdate = function (args) {
-    var jsonargs = JSON.parse(args.data.substring(2));
-    let pingList = jsonargs[1];
-    let ehcoTo = jsonargs[2];
+    let pingList = args[1];
+    let ehcoTo = args[2];
 
     /**
      * When the user receives ping update.
@@ -440,14 +447,13 @@ bonkAPI.receive_Unknow2 = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.receive_RoomJoin = function (args) {
-    var jsonargs = JSON.parse(args.data.substring(2));
     bonkAPI.playerList = [];
-    bonkAPI.myID = jsonargs[1];
-    bonkAPI.hostID = jsonargs[2];
+    bonkAPI.myID = args[1];
+    bonkAPI.hostID = args[2];
 
-    for (var i = 0; i < jsonargs[3].length; i++) {
-        bonkAPI.playerList[i] = jsonargs[3][i];
-        if(jsonargs[3][i] != null){
+    for (var i = 0; i < args[3].length; i++) {
+        bonkAPI.playerList[i] = args[3][i];
+        if (args[3][i] != null) {
             bonkAPI.currentPlayers.push(i);
         }
     }
@@ -462,10 +468,10 @@ bonkAPI.receive_RoomJoin = function (args) {
      */
     if (bonkAPI.events.hasEvent["joinRoom"]) {
         var sendObj = {
-            hostID: jsonargs[2],
+            hostID: args[2],
             userData: bonkAPI.playerList, // !May or may not be immutable
-            roomID: jsonargs[6],
-            bypass: jsonargs[7],
+            roomID: args[6],
+            bypass: args[7],
         };
         bonkAPI.events.fireEvent("joinRoom", sendObj);
     }
@@ -481,18 +487,17 @@ bonkAPI.receive_RoomJoin = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.receive_PlayerJoin = function (args) {
-    var jsonargs = JSON.parse(args.data.substring(2));
-    bonkAPI.playerList[jsonargs[1]] = {
-        peerId: jsonargs[2],
-        userName: jsonargs[3],
-        guest: jsonargs[4],
-        level: jsonargs[5],
-        team: jsonargs[6],
+    bonkAPI.playerList[args[1]] = {
+        peerId: args[2],
+        userName: args[3],
+        guest: args[4],
+        level: args[5],
+        team: args[6],
         ready: false,
         tabbed: false,
-        avatar: jsonargs[7],
+        avatar: args[7],
     };
-    bonkAPI.currentPlayers.push(jsonargs[1]);
+    bonkAPI.currentPlayers.push(args[1]);
 
     //? can:
     //? - send the bonkAPI.playerList as data
@@ -506,7 +511,7 @@ bonkAPI.receive_PlayerJoin = function (args) {
      * @property {Player} userData - {@linkcode Player} object data of the player that joined
      */
     if (bonkAPI.events.hasEvent["userJoin"]) {
-        var sendObj = { userID: jsonargs[1], userData: bonkAPI.playerList[jsonargs[1]] };
+        var sendObj = { userID: args[1], userData: bonkAPI.playerList[args[1]] };
         bonkAPI.events.fireEvent("userJoin", sendObj);
     }
 
@@ -521,11 +526,9 @@ bonkAPI.receive_PlayerJoin = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.receive_PlayerLeave = function (args) {
-    var jsonargs = JSON.parse(args.data.substring(2));
-
     // Remove player from current players
     bonkAPI.currentPlayers.forEach((n, i) => {
-        if(n == jsonargs[1]) {
+        if (n == args[1]) {
             bonkAPI.currentPlayers.splice(i, 1);
         }
     });
@@ -538,7 +541,7 @@ bonkAPI.receive_PlayerLeave = function (args) {
      * @property {Player} userData - {@linkcode Player} object data of the player that left
      */
     if (bonkAPI.events.hasEvent["userLeave"]) {
-        var sendObj = { userID: jsonargs[1], userData: bonkAPI.playerList[jsonargs[1]] };
+        var sendObj = { userID: args[1], userData: bonkAPI.playerList[args[1]] };
         bonkAPI.events.fireEvent("userLeave", sendObj);
     }
 
@@ -554,13 +557,12 @@ bonkAPI.receive_PlayerLeave = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.receive_HostLeave = function (args) {
-    var jsonargs = JSON.parse(args.data.substring(2));
     let lastHostID = bonkAPI.hostID;
-    bonkAPI.hostID = jsonargs[2];
+    bonkAPI.hostID = args[2];
 
     // Remove player from current players
     bonkAPI.currentPlayers.forEach((n, i) => {
-        if(n == lastHostID) {
+        if (n == lastHostID) {
             bonkAPI.currentPlayers.splice(i, 1);
         }
     });
@@ -573,7 +575,7 @@ bonkAPI.receive_HostLeave = function (args) {
      */
     //Using hostChange to use for multiple cases
     if (bonkAPI.events.hasEvent["hostChange"]) {
-        var sendObj = { userID: jsonargs[1] };
+        var sendObj = { userID: args[1] };
         bonkAPI.events.fireEvent("hostChange", sendObj);
     }
     /**
@@ -599,8 +601,6 @@ bonkAPI.receive_HostLeave = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.receive_Inputs = function (args) {
-    var jsonargs = JSON.parse(args.data.substring(2));
-
     /*
      * Maybe we could have different event names like
      * "receiveRawInput" and "receiveInput" which send
@@ -618,10 +618,10 @@ bonkAPI.receive_Inputs = function (args) {
      */
     if (bonkAPI.events.hasEvent["gameInputs"]) {
         var sendObj = {
-            userID: jsonargs[1],
-            rawInput: jsonargs[2]["i"],
-            frame: jsonargs[2]["f"],
-            sequence: jsonargs[2]["c"],
+            userID: args[1],
+            rawInput: args[2]["i"],
+            frame: args[2]["f"],
+            sequence: args[2]["c"],
         };
         bonkAPI.events.fireEvent("gameInputs", sendObj);
     } //example
@@ -655,7 +655,6 @@ bonkAPI.receive_GameEnd = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.receive_GameStart = function (args) {
-    var jsonargs = JSON.parse(args.data.substring(2));
     /**
      * When game has started
      * @event gameStart
@@ -663,12 +662,12 @@ bonkAPI.receive_GameStart = function (args) {
      * @property {string} mapData - Encoded map data, must decode it to use
      * @property {object} startData - Extra game specific data
      */
-    if (bonkAPI.events.hasEvent["gameStart"]) {
+    if (bonkAPI.events.hasEvent["gameStart"] && bonkAPI.myID != bonkAPI.hostID) {
         //! change name of mapdata since it is not map data, probably gamestate
         //! do the same in triggerstart
         var sendObj = {
-            mapData: jsonargs[2],
-            startData: jsonargs[3],
+            mapData: args[2],
+            startData: args[3],
         };
         bonkAPI.events.fireEvent("gameStart", sendObj);
     }
@@ -690,8 +689,7 @@ bonkAPI.receive_Error = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.receive_TeamChange = function (args) {
-    var jsonargs = JSON.parse(args.data.substring(2));
-    bonkAPI.playerList[parseInt(jsonargs[1])].team = jsonargs[2];
+    bonkAPI.playerList[parseInt(args[1])].team = args[2];
 
     /**
      * When a player has changed teams.
@@ -701,7 +699,7 @@ bonkAPI.receive_TeamChange = function (args) {
      * @property {number} team - The new team, represented from 0 to 5
      */
     if (bonkAPI.events.hasEvent["teamChange"]) {
-        var sendObj = { userID: jsonargs[1], team: jsonargs[2] };
+        var sendObj = { userID: args[1], team: args[2] };
         bonkAPI.events.fireEvent("teamChange", sendObj);
     }
 
@@ -722,9 +720,8 @@ bonkAPI.receive_TeamLockToggle = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.receive_ChatMessage = function (args) {
-    var jsonargs = JSON.parse(args.data.substring(2));
-    let chatUserID = jsonargs[1];
-    let chatMessage = jsonargs[2];
+    let chatUserID = args[1];
+    let chatMessage = args[2];
 
     /**
      * When the user has received a message.
@@ -761,8 +758,6 @@ bonkAPI.receive_PlayerKick = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.receive_ModeChange = function (args) {
-    var jsonargs = JSON.parse(args.data.substring(2));
-
     // *Maybe change raw arguement to full mode name or numbers
     /**
      * When the mode has changed.
@@ -771,7 +766,7 @@ bonkAPI.receive_ModeChange = function (args) {
      * @property {string} mode - Short string representing the new mode
      */
     if (bonkAPI.events.hasEvent["modeChange"]) {
-        var sendObj = { mode: jsonargs[1] };
+        var sendObj = { mode: args[1] };
         bonkAPI.events.fireEvent("modeChange", sendObj);
     }
 
@@ -792,8 +787,6 @@ bonkAPI.receive_RoundsChange = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.receive_MapSwitch = function (args) {
-    var jsonargs = JSON.parse(args.data.substring(2));
-
     // *Using mapSwitch to stick with other bonkAPI.events using "change"
     /**
      * When the map has changed.
@@ -802,7 +795,7 @@ bonkAPI.receive_MapSwitch = function (args) {
      * @property {string} mapData - String with the data of the map
      */
     if (bonkAPI.events.hasEvent["mapSwitch"]) {
-        var sendObj = { mapData: jsonargs[1] };
+        var sendObj = { mapData: args[1] };
         bonkAPI.events.fireEvent("mapSwitch", sendObj);
     }
 
@@ -847,8 +840,7 @@ bonkAPI.receive_ReplaySave = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.receive_NewHost = function (args) {
-    var jsonargs = JSON.parse(args.data.substring(2));
-    bonkAPI.hostID = jsonargs[1]["newHost"];
+    bonkAPI.hostID = args[1]["newHost"];
 
     /**
      * When the host changes.
@@ -856,8 +848,8 @@ bonkAPI.receive_NewHost = function (args) {
      * @type {object}
      * @property {number} userID - ID of the new host
      */
-    if(bonkAPI.events.hasEvent["hostChange"]) {
-        var sendObj = { userID: jsonargs[1]["newHost"] };
+    if (bonkAPI.events.hasEvent["hostChange"]) {
+        var sendObj = { userID: args[1]["newHost"] };
         bonkAPI.events.fireEvent("hostChange", sendObj);
     }
 
@@ -872,8 +864,6 @@ bonkAPI.receive_NewHost = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.receive_FriendRequest = function (args) {
-    var jsonargs = JSON.parse(args.data.substring(2));
-
     /**
      * When the the user has been friended.
      * @event receivedFriend
@@ -881,7 +871,7 @@ bonkAPI.receive_FriendRequest = function (args) {
      * @property {number} userID - ID of the player who friended you
      */
     if (bonkAPI.events.hasEvent["receivedFriend"]) {
-        var sendObj = { userID: jsonargs[1] };
+        var sendObj = { userID: args[1] };
         bonkAPI.events.fireEvent("receivedFriend", sendObj);
     }
 
@@ -945,8 +935,6 @@ bonkAPI.receive_RoomPassword = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.send_Inputs = function (args) {
-    var jsonargs = JSON.parse(args.substring(2));
-
     /**
      * When inputs are received from other players.
      * @event gameInputs
@@ -959,9 +947,9 @@ bonkAPI.send_Inputs = function (args) {
     if (bonkAPI.events.hasEvent["gameInputs"]) {
         var sendObj = {
             userID: bonkAPI.myID,
-            rawInput: jsonargs[1]["i"],
-            frame: jsonargs[1]["f"],
-            sequence: jsonargs[1]["c"],
+            rawInput: args[1]["i"],
+            frame: args[1]["f"],
+            sequence: args[1]["c"],
         };
         bonkAPI.events.fireEvent("gameInputs", sendObj);
     }
@@ -976,7 +964,6 @@ bonkAPI.send_Inputs = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.send_GameStart = function (args) {
-    var jsonargs = JSON.parse(args.substring(2));
     /**
      * When game has started
      * @event gameStart
@@ -986,8 +973,8 @@ bonkAPI.send_GameStart = function (args) {
      */
     if (bonkAPI.events.hasEvent["gameStart"]) {
         var sendObj = {
-            mapData: bonkAPI.ISdecode(jsonargs[1]["is"]),
-            startData: jsonargs[1]["map"],
+            mapData: bonkAPI.ISdecode(args[1]["is"]),
+            startData: args[1]["map"],
         };
         bonkAPI.events.fireEvent("gameStart", sendObj);
     }
@@ -1033,21 +1020,19 @@ bonkAPI.send_LobbyInform = function (args) {
  */
 bonkAPI.send_RoomCreate = function (args) {
     bonkAPI.playerList = [];
-    var jsonargs2 = JSON.parse(args.substring(2));
-    var jsonargs = jsonargs2[1];
 
     bonkAPI.playerList[0] = {
-        peerId: jsonargs["peerID"],
+        peerId: args[1]["peerID"],
         userName: document.getElementById("pretty_top_name").textContent,
         level:
             document.getElementById("pretty_top_level").textContent == "Guest"
                 ? 0
                 : parseInt(document.getElementById("pretty_top_level").textContent.substring(3)),
-        guest: typeof jsonargs.token == "undefined",
+        guest: typeof args[1].token == "undefined",
         team: 1,
         ready: false,
         tabbed: false,
-        avatar: jsonargs["avatar"],
+        avatar: args[1]["avatar"],
     };
     bonkAPI.currentPlayers.push(0);
 
@@ -1070,8 +1055,6 @@ bonkAPI.send_RoomCreate = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.send_RoomJoin = function (args) {
-    let jsonargs = JSON.parse(args.substring(2));
-
     //! DONT KNOW WHAT TO DO FOR NAMING
     //! Possibly get rid of XMLhttp thing since this gives the login token
     /**
@@ -1085,13 +1068,12 @@ bonkAPI.send_RoomJoin = function (args) {
      */
     if (bonkAPI.events.hasEvent["roomJoin"]) {
         var sendObj = {
-            password: jsonargs[1]["roomPassword"],
-            avatar: jsonargs[1]["avatar"],
-            token: jsonargs[1]["token"] ? jsonargs[1]["token"] : null,
+            password: args[1]["roomPassword"],
+            avatar: args[1]["avatar"],
+            token: args[1]["token"] ? args[1]["token"] : null,
             packet: args,
         };
         bonkAPI.events.fireEvent("roomJoin", sendObj);
-        args = sendObj.packet;
     }
 
     return args;
@@ -1146,10 +1128,6 @@ bonkAPI.send_MapDelete = function (args) {
  * @returns {string} arguements
  */
 bonkAPI.send_MapSwitch = function (args) {
-    //console.log("Map Changed");
-    var jsonargs = JSON.parse(args.substring(2));
-    //var jsonargs = JSON.parse(args.data.substring(2));
-
     // *Using mapSwitch to stick with other bonkAPI.events using "change"
     /**
      * When the map has changed.
@@ -1158,7 +1136,7 @@ bonkAPI.send_MapSwitch = function (args) {
      * @property {string} mapData - String with the data of the map
      */
     if (bonkAPI.events.hasEvent["mapSwitch"]) {
-        var sendObj = { mapData: jsonargs[1]["m"] };
+        var sendObj = { mapData: args[1]["m"] };
         bonkAPI.events.fireEvent("mapSwitch", sendObj);
     }
     return args;
