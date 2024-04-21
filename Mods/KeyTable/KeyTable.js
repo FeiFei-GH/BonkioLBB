@@ -160,7 +160,7 @@ bonkAPI.addEventListener("createRoom", (e) => {
 });
 
 // Event listener for when user(mod user) joins a room
-bonkAPI.addEventListener("onJoin", (e) => {
+bonkAPI.addEventListener("joinRoom", (e) => {
     //console.log("on Join event received", e);
     //console.log("User ID", e.userID);
     // Set the player name in the player selector to the current user
