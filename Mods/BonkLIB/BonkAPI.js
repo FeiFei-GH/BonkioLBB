@@ -1,5 +1,3 @@
-// ! Compitable with Bonk Version 49
-
 // Everything should be inside this object to prevent conflict with other prgrams.
 window.bonkAPI = {};
 
