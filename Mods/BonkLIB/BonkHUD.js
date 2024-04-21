@@ -1,15 +1,4 @@
-// ==UserScript==
-// @name         bonkHUD
-// @version      1.4.48
-// @description  Add a customizable key table overlay to the bonk.io game
-// @author       BZD + FeiFei + Bag
-// @namespace    http://tampermonkey.net/
-// @license      MIT
-// @match        https://bonk.io/gameframe-release.html
-// @run-at       document-start
-// @grant        none
-// ==/UserScript==
-
+// Everything should be inside this object to prevent conflict with other prgrams.
 window.bonkHUD = {};
 
 bonkHUD.windowHold = [];

@@ -1,16 +1,16 @@
 const fs = require('fs');
-const manifest = require('./dist/manifest.json');
-const npmPackage = require('./package.json');
+const packageJson = require('../../package.json');
 
-const BonkAPI = fs.readFileSync('./BonkAPI.js', {encoding: 'utf-8'});
-let BonkHUD = fs.readFileSync('./BonkHUD.js', {encoding: 'utf-8'});
+// File paths
+const BonkAPI = fs.readFileSync('./Mods/BonkLIB/BonkAPI.js', {encoding: 'utf-8'});
+const BonkHUD = fs.readFileSync('./Mods/BonkLIB/BonkHUD.js', {encoding: 'utf-8'});
 
 const content = `// ==UserScript==
 // @name         BonkLIB
-// @version      ${npmPackage.version}
+// @version      ${packageJson.version}
 // @author       FeiFei + Clarifi + BoZhi
 // @namespace    https://github.com/XyaoFeiFei/BonkioLBB
-// @description  ${manifest.description}
+// @description  BonkAPI + BonkHUD
 // @license      MIT
 // @match        https://*.bonk.io/gameframe-release.html
 // @run-at       document-start
@@ -21,6 +21,8 @@ const content = `// ==UserScript==
   https://greasyfork.org/en/scripts/433861-code-injector-bonk-io
 */
 
+// ! Compitable with Bonk Version 49
+
 ${BonkAPI}\n${BonkHUD}`;
 
-fs.writeFileSync(`./BonkLIB.js`, content);
+fs.writeFileSync(`./Mods/BonkLIB/BonkLIB.js`, content);
