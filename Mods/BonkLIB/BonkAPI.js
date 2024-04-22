@@ -220,6 +220,9 @@ window.WebSocket.prototype.send = function (args) {
                         case 46: // *Local Gained XP
                             newArgs = bonkAPI.receive_LocalXPGain(newArgs);
                             break;
+                        case 48:
+                            newArgs = bonkAPI.receive_gameState(newArgs);
+                            break;
                         case 49: // *Created Room Share Link
                             newArgs = bonkAPI.receive_RoomShareLink(newArgs);
                             break;
@@ -743,8 +746,24 @@ bonkAPI.receive_ChatMessage = function (args) {
     return args;
 };
 
+/**
+ * Data given by host after join.
+ * @function receive_gameState
+ * @fires modeChange
+ * @param {*} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.receive_InitialData = function (args) {
-    //  TODO: Finish implement of function
+    /**
+     * When the mode has changed.
+     * @event modeChange
+     * @type {object}
+     * @property {string} mode - Short string representing the new mode
+     */
+    if (bonkAPI.events.hasEvent["modeChange"]) {
+        var sendObj = { mode: args[1]["mo"] };
+        bonkAPI.events.fireEvent("modeChange", sendObj);
+    }
 
     return args;
 };
@@ -903,6 +922,30 @@ bonkAPI.receive_PlayerLevelUp = function (args) {
 
 bonkAPI.receive_LocalXPGain = function (args) {
     //  TODO: Finish implement of function
+
+    return args;
+};
+
+/**
+ * Triggers after joining a room and the 
+ * game state is sent.
+ * @function receive_gameState
+ * @fires modeChange
+ * @param {*} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
+bonkAPI.receive_gameState = function (args) {
+    //! also needs to fire something to do with gamestate
+    /**
+     * When the mode has changed.
+     * @event modeChange
+     * @type {object}
+     * @property {string} mode - Short string representing the new mode
+     */
+    if (bonkAPI.events.hasEvent["modeChange"]) {
+        var sendObj = { mode: args[1]["gs"]["mo"] };
+        bonkAPI.events.fireEvent("modeChange", sendObj);
+    }
 
     return args;
 };
@@ -1109,8 +1152,25 @@ bonkAPI.send_MapReorder = function (args) {
     return args;
 };
 
+/**
+ * When you change modes.
+ * @function send_ModeChange
+ * @fires modeChange
+ * @param {string} args - Packet received by websocket.
+ * @returns {string} arguements
+ */
 bonkAPI.send_ModeChange = function (args) {
     //  TODO: Finish implement of function
+    /**
+     * When the mode has changed.
+     * @event modeChange
+     * @type {object}
+     * @property {string} mode - Short string representing the new mode
+     */
+    if (bonkAPI.events.hasEvent["modeChange"]) {
+        var sendObj = { mode: args[1]["mo"] };
+        bonkAPI.events.fireEvent("modeChange", sendObj);
+    }
 
     return args;
 };
@@ -2431,7 +2491,7 @@ bonkAPI.safeToCap = function () {
  */
 bonkAPI.isInGame = function () {
     let renderer = document.getElementById("gamerenderer");
-    return renderer.style.visibility != "hidden";
+    return renderer.style.visibility == "inherit";
 }
 // #endregion
 
