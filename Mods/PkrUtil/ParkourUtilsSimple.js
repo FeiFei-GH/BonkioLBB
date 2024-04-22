@@ -21,6 +21,16 @@ const top = "0";
 const width = "172px";
 const height = "100px";
 
+pkrUtils.positionElement = 0;
+pkrUtils.velocityElement = 0;
+pkrUtils.specialElement = 0;
+pkrUtils.vtolAngle = 0;
+pkrUtils.vtolAnglev = 0;
+pkrUtils.arrowCharge = 0;
+pkrUtils.arrowAngle = 0;
+
+pkrUtils.currentMode = -1;
+
 pkrUtils.currentPlayerID = 0;
 
 pkrUtils.updateData = () => {
@@ -85,16 +95,57 @@ pkrUtils.update_players = () => {
     });
 };
 
+bonkAPI.addEventListener("modeChange", (e) => {
+    currentMode = e.mode;
+    let arrowdivs = document.getElementsByClassName("pkrutils-arrows-div");
+    let vtoldivs = document.getElementsByClassName("pkrutils-vtol-div");
+    if(currentMode == "ar" || currentMode == "ard") {
+        for(let i = 0; i < arrowdivs.length; i++) {
+            arrowdivs[i].style.display = "block";
+        }
+        for(let i = 0; i < vtoldivs.length; i++) {
+            vtoldivs[i].style.display = "none";
+        }
+    }
+    else if(currentMode == "v") {
+        for(let i = 0; i < arrowdivs.length; i++) {
+            arrowdivs[i].style.display = "none";
+        }
+        for(let i = 0; i < vtoldivs.length; i++) {
+            vtoldivs[i].style.display = "block";
+        }
+    }
+    else {
+        for(let i = 0; i < arrowdivs.length; i++) {
+            arrowdivs[i].style.display = "none";
+        }
+        for(let i = 0; i < vtoldivs.length; i++) {
+            vtoldivs[i].style.display = "none";
+        }
+    }
+});
+
 bonkAPI.addEventListener("stepEvent", (e) => {
-    let inputState = e.inputState;
-    let myData = inputState.discs[pkrUtils.currentPlayerID];
-    
-    let specialCD = myData.a1a;
-    let xPos = myData.x;
-    let yPos = myData.y;
-    let xVel = myData.xv;
-    let yVel = myData.yv;
-    //console.log(myData);
+    if(bonkAPI.isInGame()) {
+        let inputState = e.inputState;
+        try {
+            let myData = inputState.discs[pkrUtils.currentPlayerID];
+            
+            let specialCD = myData.a1a;
+            let xPos = myData.x;
+            let yPos = myData.y;
+            let xVel = myData.xv;
+            let yVel = myData.yv;
+            //console.log(myData);
+            pkrUtils.positionElement.textContent = "(" + xPos.toFixed(3) + ", " + yPos.toFixed(3) + ")";
+            pkrUtils.velocityElement.textContent = "(" + xVel.toFixed(3) + ", " + yVel.toFixed(3) + ")";
+            pkrUtils.specialElement.textContent = specialCD / 10;
+            pkrUtils.vtolAngle.textContent = myData.a;
+            pkrUtils.vtolAnglev.textContent = myData.av;
+            pkrUtils.arrowCharge.textContent = myData.ds;
+            pkrUtils.arrowAngle.textContent = myData.da;
+        } catch (err) {}
+    }
 });
 
 // Event listener for when a user joins the game
@@ -151,19 +202,48 @@ bonkAPI.addEventListener("joinRoom", (e) => {
 });
 
 // Main function to construct and add the key table UI to the DOM
-const addKeyTable = () => {
+const addPkrDiv = () => {
     // Create the key table
-    let keyTable = document.createElement("div");
+    let pkrDiv = document.createElement("div");
 
-    keyTable.innerHTML = `
-        <div>
+    pkrDiv.innerHTML = `
+        <div class="bonkhud-settings-row">
+            <div>
+                <span class="bonkhud-settings-label">Position: </span>
+                <span id="pkrutils_position"></span>
+            </div>
+            <div>
+                <span class="bonkhud-settings-label">Velocity: </span>
+                <span id="pkrutils_velocity"></span>
+            </div>
+            <div>
+                <span class="bonkhud-settings-label">Special: </span>
+                <span id="pkrutils_special"></span>
+            </div>
+            <div class="pkrutils-vtol-div" style="display:none">
+                <span class="bonkhud-settings-label">Angle: </span>
+                <span id="pkrutils_a"></span>
+            </div>
+            <div class="pkrutils-vtol-div" style="display:none">
+                <span class="bonkhud-settings-label">Angle 2: </span>
+                <span id="pkrutils_av"></span>
+            </div>
+            <div class="pkrutils-arrows-div" style="display:none">
+                <span class="bonkhud-settings-label">Charge: </span>
+                <span id="pkrutils_ds"></span>
+            </div>
+            <div class="pkrutils-arrows-div" style="display:none">
+                <span class="bonkhud-settings-label">Angle: </span>
+                <span id="pkrutils_da"></span>
+            </div>
+        </div>
         <div style="flex: 0 1 auto;padding: 10px;">
             <select id="pkrutils_player_selector">
                 <option id="pkrutils_selector_option_user">......</option>
             </select>
         </div>`;
 
-    bonkHUD.createWindow("pkrUtils", "pkr_utils_window", keyTable, "100px");
+    bonkHUD.createWindow("pkrUtils", "pkr_utils_window", pkrDiv, "100px");
     /*let keytable_window = document.getElementById("keytable_window");
     keytable_window.style.width = "100%";
     keytable_window.style.height = "calc(100% - 32px)";
@@ -171,12 +251,20 @@ const addKeyTable = () => {
     keytable_window.style.display = "flex";
     keytable_window.style.flexFlow = "column";*/
 
+    pkrUtils.positionElement = document.getElementById("pkrutils_position");
+    pkrUtils.velocityElement = document.getElementById("pkrutils_velocity");
+    pkrUtils.specialElement = document.getElementById("pkrutils_special");
+    pkrUtils.vtolAngle = document.getElementById("pkrutils_a");
+    pkrUtils.vtolAnglev = document.getElementById("pkrutils_av");
+    pkrUtils.arrowCharge = document.getElementById("pkrutils_ds");
+    pkrUtils.arrowAngle = document.getElementById("pkrutils_da");
+
     bonkHUD.loadUISetting("pkr_utils_window");
 };
 
 // Initialization logic to set up the UI once the document is ready
 const init = () => {
-    addKeyTable();
+    addPkrDiv();
     let playerSelector = document.getElementById("pkrutils_player_selector");
     if (playerSelector) {
         playerSelector.addEventListener("change", pkrUtils.select_player);
