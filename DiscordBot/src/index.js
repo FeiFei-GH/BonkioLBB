@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
 dotenv.config(); // loads .env file
-import {downloadMaps} from "./modules/maps.js";
+import {downloadMaps} from "../../Util/sheetsUtils.js";
 import { Client, IntentsBitField, EmbedBuilder } from "discord.js";
 
 const client = new Client({
