@@ -760,7 +760,7 @@ bonkAPI.receive_GameStart = function (args) {
         //! change name of mapdata since it is not map data, probably gamestate
         //! do the same in triggerstart
         var sendObj = {
-            mapData: args[2],
+            mapData: bonkAPI.ISdecode(args[2]),
             startData: args[3],
         };
         bonkAPI.events.fireEvent("gameStart", sendObj);
