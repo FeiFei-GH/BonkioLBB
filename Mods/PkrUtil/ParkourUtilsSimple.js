@@ -29,6 +29,10 @@ pkrUtils.vtolAnglev = 0;
 pkrUtils.arrowCharge = 0;
 pkrUtils.arrowAngle = 0;
 
+pkrUtils.scale = 1;
+
+pkrUtils.hasPrecision = false;
+
 pkrUtils.currentMode = -1;
 
 pkrUtils.currentPlayerID = 0;
@@ -130,15 +134,21 @@ bonkAPI.addEventListener("stepEvent", (e) => {
         let inputState = e.inputState;
         try {
             let myData = inputState.discs[pkrUtils.currentPlayerID];
-            
+
             let specialCD = myData.a1a;
-            let xPos = myData.x;
-            let yPos = myData.y;
-            let xVel = myData.xv;
-            let yVel = myData.yv;
+            let xPos = myData.x * pkrUtils.scale - 365;
+            let yPos = myData.y * pkrUtils.scale - 250;
+            let xVel = myData.xv * pkrUtils.scale;
+            let yVel = myData.yv * pkrUtils.scale;
+            if(!pkrUtils.hasPrecision) {
+                xPos = xPos.toFixed(2);
+                yPos = yPos.toFixed(2);
+                xVel = xVel.toFixed(2);
+                yVel = yVel.toFixed(2);
+            }
             //console.log(myData);
-            pkrUtils.positionElement.textContent = "(" + xPos.toFixed(3) + ", " + yPos.toFixed(3) + ")";
-            pkrUtils.velocityElement.textContent = "(" + xVel.toFixed(3) + ", " + yVel.toFixed(3) + ")";
+            pkrUtils.positionElement.textContent = "(" + xPos + ", " + yPos + ")";
+            pkrUtils.velocityElement.textContent = "(" + xVel + ", " + yVel + ")";
             pkrUtils.specialElement.textContent = specialCD / 10;
             pkrUtils.vtolAngle.textContent = myData.a;
             pkrUtils.vtolAnglev.textContent = myData.av;
@@ -146,6 +156,12 @@ bonkAPI.addEventListener("stepEvent", (e) => {
             pkrUtils.arrowAngle.textContent = myData.da;
         } catch (err) {}
     }
+});
+
+bonkAPI.addEventListener('gameStart', (e) => {
+    try {
+        pkrUtils.scale = e.mapData.physics.ppm;
+    } catch(er) {console.log(er)}
 });
 
 // Event listener for when a user joins the game
@@ -241,6 +257,10 @@ const addPkrDiv = () => {
             <select id="pkrutils_player_selector">
                 <option id="pkrutils_selector_option_user">......</option>
             </select>
+            <div>
+                <span class="bonkhud-settings-label" style="margin-right:5px;vertical-align:middle;">Precision</span>
+                <input type="checkbox" id="pkrutils_precision_toggle">
+            </div>
         </div>`;
 
     bonkHUD.createWindow("pkrUtils", "pkr_utils_window", pkrDiv, "100px");
@@ -250,6 +270,12 @@ const addPkrDiv = () => {
     keytable_window.style.padding = "0";
     keytable_window.style.display = "flex";
     keytable_window.style.flexFlow = "column";*/
+
+    let precisionCheck = document.getElementById("pkrutils_precision_toggle");
+    precisionCheck.checked = false;
+    precisionCheck.oninput = function () {
+        pkrUtils.hasPrecision = precisionCheck.checked;
+    };
 
     pkrUtils.positionElement = document.getElementById("pkrutils_position");
     pkrUtils.velocityElement = document.getElementById("pkrutils_velocity");
