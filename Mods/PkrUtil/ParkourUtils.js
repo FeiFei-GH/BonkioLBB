@@ -20,60 +20,119 @@ pkrUtils.data = 0;
 // #region //!------------------Use bonkAPI as listener-----------------
 
 let init = function () {
-    let circleCtx = 0;
+    let graphicsRef = new Map();
+    let uiCtx = 0;
     let scale = 1;
     let mapScale = 1;
     let screenWidth = 1000;
+    let goResize = false;
+
+    let inGameList = [];
 
     let resizeCtx = function () {
-        //console.log(circleCtx);
-        circleCtx.clear();
-        circleCtx.beginFill(0xff0000);
-        //console.log(scale);
-        circleCtx.drawCircle(0, 0, scale, scale);
-        circleCtx.endFill();
+        graphicsRef.forEach((val, key, map) => {
+            val.resize();
+        });
     }
 
+    bonkAPI.addEventListener("playerChange", (e) => {
+        inGameList = bonkAPI.getPlayersInLobbyID();
+        if(!e.hasLeft) {
+            let c = new window.PIXI.Container();
+            c.y = -scale;
+            let specialHold = new window.PIXI.Graphics();
+            specialHold.lineStyle(1, 0xebebeb);
+            specialHold.drawRect(0, 0, 0.5 * scale, 2 * scale);
+            specialHold.endFill();
+            let sContainer = new window.PIXI.Container();
+            sContainer.y = -2 * scale;
+            let special = new window.PIXI.Graphics();
+            special.beginFill(0xd4feff);
+            special.drawRect(0, 0, 0.5 * scale, 2 * scale);
+            special.endFill();
+            sContainer.addChild(special);
+            c.addChild(sContainer);
+            c.addChild(specialHold);
+            uiCtx.addChild(c);
+            console.log(special);
+            console.log(specialHold);
+
+            let resizeFunc = function () {
+                console.log("UNO");
+                specialHold.clear();
+                specialHold.lineStyle(1, 0xebebeb);
+                specialHold.drawRect(0, -2 * scale, 0.5 * scale, 2 * scale);
+                specialHold.endFill();
+
+                sContainer.y = -2 * scale;
+
+                special.clear();
+                special.beginFill(0xd4feff);
+                special.drawRect(0, 0, 0.5 * scale, 2 * scale);
+                special.endFill();
+                console.log(special);
+            }
+
+            let refHold = {
+                container: c,
+                specialBar: sContainer,
+                resize: resizeFunc,
+            }
+            graphicsRef.set(e.userID, refHold);
+        }
+        else {
+            graphicsRef.get(e.userID).container.destroy();
+            graphicsRef.delete(e.userID);
+        }
+    });
+
     bonkAPI.addEventListener("graphicsReady", (e) => {
-        circleCtx = new window.PIXI.Graphics();
-        circleCtx.beginFill(0xff0000);
-        circleCtx.drawCircle(0, 0, 16, 16);
-        circleCtx.endFill();
-        bonkAPI.pixiCtx.addChild(circleCtx);
-        console.log(circleCtx);
+        uiCtx = new window.PIXI.Container();
+        resizeCtx();
+        bonkAPI.pixiCtx.addChild(uiCtx);
+        console.log(uiCtx);
     });
 
     bonkAPI.addEventListener('gameStart', (e) => {
         try {
             mapScale = 730 / e.mapData.physics.ppm;
-            resizeCtx();
+            goResize = true;
         } catch(er) {console.log(er)}
     });
 
     bonkAPI.addEventListener("stepEvent", (e) => {
         if(bonkAPI.isInGame()) {
             let inputState = e.inputState;
-            pkrUtils.data = inputState.discs[bonkAPI.getMyID()];
-            try {
-                let xPos = pkrUtils.data.x;
-                let yPos = pkrUtils.data.y;
-                //console.log(e.width + ": " + xPos);
-                circleCtx.x = xPos * scale;
-                circleCtx.y = yPos * scale;
-                circleCtx.visible = true;
-                //e.g.drawCircle(xPos * 12, yPos * 12, 5, 5);
-            } catch(er) {
-                //console.log(er);
-                circleCtx.visible = false;
+
+            for(let i = 0; i < inGameList.length; i++) {
+                let info = graphicsRef.get(inGameList[i]);
+
+                try {
+                    let xPos = inputState.discs[inGameList[i]].x;
+                    let yPos = inputState.discs[inGameList[i]].y;
+                    //console.log(e.width + ": " + xPos);
+                    info.specialBar.scale.y = inputState.discs[inGameList[i]].a1a / 1000;
+                    info.container.x = xPos * scale;
+                    info.container.y = yPos * scale - scale;
+                    info.container.visible = true;
+                    //e.g.drawCircle(xPos * 12, yPos * 12, 5, 5);
+                } catch(er) {
+                    //console.log(er);
+                    if(info) {
+                        info.container.visible = false;
+                    }
+                }
             }
         }
     });
 
     bonkAPI.addEventListener("graphicsUpdate", (e) => {
-        if(screenWidth != e.width) {
+        //console.log("g");
+        if(screenWidth != e.width || goResize) {
             screenWidth = e.width;
             scale = screenWidth / mapScale;
             resizeCtx();
+            goResize = false;
         }
     });
     console.log("PkrUtils Loaded");

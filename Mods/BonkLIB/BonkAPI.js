@@ -451,6 +451,7 @@ bonkAPI.receive_Unknow2 = function (args) {
  * Triggered when the user joins a lobby.
  * @function receive_RoomJoin
  * @fires joinRoom
+ * @fires playerChange
  * @param {JSON} args - Packet received by websocket.
  * @returns {JSON} arguements
  */
@@ -459,10 +460,39 @@ bonkAPI.receive_RoomJoin = function (args) {
     bonkAPI.myID = args[1];
     bonkAPI.hostID = args[2];
 
-    for (var i = 0; i < args[3].length; i++) {
+    for (let i = 0; i < bonkAPI.currentPlayers.length; i++) {
+        /**
+             * When a player leaves or joins.
+             * @event playerChange
+             * @type {object}
+             * @property {number} userID - ID of the player who joined or left
+             * @property {object} userData - Data of the player who joined or left
+             * @property {boolean} hasLeft - Whether the player joined or left 
+             */
+        if (bonkAPI.events.hasEvent["playerChange"]) {
+            var sendObj = { userID: bonkAPI.currentPlayers[i], userData: bonkAPI.playerList[bonkAPI.currentPlayers[i]], hasLeft: true };
+            bonkAPI.events.fireEvent("playerChange", sendObj);
+        }
+    }
+    bonkAPI.currentPlayers = [];
+
+    for (let i = 0; i < args[3].length; i++) {
         bonkAPI.playerList[i] = args[3][i];
         if (args[3][i] != null) {
             bonkAPI.currentPlayers.push(i);
+
+            /**
+             * When a player leaves or joins.
+             * @event playerChange
+             * @type {object}
+             * @property {number} userID - ID of the player who joined or left
+             * @property {object} userData - Data of the player who joined or left
+             * @property {boolean} hasLeft - Whether the player joined or left 
+             */
+            if (bonkAPI.events.hasEvent["playerChange"]) {
+                var sendObj = { userID: args[1], userData: bonkAPI.playerList[args[1]], hasLeft: false };
+                bonkAPI.events.fireEvent("playerChange", sendObj);
+            }
         }
     }
     /**
@@ -484,6 +514,19 @@ bonkAPI.receive_RoomJoin = function (args) {
         bonkAPI.events.fireEvent("joinRoom", sendObj);
     }
 
+    /**
+     * When a player leaves or joins.
+     * @event playerChange
+     * @type {object}
+     * @property {number} userID - ID of the player who joined or left
+     * @property {object} userData - Data of the player who joined or left
+     * @property {boolean} hasLeft - Whether the player joined or left 
+     */
+    if (bonkAPI.events.hasEvent["playerChange"]) {
+        var sendObj = { userID: args[1], userData: bonkAPI.playerList[args[1]], hasLeft: false };
+        bonkAPI.events.fireEvent("playerChange", sendObj);
+    }
+
     return args;
 };
 
@@ -491,6 +534,7 @@ bonkAPI.receive_RoomJoin = function (args) {
  * Triggered when a player joins the lobby.
  * @function receive_PlayerJoin
  * @fires userJoin
+ * @fires playerChange
  * @param {JSON} args - Packet received by websocket.
  * @returns {JSON} arguements
  */
@@ -523,6 +567,19 @@ bonkAPI.receive_PlayerJoin = function (args) {
         bonkAPI.events.fireEvent("userJoin", sendObj);
     }
 
+    /**
+     * When a player leaves or joins.
+     * @event playerChange
+     * @type {object}
+     * @property {number} userID - ID of the player who joined or left
+     * @property {object} userData - Data of the player who joined or left
+     * @property {boolean} hasLeft - Whether the player joined or left 
+     */
+    if (bonkAPI.events.hasEvent["playerChange"]) {
+        var sendObj = { userID: args[1], userData: bonkAPI.playerList[args[1]], hasLeft: false };
+        bonkAPI.events.fireEvent("playerChange", sendObj);
+    }
+
     return args;
 };
 
@@ -530,6 +587,7 @@ bonkAPI.receive_PlayerJoin = function (args) {
  * Triggered when a player leaves the lobby.
  * @function receive_PlayerLeave
  * @fires userLeave
+ * @fires playerChange
  * @param {JSON} args - Packet received by websocket.
  * @returns {JSON} arguements
  */
@@ -553,6 +611,19 @@ bonkAPI.receive_PlayerLeave = function (args) {
         bonkAPI.events.fireEvent("userLeave", sendObj);
     }
 
+    /**
+     * When a player leaves or joins.
+     * @event playerChange
+     * @type {object}
+     * @property {number} userID - ID of the player who joined or left
+     * @property {object} userData - Data of the player who joined or left
+     * @property {boolean} hasLeft - Whether the player joined or left 
+     */
+    if (bonkAPI.events.hasEvent["playerChange"]) {
+        var sendObj = { userID: args[1], userData: bonkAPI.playerList[args[1]], hasLeft: true };
+        bonkAPI.events.fireEvent("playerChange", sendObj);
+    }
+
     return args;
 };
 
@@ -561,6 +632,7 @@ bonkAPI.receive_PlayerLeave = function (args) {
  * @function receive_HostLeave
  * @fires hostChange
  * @fires userLeave
+ * @fires playerChange
  * @param {JSON} args - Packet received by websocket.
  * @returns {JSON} arguements
  */
@@ -586,6 +658,7 @@ bonkAPI.receive_HostLeave = function (args) {
         var sendObj = { userID: args[1] };
         bonkAPI.events.fireEvent("hostChange", sendObj);
     }
+
     /**
      * When another player leaves the lobby.
      * @event userLeave
@@ -596,6 +669,19 @@ bonkAPI.receive_HostLeave = function (args) {
     if (bonkAPI.events.hasEvent["userLeave"]) {
         var sendObj = { userID: lastHostID, userData: bonkAPI.playerList[lastHostID] };
         bonkAPI.events.fireEvent("userLeave", sendObj);
+    }
+
+    /**
+     * When a player leaves or joins.
+     * @event playerChange
+     * @type {object}
+     * @property {number} userID - ID of the player who joined or left
+     * @property {object} userData - Data of the player who joined or left
+     * @property {boolean} hasLeft - Whether the player joined or left 
+     */
+    if (bonkAPI.events.hasEvent["playerChange"]) {
+        var sendObj = { userID: lastHostID, userData: bonkAPI.playerList[lastHostID], hasLeft: true };
+        bonkAPI.events.fireEvent("playerChange", sendObj);
     }
 
     return args;
@@ -1065,11 +1151,29 @@ bonkAPI.send_LobbyInform = function (args) {
 /**
  * Called when created a room.
  * @function send_RoomCreate
+ * @fires createRoom
+ * @fires playerChange
  * @param {JSON} args - Packet received by websocket.
  * @returns {JSON} arguements
  */
 bonkAPI.send_RoomCreate = function (args) {
     bonkAPI.playerList = [];
+
+    for (let i = 0; i < bonkAPI.currentPlayers.length; i++) {
+        /**
+             * When a player leaves or joins.
+             * @event playerChange
+             * @type {object}
+             * @property {number} userID - ID of the player who joined or left
+             * @property {object} userData - Data of the player who joined or left
+             * @property {boolean} hasLeft - Whether the player joined or left 
+             */
+        if (bonkAPI.events.hasEvent["playerChange"]) {
+            var sendObj = { userID: bonkAPI.currentPlayers[i], userData: bonkAPI.playerList[bonkAPI.currentPlayers[i]], hasLeft: true };
+            bonkAPI.events.fireEvent("playerChange", sendObj);
+        }
+    }
+    bonkAPI.currentPlayers = [];
 
     bonkAPI.playerList[0] = {
         peerId: args[1]["peerID"],
@@ -1099,6 +1203,19 @@ bonkAPI.send_RoomCreate = function (args) {
     if (bonkAPI.events.hasEvent["createRoom"]) {
         var sendObj = { userID: 0, userData: bonkAPI.playerList[0] };
         bonkAPI.events.fireEvent("createRoom", sendObj);
+    }
+
+    /**
+     * When a player leaves or joins.
+     * @event playerChange
+     * @type {object}
+     * @property {number} userID - ID of the player who joined or left
+     * @property {object} userData - Data of the player who joined or left
+     * @property {boolean} hasLeft - Whether the player joined or left 
+     */
+    if (bonkAPI.events.hasEvent["playerChange"]) {
+        var sendObj = { userID: 0, userData: bonkAPI.playerList[0], hasLeft: false };
+        bonkAPI.events.fireEvent("playerChange", sendObj);
     }
 
     return args;
