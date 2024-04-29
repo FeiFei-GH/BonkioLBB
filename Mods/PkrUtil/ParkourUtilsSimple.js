@@ -163,13 +163,13 @@ pkrUtils.generateMarker = (xInput, yInput, rInput) => {
 }
 
 bonkAPI.addEventListener("graphicsReady", (e) => {
+    console.log("Readying Graphics");
     pkrUtils.gCtx = new window.PIXI.Container();
     pkrUtils.markers.forEach((val, key, map) => {
         val.resize();
     });
     bonkAPI.pixiCtx.addChild(pkrUtils.gCtx);
     pkrUtils.goResize = true;
-    //console.log(bonkAPI.pixiCtx);
 });
 
 bonkAPI.addEventListener("modeChange", (e) => {
