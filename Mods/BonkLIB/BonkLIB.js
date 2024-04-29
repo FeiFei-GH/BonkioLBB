@@ -469,6 +469,7 @@ bonkAPI.receive_Unknow2 = function (args) {
  * Triggered when the user joins a lobby.
  * @function receive_RoomJoin
  * @fires joinRoom
+ * @fires playerChange
  * @param {JSON} args - Packet received by websocket.
  * @returns {JSON} arguements
  */
@@ -477,10 +478,39 @@ bonkAPI.receive_RoomJoin = function (args) {
     bonkAPI.myID = args[1];
     bonkAPI.hostID = args[2];
 
-    for (var i = 0; i < args[3].length; i++) {
+    for (let i = 0; i < bonkAPI.currentPlayers.length; i++) {
+        /**
+             * When a player leaves or joins.
+             * @event playerChange
+             * @type {object}
+             * @property {number} userID - ID of the player who joined or left
+             * @property {object} userData - Data of the player who joined or left
+             * @property {boolean} hasLeft - Whether the player joined or left 
+             */
+        if (bonkAPI.events.hasEvent["playerChange"]) {
+            var sendObj = { userID: bonkAPI.currentPlayers[i], userData: bonkAPI.playerList[bonkAPI.currentPlayers[i]], hasLeft: true };
+            bonkAPI.events.fireEvent("playerChange", sendObj);
+        }
+    }
+    bonkAPI.currentPlayers = [];
+
+    for (let i = 0; i < args[3].length; i++) {
         bonkAPI.playerList[i] = args[3][i];
         if (args[3][i] != null) {
             bonkAPI.currentPlayers.push(i);
+
+            /**
+             * When a player leaves or joins.
+             * @event playerChange
+             * @type {object}
+             * @property {number} userID - ID of the player who joined or left
+             * @property {object} userData - Data of the player who joined or left
+             * @property {boolean} hasLeft - Whether the player joined or left 
+             */
+            if (bonkAPI.events.hasEvent["playerChange"]) {
+                var sendObj = { userID: args[1], userData: bonkAPI.playerList[args[1]], hasLeft: false };
+                bonkAPI.events.fireEvent("playerChange", sendObj);
+            }
         }
     }
     /**
@@ -502,6 +532,19 @@ bonkAPI.receive_RoomJoin = function (args) {
         bonkAPI.events.fireEvent("joinRoom", sendObj);
     }
 
+    /**
+     * When a player leaves or joins.
+     * @event playerChange
+     * @type {object}
+     * @property {number} userID - ID of the player who joined or left
+     * @property {object} userData - Data of the player who joined or left
+     * @property {boolean} hasLeft - Whether the player joined or left 
+     */
+    if (bonkAPI.events.hasEvent["playerChange"]) {
+        var sendObj = { userID: args[1], userData: bonkAPI.playerList[args[1]], hasLeft: false };
+        bonkAPI.events.fireEvent("playerChange", sendObj);
+    }
+
     return args;
 };
 
@@ -509,6 +552,7 @@ bonkAPI.receive_RoomJoin = function (args) {
  * Triggered when a player joins the lobby.
  * @function receive_PlayerJoin
  * @fires userJoin
+ * @fires playerChange
  * @param {JSON} args - Packet received by websocket.
  * @returns {JSON} arguements
  */
@@ -541,6 +585,19 @@ bonkAPI.receive_PlayerJoin = function (args) {
         bonkAPI.events.fireEvent("userJoin", sendObj);
     }
 
+    /**
+     * When a player leaves or joins.
+     * @event playerChange
+     * @type {object}
+     * @property {number} userID - ID of the player who joined or left
+     * @property {object} userData - Data of the player who joined or left
+     * @property {boolean} hasLeft - Whether the player joined or left 
+     */
+    if (bonkAPI.events.hasEvent["playerChange"]) {
+        var sendObj = { userID: args[1], userData: bonkAPI.playerList[args[1]], hasLeft: false };
+        bonkAPI.events.fireEvent("playerChange", sendObj);
+    }
+
     return args;
 };
 
@@ -548,6 +605,7 @@ bonkAPI.receive_PlayerJoin = function (args) {
  * Triggered when a player leaves the lobby.
  * @function receive_PlayerLeave
  * @fires userLeave
+ * @fires playerChange
  * @param {JSON} args - Packet received by websocket.
  * @returns {JSON} arguements
  */
@@ -571,6 +629,19 @@ bonkAPI.receive_PlayerLeave = function (args) {
         bonkAPI.events.fireEvent("userLeave", sendObj);
     }
 
+    /**
+     * When a player leaves or joins.
+     * @event playerChange
+     * @type {object}
+     * @property {number} userID - ID of the player who joined or left
+     * @property {object} userData - Data of the player who joined or left
+     * @property {boolean} hasLeft - Whether the player joined or left 
+     */
+    if (bonkAPI.events.hasEvent["playerChange"]) {
+        var sendObj = { userID: args[1], userData: bonkAPI.playerList[args[1]], hasLeft: true };
+        bonkAPI.events.fireEvent("playerChange", sendObj);
+    }
+
     return args;
 };
 
@@ -579,6 +650,7 @@ bonkAPI.receive_PlayerLeave = function (args) {
  * @function receive_HostLeave
  * @fires hostChange
  * @fires userLeave
+ * @fires playerChange
  * @param {JSON} args - Packet received by websocket.
  * @returns {JSON} arguements
  */
@@ -604,6 +676,7 @@ bonkAPI.receive_HostLeave = function (args) {
         var sendObj = { userID: args[1] };
         bonkAPI.events.fireEvent("hostChange", sendObj);
     }
+
     /**
      * When another player leaves the lobby.
      * @event userLeave
@@ -614,6 +687,19 @@ bonkAPI.receive_HostLeave = function (args) {
     if (bonkAPI.events.hasEvent["userLeave"]) {
         var sendObj = { userID: lastHostID, userData: bonkAPI.playerList[lastHostID] };
         bonkAPI.events.fireEvent("userLeave", sendObj);
+    }
+
+    /**
+     * When a player leaves or joins.
+     * @event playerChange
+     * @type {object}
+     * @property {number} userID - ID of the player who joined or left
+     * @property {object} userData - Data of the player who joined or left
+     * @property {boolean} hasLeft - Whether the player joined or left 
+     */
+    if (bonkAPI.events.hasEvent["playerChange"]) {
+        var sendObj = { userID: lastHostID, userData: bonkAPI.playerList[lastHostID], hasLeft: true };
+        bonkAPI.events.fireEvent("playerChange", sendObj);
     }
 
     return args;
@@ -692,7 +778,7 @@ bonkAPI.receive_GameStart = function (args) {
         //! change name of mapdata since it is not map data, probably gamestate
         //! do the same in triggerstart
         var sendObj = {
-            mapData: args[2],
+            mapData: bonkAPI.ISdecode(args[2]),
             startData: args[3],
         };
         bonkAPI.events.fireEvent("gameStart", sendObj);
@@ -1083,11 +1169,29 @@ bonkAPI.send_LobbyInform = function (args) {
 /**
  * Called when created a room.
  * @function send_RoomCreate
+ * @fires createRoom
+ * @fires playerChange
  * @param {JSON} args - Packet received by websocket.
  * @returns {JSON} arguements
  */
 bonkAPI.send_RoomCreate = function (args) {
     bonkAPI.playerList = [];
+
+    for (let i = 0; i < bonkAPI.currentPlayers.length; i++) {
+        /**
+             * When a player leaves or joins.
+             * @event playerChange
+             * @type {object}
+             * @property {number} userID - ID of the player who joined or left
+             * @property {object} userData - Data of the player who joined or left
+             * @property {boolean} hasLeft - Whether the player joined or left 
+             */
+        if (bonkAPI.events.hasEvent["playerChange"]) {
+            var sendObj = { userID: bonkAPI.currentPlayers[i], userData: bonkAPI.playerList[bonkAPI.currentPlayers[i]], hasLeft: true };
+            bonkAPI.events.fireEvent("playerChange", sendObj);
+        }
+    }
+    bonkAPI.currentPlayers = [];
 
     bonkAPI.playerList[0] = {
         peerId: args[1]["peerID"],
@@ -1117,6 +1221,19 @@ bonkAPI.send_RoomCreate = function (args) {
     if (bonkAPI.events.hasEvent["createRoom"]) {
         var sendObj = { userID: 0, userData: bonkAPI.playerList[0] };
         bonkAPI.events.fireEvent("createRoom", sendObj);
+    }
+
+    /**
+     * When a player leaves or joins.
+     * @event playerChange
+     * @type {object}
+     * @property {number} userID - ID of the player who joined or left
+     * @property {object} userData - Data of the player who joined or left
+     * @property {boolean} hasLeft - Whether the player joined or left 
+     */
+    if (bonkAPI.events.hasEvent["playerChange"]) {
+        var sendObj = { userID: 0, userData: bonkAPI.playerList[0], hasLeft: false };
+        bonkAPI.events.fireEvent("playerChange", sendObj);
     }
 
     return args;
@@ -1388,7 +1505,7 @@ bonkAPI.onLoaded = () => {
                     
                     bonkAPI.events.fireEvent("graphicsUpdate", sendObj);
                     //! some problems here sometimes
-                    if(!bonkAPI.pixiStage.children.includes(bonkAPI.pixiCtx)) {
+                    if(bonkAPI.pixiStage != 0 && !bonkAPI.pixiStage.children.includes(bonkAPI.pixiCtx)) {
                         bonkAPI.pixiStage.addChild(bonkAPI.pixiCtx);
                     }
                 }
@@ -2662,6 +2779,27 @@ bonkHUD.bonkHUDCSS.innerHTML = `
 .bonkhud-scrollbar-other {
     scrollbar-width: none;
 }
+.bonkhud-resizer {
+    width: 10px;
+    height: 10px;
+    background: transparent;
+    position: absolute;
+}
+.bonkhud-resizer.north-east {
+    top: -5px;
+    right: -5px;
+    cursor: nesw-resize;
+}
+.bonkhud-resizer.south-east {
+    bottom: -5px;
+    right: -5px;
+    cursor: nwse-resize;
+}
+.bonkhud-resizer.south-west {
+    bottom: -5px;
+    left: -5px;
+    cursor: nesw-resize;
+}
 `;
 document.getElementsByTagName("head")[0].appendChild(bonkHUD.bonkHUDCSS);
 
@@ -3020,6 +3158,18 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     dragItem.style.visibility = bonkHUD.windowHold[ind].visibility;
     dragItem.style.opacity = bonkHUD.windowHold[ind].opacity;
 
+    let dragNE = document.createElement("div");
+    dragNE.classList.add("bonkhud-resizer");
+    dragNE.classList.add("north-east");
+
+    let dragSE = document.createElement("div");
+    dragSE.classList.add("bonkhud-resizer");
+    dragSE.classList.add("south-east");
+
+    let dragSW = document.createElement("div");
+    dragSW.classList.add("bonkhud-resizer");
+    dragSW.classList.add("south-west");
+
     // Create the header
     let header = document.createElement("div");
     header.classList.add("bonkhud-drag-header");
@@ -3059,6 +3209,9 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     header.appendChild(closeButton);
 
     // Append the header to the dragItem
+    dragItem.appendChild(dragNE);
+    dragItem.appendChild(dragSE);
+    dragItem.appendChild(dragSW);
     dragItem.appendChild(header);
 
     // Create the key table
@@ -3090,7 +3243,10 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     dragItem.addEventListener('mousedown', (e) => bonkHUD.dragStart(e, dragItem));
 
     // Add event listeners for resizing
-    resizeButton.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem));
+    resizeButton.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "nw"));
+    dragNE.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "ne"));
+    dragSE.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "se"));
+    dragSW.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "sw"));
 
     bonkHUD.updateStyleSettings(); //! probably slow but it works, its not like someone will have 100's of windows
 };
@@ -3256,16 +3412,18 @@ bonkHUD.dragEnd = function (dragMoveFn, dragItem) {
 };
 
 // Function to start resizing the UI
-bonkHUD.startResizing = function (e, dragItem) {
+bonkHUD.startResizing = function (e, dragItem, dir) {
     e.stopPropagation(); // Prevent triggering dragStart for dragItem
 
     let startX = e.clientX;
     let startY = e.clientY;
+    let windowX = parseInt(window.getComputedStyle(dragItem).right, 10);
+    let windowY = parseInt(window.getComputedStyle(dragItem).bottom, 10);
     let startWidth = parseInt(window.getComputedStyle(dragItem).width, 10);
     let startHeight = parseInt(window.getComputedStyle(dragItem).height, 10);
 
     function doResize(e) {
-        bonkHUD.resizeMove(e, startX, startY, startWidth, startHeight, dragItem);
+        bonkHUD.resizeMove(e, startX, startY, windowX, windowY, startWidth, startHeight, dragItem, dir);
     }
 
     function stopResizing() {
@@ -3277,20 +3435,38 @@ bonkHUD.startResizing = function (e, dragItem) {
 };
 
 // Function to handle the resize event
-bonkHUD.resizeMove = function (e, startX, startY, startWidth, startHeight, dragItem) {
-    let newWidth = startWidth - (e.clientX - startX);
-    let newHeight = startHeight - (e.clientY - startY);
-
-    // Enforce minimum dimensions
-    newWidth = Math.max(154, newWidth);
-    newHeight = Math.max(30, newHeight);
-
-    dragItem.style.width = bonkHUD.pxTorem(newWidth) + 'rem';
-    dragItem.style.height = bonkHUD.pxTorem(newHeight) + 'rem';
+bonkHUD.resizeMove = function (e, startX, startY, windowX, windowY, startWidth, startHeight, dragItem, dir) {
+    let newWidth = 0;
+    let newHeight = 0;
+    if(dir == "nw") {
+        newWidth = startWidth - (e.clientX - startX);
+        newHeight = startHeight - (e.clientY - startY);
+        dragItem.style.height = bonkHUD.pxTorem(Math.max(30, newHeight)) + 'rem';
+        dragItem.style.width = bonkHUD.pxTorem(Math.max(154, newWidth)) + 'rem';
+    } else if(dir == "sw") {
+        newWidth = startWidth - (e.clientX - startX);
+        newHeight = startHeight + (e.clientY - startY);
+        dragItem.style.height = bonkHUD.pxTorem(Math.max(30, newHeight)) + 'rem';
+        dragItem.style.bottom = bonkHUD.pxTorem(windowY - (newHeight < 30 ? 30 - startHeight : e.clientY - startY)) + 'rem';
+        dragItem.style.width = bonkHUD.pxTorem(Math.max(154, newWidth)) + 'rem';
+    } else if(dir == "ne") {
+        newWidth = startWidth + (e.clientX - startX);
+        newHeight = startHeight - (e.clientY - startY);
+        dragItem.style.height = bonkHUD.pxTorem(Math.max(30, newHeight)) + 'rem';
+        dragItem.style.width = bonkHUD.pxTorem(Math.max(154, newWidth)) + 'rem';
+        dragItem.style.right = bonkHUD.pxTorem(windowX - (newWidth < 154 ? 154 - startWidth : e.clientX - startX)) + 'rem';
+    } else {
+        newWidth = startWidth + (e.clientX - startX);
+        newHeight = startHeight + (e.clientY - startY);
+        dragItem.style.height = bonkHUD.pxTorem(Math.max(30, newHeight)) + 'rem';
+        dragItem.style.bottom = bonkHUD.pxTorem(windowY - (newHeight < 30 ? 30 - startHeight : e.clientY - startY)) + 'rem';
+        dragItem.style.width = bonkHUD.pxTorem(Math.max(154, newWidth)) + 'rem';
+        dragItem.style.right = bonkHUD.pxTorem(windowX - (newWidth < 154 ? 154 - startWidth : e.clientX - startX)) + 'rem';
+    }
 };
 
 // Function to stop the resize event
-bonkHUD.resizeEnd = function (resizeMoveFn, dragItem) {
+bonkHUD.resizeEnd = function (resizeMoveFn, dragItem, dir) {
     document.removeEventListener('mousemove', resizeMoveFn);
     let ind = bonkHUD.getWindowIndexByID(dragItem.id.substring(0, dragItem.id.length - 5));
     bonkHUD.windowHold[ind].width = dragItem.style.width;
@@ -3347,6 +3523,7 @@ bonkHUD.generateButton = function (name) {
     newButton.style.cursor = "pointer";
     newButton.style.borderRadius = "3px";
     newButton.style.textAlign = "center";
+    newButton.style.backgroundColor = bonkHUD.styleHold.buttonColor.color;
     newButton.innerText = name;
 
     newButton.addEventListener('mouseover', (e) => {

@@ -40,6 +40,27 @@ bonkHUD.bonkHUDCSS.innerHTML = `
 .bonkhud-scrollbar-other {
     scrollbar-width: none;
 }
+.bonkhud-resizer {
+    width: 10px;
+    height: 10px;
+    background: transparent;
+    position: absolute;
+}
+.bonkhud-resizer.north-east {
+    top: -5px;
+    right: -5px;
+    cursor: nesw-resize;
+}
+.bonkhud-resizer.south-east {
+    bottom: -5px;
+    right: -5px;
+    cursor: nwse-resize;
+}
+.bonkhud-resizer.south-west {
+    bottom: -5px;
+    left: -5px;
+    cursor: nesw-resize;
+}
 `;
 document.getElementsByTagName("head")[0].appendChild(bonkHUD.bonkHUDCSS);
 
@@ -398,6 +419,18 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     dragItem.style.visibility = bonkHUD.windowHold[ind].visibility;
     dragItem.style.opacity = bonkHUD.windowHold[ind].opacity;
 
+    let dragNE = document.createElement("div");
+    dragNE.classList.add("bonkhud-resizer");
+    dragNE.classList.add("north-east");
+
+    let dragSE = document.createElement("div");
+    dragSE.classList.add("bonkhud-resizer");
+    dragSE.classList.add("south-east");
+
+    let dragSW = document.createElement("div");
+    dragSW.classList.add("bonkhud-resizer");
+    dragSW.classList.add("south-west");
+
     // Create the header
     let header = document.createElement("div");
     header.classList.add("bonkhud-drag-header");
@@ -437,6 +470,9 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     header.appendChild(closeButton);
 
     // Append the header to the dragItem
+    dragItem.appendChild(dragNE);
+    dragItem.appendChild(dragSE);
+    dragItem.appendChild(dragSW);
     dragItem.appendChild(header);
 
     // Create the key table
@@ -468,7 +504,10 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     dragItem.addEventListener('mousedown', (e) => bonkHUD.dragStart(e, dragItem));
 
     // Add event listeners for resizing
-    resizeButton.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem));
+    resizeButton.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "nw"));
+    dragNE.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "ne"));
+    dragSE.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "se"));
+    dragSW.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "sw"));
 
     bonkHUD.updateStyleSettings(); //! probably slow but it works, its not like someone will have 100's of windows
 };
@@ -634,16 +673,18 @@ bonkHUD.dragEnd = function (dragMoveFn, dragItem) {
 };
 
 // Function to start resizing the UI
-bonkHUD.startResizing = function (e, dragItem) {
+bonkHUD.startResizing = function (e, dragItem, dir) {
     e.stopPropagation(); // Prevent triggering dragStart for dragItem
 
     let startX = e.clientX;
     let startY = e.clientY;
+    let windowX = parseInt(window.getComputedStyle(dragItem).right, 10);
+    let windowY = parseInt(window.getComputedStyle(dragItem).bottom, 10);
     let startWidth = parseInt(window.getComputedStyle(dragItem).width, 10);
     let startHeight = parseInt(window.getComputedStyle(dragItem).height, 10);
 
     function doResize(e) {
-        bonkHUD.resizeMove(e, startX, startY, startWidth, startHeight, dragItem);
+        bonkHUD.resizeMove(e, startX, startY, windowX, windowY, startWidth, startHeight, dragItem, dir);
     }
 
     function stopResizing() {
@@ -655,20 +696,38 @@ bonkHUD.startResizing = function (e, dragItem) {
 };
 
 // Function to handle the resize event
-bonkHUD.resizeMove = function (e, startX, startY, startWidth, startHeight, dragItem) {
-    let newWidth = startWidth - (e.clientX - startX);
-    let newHeight = startHeight - (e.clientY - startY);
-
-    // Enforce minimum dimensions
-    newWidth = Math.max(154, newWidth);
-    newHeight = Math.max(30, newHeight);
-
-    dragItem.style.width = bonkHUD.pxTorem(newWidth) + 'rem';
-    dragItem.style.height = bonkHUD.pxTorem(newHeight) + 'rem';
+bonkHUD.resizeMove = function (e, startX, startY, windowX, windowY, startWidth, startHeight, dragItem, dir) {
+    let newWidth = 0;
+    let newHeight = 0;
+    if(dir == "nw") {
+        newWidth = startWidth - (e.clientX - startX);
+        newHeight = startHeight - (e.clientY - startY);
+        dragItem.style.height = bonkHUD.pxTorem(Math.max(30, newHeight)) + 'rem';
+        dragItem.style.width = bonkHUD.pxTorem(Math.max(154, newWidth)) + 'rem';
+    } else if(dir == "sw") {
+        newWidth = startWidth - (e.clientX - startX);
+        newHeight = startHeight + (e.clientY - startY);
+        dragItem.style.height = bonkHUD.pxTorem(Math.max(30, newHeight)) + 'rem';
+        dragItem.style.bottom = bonkHUD.pxTorem(windowY - (newHeight < 30 ? 30 - startHeight : e.clientY - startY)) + 'rem';
+        dragItem.style.width = bonkHUD.pxTorem(Math.max(154, newWidth)) + 'rem';
+    } else if(dir == "ne") {
+        newWidth = startWidth + (e.clientX - startX);
+        newHeight = startHeight - (e.clientY - startY);
+        dragItem.style.height = bonkHUD.pxTorem(Math.max(30, newHeight)) + 'rem';
+        dragItem.style.width = bonkHUD.pxTorem(Math.max(154, newWidth)) + 'rem';
+        dragItem.style.right = bonkHUD.pxTorem(windowX - (newWidth < 154 ? 154 - startWidth : e.clientX - startX)) + 'rem';
+    } else {
+        newWidth = startWidth + (e.clientX - startX);
+        newHeight = startHeight + (e.clientY - startY);
+        dragItem.style.height = bonkHUD.pxTorem(Math.max(30, newHeight)) + 'rem';
+        dragItem.style.bottom = bonkHUD.pxTorem(windowY - (newHeight < 30 ? 30 - startHeight : e.clientY - startY)) + 'rem';
+        dragItem.style.width = bonkHUD.pxTorem(Math.max(154, newWidth)) + 'rem';
+        dragItem.style.right = bonkHUD.pxTorem(windowX - (newWidth < 154 ? 154 - startWidth : e.clientX - startX)) + 'rem';
+    }
 };
 
 // Function to stop the resize event
-bonkHUD.resizeEnd = function (resizeMoveFn, dragItem) {
+bonkHUD.resizeEnd = function (resizeMoveFn, dragItem, dir) {
     document.removeEventListener('mousemove', resizeMoveFn);
     let ind = bonkHUD.getWindowIndexByID(dragItem.id.substring(0, dragItem.id.length - 5));
     bonkHUD.windowHold[ind].width = dragItem.style.width;
@@ -725,6 +784,7 @@ bonkHUD.generateButton = function (name) {
     newButton.style.cursor = "pointer";
     newButton.style.borderRadius = "3px";
     newButton.style.textAlign = "center";
+    newButton.style.backgroundColor = bonkHUD.styleHold.buttonColor.color;
     newButton.innerText = name;
 
     newButton.addEventListener('mouseover', (e) => {
