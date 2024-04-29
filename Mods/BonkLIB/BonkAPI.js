@@ -1455,6 +1455,10 @@ bonkAPI.onLoaded = () => {
             }
             //console.log(bonkAPI.parentDraw);
             if(canv != 0 && bonkAPI.parentDraw) {
+                while(bonkAPI.parentDraw.parent != null) {
+                    bonkAPI.parentDraw = bonkAPI.parentDraw.parent;
+                }
+
                 /**
                  * When a new frame is rendered when in game. It is recomended
                  * to not create new graphics or clear graphics every frame if
@@ -1470,7 +1474,7 @@ bonkAPI.onLoaded = () => {
                     let h = parseInt(canv.style.height);
                     //bonkAPI.pixiCtx.x = w / 2;
                     //bonkAPI.pixiCtx.y = h / 2;
-                    bonkAPI.pixiStage = {"children":[]};
+                    bonkAPI.pixiStage = 0;
                     for(let i = 0; i < bonkAPI.parentDraw.children.length; i++){
                         if(bonkAPI.parentDraw.children[i].constructor.name == "e"){
                             //console.log(bonkAPI.parentDraw);
@@ -1488,6 +1492,7 @@ bonkAPI.onLoaded = () => {
                     bonkAPI.events.fireEvent("graphicsUpdate", sendObj);
                     //! some problems here sometimes
                     if(bonkAPI.pixiStage != 0 && !bonkAPI.pixiStage.children.includes(bonkAPI.pixiCtx)) {
+                        //console.log("Added");
                         bonkAPI.pixiStage.addChild(bonkAPI.pixiCtx);
                     }
                 }

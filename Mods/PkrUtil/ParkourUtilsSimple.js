@@ -21,6 +21,8 @@ const top = "0";
 const width = "172px";
 const height = "100px";
 
+pkrUtils.currentData = {};
+
 pkrUtils.positionElement = 0;
 pkrUtils.velocityElement = 0;
 pkrUtils.specialElement = 0;
@@ -31,15 +33,19 @@ pkrUtils.arrowAngle = 0;
 
 pkrUtils.scale = 1;
 
+pkrUtils.screenWidth = 1;
+pkrUtils.gScale = 1;
+pkrUtils.goResize = false;
+
+pkrUtils.gCtx = 0;
+pkrUtils.markerIndex = 0;
+pkrUtils.markers = new Map();
+
 pkrUtils.hasPrecision = false;
 
 pkrUtils.currentMode = -1;
 
 pkrUtils.currentPlayerID = 0;
-
-pkrUtils.updateData = () => {
-
-}
 
 // Event listener function to change the player selected in the player selector
 pkrUtils.select_player = () => {
@@ -99,6 +105,73 @@ pkrUtils.update_players = () => {
     });
 };
 
+pkrUtils.generateMarker = (xInput, yInput, rInput) => {
+    let markerHold = document.getElementById("pkrutils_marker_hold");
+
+    let markerGraphic = new window.PIXI.Graphics();
+    markerGraphic.beginFill(0xffffff);
+    markerGraphic.drawCircle((xInput + 365) * pkrUtils.gScale,(yInput + 250) * pkrUtils.gScale, rInput * pkrUtils.gScale);
+    markerGraphic.endFill();
+    pkrUtils.gCtx.addChild(markerGraphic);
+
+    let resizeFunc = 0;
+
+    let obj = {
+        resize: resizeFunc,
+        x: xInput,
+        y: yInput,
+        r: rInput,
+    };
+    let thisIndex = pkrUtils.markerIndex;
+    pkrUtils.markers.set(thisIndex, obj);
+    pkrUtils.markerIndex++;
+
+    resizeFunc = function () {
+        markerGraphic.clear();
+        markerGraphic.beginFill(0xffffff);
+        markerGraphic.drawCircle((pkrUtils.markers.get(thisIndex).x + 365) * pkrUtils.gScale, (pkrUtils.markers.get(thisIndex).y + 250) * pkrUtils.gScale, pkrUtils.markers.get(thisIndex).r * pkrUtils.gScale);
+        markerGraphic.endFill();
+    }
+    Object.assign(obj, {resize: resizeFunc})
+
+    pkrUtils.goResize = true;
+
+    let markerDiv = document.createElement("div");
+    markerDiv.classList.add("bonkhud-border-color");
+    markerDiv.style.height = "3rem";
+    markerDiv.style.display = "flex";
+    markerDiv.style.borderBottom = "1px solid";
+    markerDiv.style.alignItems = "center";
+    markerDiv.style.justifyContent = "space-between";
+    markerDiv.style.flexWrap = "wrap";
+    let nameSpan = document.createElement("span");
+    nameSpan.innerText = "(" + xInput + ", " + yInput + ")";
+    let markerButton = bonkHUD.generateButton("Delete");
+    markerButton.style.width = "3rem";
+    markerButton.style.float = "right";
+
+    markerDiv.appendChild(nameSpan);
+    markerDiv.appendChild(markerButton);
+    markerHold.appendChild(markerDiv);
+
+    markerButton.addEventListener('click', (e) => {
+        pkrUtils.markers.delete(thisIndex);
+        markerGraphic.destroy();
+        markerHold.removeChild(markerDiv);
+        pkrUtils.goResize = true;
+    });
+}
+
+bonkAPI.addEventListener("graphicsReady", (e) => {
+    pkrUtils.gCtx = new window.PIXI.Container();
+    pkrUtils.markers.forEach((val, key, map) => {
+        val.resize();
+    });
+    bonkAPI.pixiCtx.addChild(pkrUtils.gCtx);
+    pkrUtils.goResize = true;
+    //console.log(bonkAPI.pixiCtx);
+});
+
 bonkAPI.addEventListener("modeChange", (e) => {
     currentMode = e.mode;
     let arrowdivs = document.getElementsByClassName("pkrutils-arrows-div");
@@ -133,27 +206,27 @@ bonkAPI.addEventListener("stepEvent", (e) => {
     if(bonkAPI.isInGame()) {
         let inputState = e.inputState;
         try {
-            let myData = inputState.discs[pkrUtils.currentPlayerID];
+            pkrUtils.currentData = inputState.discs[pkrUtils.currentPlayerID];
 
-            let specialCD = myData.a1a;
-            let xPos = myData.x * pkrUtils.scale - 365;
-            let yPos = myData.y * pkrUtils.scale - 250;
-            let xVel = myData.xv * pkrUtils.scale;
-            let yVel = myData.yv * pkrUtils.scale;
+            let specialCD = pkrUtils.currentData.a1a;
+            let xPos = pkrUtils.currentData.x * pkrUtils.scale - 365;
+            let yPos = pkrUtils.currentData.y * pkrUtils.scale - 250;
+            let xVel = pkrUtils.currentData.xv * pkrUtils.scale;
+            let yVel = pkrUtils.currentData.yv * pkrUtils.scale;
             if(!pkrUtils.hasPrecision) {
                 xPos = xPos.toFixed(2);
                 yPos = yPos.toFixed(2);
                 xVel = xVel.toFixed(2);
                 yVel = yVel.toFixed(2);
             }
-            //console.log(myData);
+
             pkrUtils.positionElement.textContent = "(" + xPos + ", " + yPos + ")";
             pkrUtils.velocityElement.textContent = "(" + xVel + ", " + yVel + ")";
             pkrUtils.specialElement.textContent = specialCD / 10;
-            pkrUtils.vtolAngle.textContent = myData.a;
-            pkrUtils.vtolAnglev.textContent = myData.av;
-            pkrUtils.arrowCharge.textContent = myData.ds;
-            pkrUtils.arrowAngle.textContent = myData.da;
+            pkrUtils.vtolAngle.textContent = pkrUtils.currentData.a;
+            pkrUtils.vtolAnglev.textContent = pkrUtils.currentData.av;
+            pkrUtils.arrowCharge.textContent = pkrUtils.currentData.ds;
+            pkrUtils.arrowAngle.textContent = pkrUtils.currentData.da;
         } catch (err) {}
     }
 });
@@ -161,7 +234,20 @@ bonkAPI.addEventListener("stepEvent", (e) => {
 bonkAPI.addEventListener('gameStart', (e) => {
     try {
         pkrUtils.scale = e.mapData.physics.ppm;
+        pkrUtils.goResize = true;
     } catch(er) {console.log(er)}
+});
+
+bonkAPI.addEventListener("graphicsUpdate", (e) => {
+    //console.log("g");
+    if(pkrUtils.screenWidth != e.width || pkrUtils.goResize) {
+        pkrUtils.screenWidth = e.width;
+        pkrUtils.gScale = e.width / 730;
+        pkrUtils.markers.forEach((val, key, map) => {
+            val.resize();
+        });
+        pkrUtils.goResize = false;
+    }
 });
 
 // Event listener for when a user joins the game
@@ -253,7 +339,7 @@ const addPkrDiv = () => {
                 <span id="pkrutils_da"></span>
             </div>
         </div>
-        <div style="flex: 0 1 auto;padding: 10px;">
+        <div class="bonkhud-settings-row">
             <select id="pkrutils_player_selector">
                 <option id="pkrutils_selector_option_user">......</option>
             </select>
@@ -261,7 +347,22 @@ const addPkrDiv = () => {
                 <span class="bonkhud-settings-label" style="margin-right:5px;vertical-align:middle;">Precision</span>
                 <input type="checkbox" id="pkrutils_precision_toggle">
             </div>
-        </div>`;
+        </div>
+        <div id="pkrutils_marker_maker" class="bonkhud-settings-row">
+            <div>
+                <span class="bonkhud-settings-label">x </span>
+                <input id="pkrutils_x_marker" type="number" value="0" style="width:100%">
+            </div>
+            <div>
+                <span class="bonkhud-settings-label">y </span>
+                <input id="pkrutils_y_marker" type="number" value="0" style="width:100%">
+            </div>
+            <div style="margin-bottom: 5px;">
+                <span class="bonkhud-settings-label">Radius </span>
+                <input id="pkrutils_r_marker" type="number" min="1" value="1" style="width:100%">
+            </div>
+        </div>
+        <div id="pkrutils_marker_hold" style="padding:10px"></div>`;
 
     bonkHUD.createWindow("pkrUtils", "pkr_utils_window", pkrDiv, "100px");
     /*let keytable_window = document.getElementById("keytable_window");
@@ -276,6 +377,26 @@ const addPkrDiv = () => {
     precisionCheck.oninput = function () {
         pkrUtils.hasPrecision = precisionCheck.checked;
     };
+
+    let markerMaker = document.getElementById("pkrutils_marker_maker");
+    let markerGenerator = bonkHUD.generateButton("Create Marker");
+    markerGenerator.style.marginBottom = "5px";
+    markerGenerator.addEventListener('click', (e) => {
+        pkrUtils.generateMarker(parseInt(document.getElementById("pkrutils_x_marker").value), parseInt(document.getElementById("pkrutils_y_marker").value), parseInt(document.getElementById("pkrutils_r_marker").value));
+    });
+
+    let markerGenerator2 = bonkHUD.generateButton("Marker At Position");
+    markerGenerator2.style.marginBottom = "5px";
+    markerGenerator2.addEventListener('click', (e) => {
+        try {
+            pkrUtils.generateMarker(Math.trunc(pkrUtils.currentData.x * pkrUtils.scale - 365), Math.trunc(pkrUtils.currentData.y * pkrUtils.scale - 250), parseInt(document.getElementById("pkrutils_r_marker").value));
+        } catch(er) {
+            console.log("Unable to create marker");
+        }
+    });
+
+    markerMaker.appendChild(markerGenerator);
+    markerMaker.appendChild(markerGenerator2);
 
     pkrUtils.positionElement = document.getElementById("pkrutils_position");
     pkrUtils.velocityElement = document.getElementById("pkrutils_velocity");

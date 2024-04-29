@@ -725,6 +725,7 @@ bonkHUD.generateButton = function (name) {
     newButton.style.cursor = "pointer";
     newButton.style.borderRadius = "3px";
     newButton.style.textAlign = "center";
+    newButton.style.backgroundColor = bonkHUD.styleHold.buttonColor.color;
     newButton.innerText = name;
 
     newButton.addEventListener('mouseover', (e) => {
