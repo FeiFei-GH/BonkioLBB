@@ -46,6 +46,11 @@ bonkHUD.bonkHUDCSS.innerHTML = `
     background: transparent;
     position: absolute;
 }
+.bonkhud-resizer.north-west {
+    top: -5px;
+    left: -5px;
+    cursor: nwse-resize;
+}
 .bonkhud-resizer.north-east {
     top: -5px;
     right: -5px;
@@ -363,7 +368,7 @@ bonkHUD.createWindowControl = function (name, ind) {
     let visiblityCheck = document.createElement("input");
     visiblityCheck.id = bonkHUD.windowHold[ind].id + "-visibility-check";
     visiblityCheck.type = "checkbox"; // Slider type for range selection
-    if (bonkHUD.windowHold[ind].visibility == "visible") {
+    if (bonkHUD.windowHold[ind].display == "block") {
         visiblityCheck.checked = true;
     }
     else {
@@ -373,8 +378,8 @@ bonkHUD.createWindowControl = function (name, ind) {
     visiblityCheck.style.verticalAlign = "middle";
     visiblityCheck.oninput = function () {
         let control = document.getElementById(bonkHUD.windowHold[ind].id + "-drag"); // Update the UI opacity in real-time;
-        control.style.visibility = this.checked ? "visible" : "hidden";
-        bonkHUD.windowHold[ind].visibility = control.style.visibility;
+        control.style.display = this.checked ? "block" : "none";
+        bonkHUD.windowHold[ind].block = control.style.block;
         bonkHUD.saveUISetting(bonkHUD.windowHold[ind].id);
     };
     holdRight.appendChild(visiblityCheck); // Place the slider into the slider container
@@ -416,8 +421,13 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     dragItem.style.width = bonkHUD.windowHold[ind].width; //width ? width : "172";
     dragItem.style.height = bonkHUD.windowHold[ind].height; //height ? height : minHeight;
     //dragItem.style.minHeight = minHeight; // Minimum height to prevent deformation
-    dragItem.style.visibility = bonkHUD.windowHold[ind].visibility;
+    dragItem.style.display = bonkHUD.windowHold[ind].display;
+    dragItem.style.visibility = "visible";
     dragItem.style.opacity = bonkHUD.windowHold[ind].opacity;
+
+    let dragNW = document.createElement("div");
+    dragNW.classList.add("bonkhud-resizer");
+    dragNW.classList.add("north-west");
 
     let dragNE = document.createElement("div");
     dragNE.classList.add("bonkhud-resizer");
@@ -437,6 +447,7 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     header.classList.add("newbonklobby_boxtop");
     header.classList.add("newbonklobby_boxtop_classic");
     header.classList.add("bonkhud-header-color");
+    header.style.visibility = "visible";
 
     // Create the title span
     let title = document.createElement("span");
@@ -447,14 +458,15 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     title.style.textAlign = "center";
 
     // Create the resize button
-    let resizeButton = document.createElement("div");
-    resizeButton.classList.add("bonkhud-header-button");
-    resizeButton.classList.add("bonkhud-title-color");
-    resizeButton.classList.add("bonkhud-resize");
-    resizeButton.innerText = ":::"; // Use an appropriate icon or text
-    resizeButton.style.lineHeight = "22px";
-    resizeButton.style.textIndent = "5px";
-    resizeButton.style.cursor = "nwse-resize";
+    let openCloseButton = document.createElement("div");
+    openCloseButton.classList.add("bonkhud-header-button");
+    openCloseButton.classList.add("bonkhud-title-color");
+    openCloseButton.classList.add("bonkhud-resize");
+    openCloseButton.innerText = "△"; // Use an appropriate icon or text
+    openCloseButton.style.fontSize = "15px";
+    openCloseButton.style.lineHeight = "25px";
+    openCloseButton.style.textIndent = "5px";
+    openCloseButton.style.cursor = "cell";
 
     let closeButton = document.createElement("div");
     closeButton.classList.add("bonkhud-header-button");
@@ -466,10 +478,11 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
 
     // Append the title and resize button to the header
     header.appendChild(title);
-    header.appendChild(resizeButton);
+    header.appendChild(openCloseButton);
     header.appendChild(closeButton);
 
     // Append the header to the dragItem
+    dragItem.appendChild(dragNW);
     dragItem.appendChild(dragNE);
     dragItem.appendChild(dragSE);
     dragItem.appendChild(dragSW);
@@ -493,10 +506,10 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     document.body.appendChild(dragItem);
 
     closeButton.addEventListener('click', (e) => {
-        dragItem.style.visibility = "hidden";
+        dragItem.style.display = "none";
         let visCheck = document.getElementById(id + "-visibility-check");
         visCheck.checked = false;
-        bonkHUD.windowHold[ind].visibility = dragItem.style.visibility;
+        bonkHUD.windowHold[ind].display = dragItem.style.display;
         bonkHUD.saveUISetting(id);
     });
 
@@ -504,7 +517,16 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     dragItem.addEventListener('mousedown', (e) => bonkHUD.dragStart(e, dragItem));
 
     // Add event listeners for resizing
-    resizeButton.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "nw"));
+    openCloseButton.addEventListener('mousedown', (e) => {
+        if(openCloseButton.innerText == "△") {
+            dragItem.style.visibility = "hidden";
+            openCloseButton.innerText = "▽";
+        } else {
+            dragItem.style.visibility = "visible";
+            openCloseButton.innerText = "△";
+        }
+    });
+    dragNW.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "nw"));
     dragNE.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "ne"));
     dragSE.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "se"));
     dragSW.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "sw"));
@@ -529,7 +551,7 @@ bonkHUD.getUISetting = function (id) {
             bottom: "0rem",
             right: "0rem",
             opacity: "1",
-            visibility: "visible",
+            display: "block",
         }
     }
     return setting;
@@ -772,6 +794,10 @@ bonkHUD.clamp = function (val, min, max) {
 
 bonkHUD.pxTorem = function (px) {
     return px / parseFloat(getComputedStyle(document.documentElement).fontSize);
+};
+
+bonkHUD.remTopx = function (rem) {
+    return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
 };
 
 //? might make more of these for use in the main settings window
