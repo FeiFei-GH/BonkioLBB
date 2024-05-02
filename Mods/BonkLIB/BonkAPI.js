@@ -1507,8 +1507,8 @@ bonkAPI.onLoaded = () => {
                         height: h,
                     };
                     
+                    
                     bonkAPI.events.fireEvent("graphicsUpdate", sendObj);
-                    //! some problems here sometimes
                     if(bonkAPI.pixiStage != 0 && !bonkAPI.pixiStage.children.includes(bonkAPI.pixiCtx)) {
                         bonkAPI.pixiStage.addChild(bonkAPI.pixiCtx);
                     }
