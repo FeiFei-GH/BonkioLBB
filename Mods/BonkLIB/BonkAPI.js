@@ -1050,7 +1050,7 @@ bonkAPI.receive_gameState = function (args) {
         };
         bonkAPI.events.fireEvent("gameStart", sendObj);
     }
-
+  
     return args;
 };
 
@@ -1473,10 +1473,10 @@ bonkAPI.onLoaded = () => {
             }
             //console.log(bonkAPI.parentDraw);
             if(canv != 0 && bonkAPI.parentDraw) {
+                //! might do something might not
                 while(bonkAPI.parentDraw.parent != null) {
                     bonkAPI.parentDraw = bonkAPI.parentDraw.parent;
                 }
-
                 /**
                  * When a new frame is rendered when in game. It is recomended
                  * to not create new graphics or clear graphics every frame if
@@ -1510,7 +1510,6 @@ bonkAPI.onLoaded = () => {
                     bonkAPI.events.fireEvent("graphicsUpdate", sendObj);
                     //! some problems here sometimes
                     if(bonkAPI.pixiStage != 0 && !bonkAPI.pixiStage.children.includes(bonkAPI.pixiCtx)) {
-                        //console.log("Added");
                         bonkAPI.pixiStage.addChild(bonkAPI.pixiCtx);
                     }
                 }

@@ -1,0 +1,21 @@
+{
+    "source": {
+        "include": ["Mods/BonkLIB/BonkAPI.js", "README.md", "package.json"]
+    },
+
+    "opts": {
+        "encoding": "utf8",
+        "readme": "./README.md",
+        "destination": "Mods/BonkLIB/docs/",
+        "recurse": true,
+        "verbose": true,
+        "template": "./node_modules/clean-jsdoc-theme",
+        "theme_opts": {
+            "default_theme": "dark"
+        }
+    },
+    "markdown": {
+        "hardwrap": false,
+        "idInHeadings": true
+    }
+}
