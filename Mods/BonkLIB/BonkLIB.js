@@ -852,7 +852,7 @@ bonkAPI.receive_ChatMessage = function (args) {
 
 /**
  * Data given by host after join.
- * @function receive_gameState
+ * @function receive_InitialData
  * @fires modeChange
  * @param {JSON} args - Packet received by websocket.
  * @returns {JSON} arguements
@@ -1035,6 +1035,7 @@ bonkAPI.receive_LocalXPGain = function (args) {
  * game state is sent.
  * @function receive_gameState
  * @fires modeChange
+ * @fires gameStart
  * @param {JSON} args - Packet received by websocket.
  * @returns {JSON} arguements
  */
@@ -1049,6 +1050,23 @@ bonkAPI.receive_gameState = function (args) {
     if (bonkAPI.events.hasEvent["modeChange"]) {
         var sendObj = { mode: args[1]["gs"]["mo"] };
         bonkAPI.events.fireEvent("modeChange", sendObj);
+    }
+
+    /**
+     * When game has started
+     * @event gameStart
+     * @type {object}
+     * @property {string} mapData - Encoded map data, must decode it to use
+     * @property {object} startData - Extra game specific data
+     */
+    if (bonkAPI.events.hasEvent["gameStart"]) {
+        //! change name of mapdata since it is not map data, probably gamestate
+        //! do the same in triggerstart
+        var sendObj = {
+            mapData: bonkAPI.decodeMap(args[1]["gs"]["map"]),
+            startData: args[3],
+        };
+        bonkAPI.events.fireEvent("gameStart", sendObj);
     }
 
     return args;
@@ -1616,147 +1634,151 @@ bonkAPI.onLoaded = () => {
 
     class bonkAPI_bytebuffer {
         constructor() {
-            var g1d = [arguments];
-            this.index = 0;
-            this.buffer = new ArrayBuffer(100 * 1024);
-            this.view = new DataView(this.buffer);
-            this.implicitClassAliasArray = [];
-            this.implicitStringArray = [];
-            this.bodgeCaptureZoneDataIdentifierArray = [];
+          var g1d = [arguments];
+          this.index = 0;
+          this.buffer = new ArrayBuffer(100*1024);
+          this.view = new DataView(this.buffer);
+          this.implicitClassAliasArray = [];
+          this.implicitStringArray = [];
+          this.bodgeCaptureZoneDataIdentifierArray = [];
         }
+        
         readByte() {
-            var N0H = [arguments];
-            N0H[4] = this.view.getUint8(this.index);
-            this.index += 1;
-            return N0H[4];
+          var N0H = [arguments];
+          N0H[4] = this.view.getUint8(this.index);
+          this.index += 1;
+          return N0H[4];
         }
         writeByte(z0w) {
-            var v8$ = [arguments];
-            this.view.setUint8(this.index, v8$[0][0]);
-            this.index += 1;
+          var v8$ = [arguments];
+          this.view.setUint8(this.index, v8$[0][0]);
+          this.index += 1;
         }
         readInt() {
-            var A71 = [arguments];
-            A71[6] = this.view.getInt32(this.index);
-            this.index += 4;
-            return A71[6];
+          var A71 = [arguments];
+          A71[6] = this.view.getInt32(this.index);
+          this.index += 4;
+          return A71[6];
         }
         writeInt(W6i) {
-            var p5u = [arguments];
-            this.view.setInt32(this.index, p5u[0][0]);
-            this.index += 4;
+          var p5u = [arguments];
+          this.view.setInt32(this.index, p5u[0][0]);
+          this.index += 4;
         }
         readShort() {
-            var R1R = [arguments];
-            R1R[9] = this.view.getInt16(this.index);
-            this.index += 2;
-            return R1R[9];
+          var R1R = [arguments];
+          R1R[9] = this.view.getInt16(this.index);
+          this.index += 2;
+          return R1R[9];
         }
         writeShort(H8B) {
-            var d_3 = [arguments];
-            this.view.setInt16(this.index, d_3[0][0]);
-            this.index += 2;
+          var d_3 = [arguments];
+          this.view.setInt16(this.index, d_3[0][0]);
+          this.index += 2;
         }
         readUint() {
-            var W2$ = [arguments];
-            W2$[8] = this.view.getUint32(this.index);
-            this.index += 4;
-            return W2$[8];
+          var W2$ = [arguments];
+          W2$[8] = this.view.getUint32(this.index);
+          this.index += 4;
+          return W2$[8];
         }
         writeUint(B2X) {
-            var f8B = [arguments];
-            this.view.setUint32(this.index, f8B[0][0]);
-            this.index += 4;
+          var f8B = [arguments];
+          this.view.setUint32(this.index, f8B[0][0]);
+          this.index += 4;
         }
         readBoolean() {
-            var h6P = [arguments];
-            h6P[6] = this.readByte();
-            return h6P[6] == 1;
+          var h6P = [arguments];
+          h6P[6] = this.readByte();
+          return h6P[6] == 1;
         }
         writeBoolean(Y3I) {
-            var l79 = [arguments];
-            if (l79[0][0]) {
-                this.writeByte(1);
-            } else {
-                this.writeByte(0);
-            }
+          var l79 = [arguments];
+          if (l79[0][0]) {
+            this.writeByte(1);
+          } else {
+            this.writeByte(0);
+          }
         }
         readDouble() {
-            var V60 = [arguments];
-            V60[4] = this.view.getFloat64(this.index);
-            this.index += 8;
-            return V60[4];
+          var V60 = [arguments];
+          V60[4] = this.view.getFloat64(this.index);
+          this.index += 8;
+          return V60[4];
         }
         writeDouble(z4Z) {
-            var O41 = [arguments];
-            this.view.setFloat64(this.index, O41[0][0]);
-            this.index += 8;
+          var O41 = [arguments];
+          this.view.setFloat64(this.index, O41[0][0]);
+          this.index += 8;
         }
         readFloat() {
-            var I0l = [arguments];
-            I0l[5] = this.view.getFloat32(this.index);
-            this.index += 4;
-            return I0l[5];
+          var I0l = [arguments];
+          I0l[5] = this.view.getFloat32(this.index);
+          this.index += 4;
+          return I0l[5];
         }
         writeFloat(y4B) {
-            var B0v = [arguments];
-            this.view.setFloat32(this.index, B0v[0][0]);
-            this.index += 4;
+          var B0v = [arguments];
+          this.view.setFloat32(this.index, B0v[0][0]);
+          this.index += 4;
         }
         readUTF() {
-            var d6I = [arguments];
-            d6I[8] = this.readByte();
-            d6I[7] = this.readByte();
-            d6I[9] = d6I[8] * 256 + d6I[7];
-            d6I[1] = new Uint8Array(d6I[9]);
-            for (d6I[6] = 0; d6I[6] < d6I[9]; d6I[6]++) {
-                d6I[1][d6I[6]] = this.readByte();
-            }
-            return bonkAPI.textdecoder.decode(d6I[1]);
+          var d6I = [arguments];
+          d6I[8] = this.readByte();
+          d6I[7] = this.readByte();
+          d6I[9] = d6I[8] * 256 + d6I[7];
+          d6I[1] = new Uint8Array(d6I[9]);
+          for (d6I[6] = 0; d6I[6] < d6I[9]; d6I[6]++) {
+            d6I[1][d6I[6]] = this.readByte();
+          }
+          return bonkAPI.textdecoder.decode(d6I[1]);
         }
         writeUTF(L3Z) {
-            var Z75 = [arguments];
-            Z75[4] = bonkAPI.textencoder.encode(Z75[0][0]);
-            Z75[3] = Z75[4].length;
-            Z75[5] = Math.floor(Z75[3] / 256);
-            Z75[8] = Z75[3] % 256;
-            this.writeByte(Z75[5]);
-            this.writeByte(Z75[8]);
-            Z75[7] = this;
-            Z75[4].forEach(I_O);
-            function I_O(s0Q, H4K, j$o) {
-                var N0o = [arguments];
-                Z75[7].writeByte(N0o[0][0]);
-            }
+          var Z75 = [arguments];
+          Z75[4] = bonkAPI.textencoder.encode(Z75[0][0]);
+          Z75[3] = Z75[4].length;
+          Z75[5] = Math.floor(Z75[3]/256);
+          Z75[8] = Z75[3] % 256;
+          this.writeByte(Z75[5]);
+          this.writeByte(Z75[8]);
+          Z75[7] = this;
+          Z75[4].forEach(I_O);
+          function I_O(s0Q, H4K, j$o) {
+            var N0o = [arguments];
+            Z75[7].writeByte(N0o[0][0]);
+          }
         }
         toBase64() {
-            var P4$ = [arguments];
-            P4$[4] = "";
-            P4$[9] = new Uint8Array(this.buffer);
-            P4$[8] = this.index;
-            for (P4$[7] = 0; P4$[7] < P4$[8]; P4$[7]++) {
-                P4$[4] += String.fromCharCode(P4$[9][P4$[7]]);
-            }
-            return window.btoa(P4$[4]);
+          var P4$ = [arguments];
+          P4$[4] = "";
+          P4$[9] = new Uint8Array(this.buffer);
+          P4$[8] = this.index;
+          for (P4$[7] = 0; P4$[7] < P4$[8]; P4$[7]++) {
+            P4$[4] += String.fromCharCode(P4$[9][P4$[7]]);
+          }
+          return Gwindow.btoa(P4$[4]);
         }
         fromBase64(W69, A8Q) {
-            var o0n = [arguments];
-            o0n[8] = window.pako;
-            o0n[6] = window.atob(o0n[0][0]);
-            o0n[9] = o0n[6].length;
-            o0n[4] = new Uint8Array(o0n[9]);
-            for (o0n[1] = 0; o0n[1] < o0n[9]; o0n[1]++) {
-                o0n[4][o0n[1]] = o0n[6].charCodeAt(o0n[1]);
-            }
-            if (o0n[0][1] === true) {
-                o0n[5] = o0n[8].inflate(o0n[4]);
-                o0n[4] = o0n[5];
-            }
-            this.buffer = o0n[4].buffer.slice(o0n[4].byteOffset, o0n[4].byteLength + o0n[4].byteOffset);
-            this.view = new DataView(this.buffer);
-            this.index = 0;
+          var o0n = [arguments];
+          o0n[8] = Gwindow.pako;
+          o0n[6] = Gwindow.atob(o0n[0][0]);
+          o0n[9] = o0n[6].length;
+          o0n[4] = new Uint8Array(o0n[9]);
+          for (o0n[1] = 0; o0n[1] < o0n[9]; o0n[1]++) {
+            o0n[4][o0n[1]] = o0n[6].charCodeAt(o0n[1]);
+          }
+          if (o0n[0][1] === true) {
+            o0n[5] = o0n[8].inflate(o0n[4]);
+            o0n[4] = o0n[5];
+          }
+          this.buffer = o0n[4].buffer.slice(
+            o0n[4].byteOffset,
+            o0n[4].byteLength + o0n[4].byteOffset
+          );
+          this.view = new DataView(this.buffer);
+          this.index = 0;
         }
-    }
+      }
 
     bonkAPI.ISdecode = function (rawdata) {
         rawdata_caseflipped = "";
@@ -1804,7 +1826,7 @@ bonkAPI.onLoaded = () => {
 
     bonkAPI.encodeMap = function (W2A) {
         var M3n = [arguments];
-        M3n[1] = new bytebuffer2();
+        M3n[1] = new bonkAPI_bytebuffer();
         M3n[9] = M3n[0][0].physics;
         M3n[0][0].v = 15;
         M3n[1].writeShort(M3n[0][0].v);
@@ -2032,7 +2054,7 @@ bonkAPI.onLoaded = () => {
     bonkAPI.decodeMap = function (map) {
         var F5W = [arguments];
         var b64mapdata = LZString.decompressFromEncodedURIComponent(map);
-        var binaryReader = new bytebuffer2();
+        var binaryReader = new bonkAPI_bytebuffer();
         binaryReader.fromBase64(b64mapdata, false);
         map = {
             v: 1,
@@ -2784,6 +2806,32 @@ bonkHUD.bonkHUDCSS.innerHTML = `
 .bonkhud-scrollbar-other {
     scrollbar-width: none;
 }
+.bonkhud-resizer {
+    width: 10px;
+    height: 10px;
+    background: transparent;
+    position: absolute;
+}
+.bonkhud-resizer.north-west {
+    top: -5px;
+    left: -5px;
+    cursor: nwse-resize;
+}
+.bonkhud-resizer.north-east {
+    top: -5px;
+    right: -5px;
+    cursor: nesw-resize;
+}
+.bonkhud-resizer.south-east {
+    bottom: -5px;
+    right: -5px;
+    cursor: nwse-resize;
+}
+.bonkhud-resizer.south-west {
+    bottom: -5px;
+    left: -5px;
+    cursor: nesw-resize;
+}
 `;
 document.getElementsByTagName("head")[0].appendChild(bonkHUD.bonkHUDCSS);
 
@@ -2843,7 +2891,7 @@ bonkHUD.initialize = function () {
     windowSettingsContainer.classList.add("bonkhud-scrollbar-kit");
     windowSettingsContainer.classList.add("bonkhud-scrollbar-other");
     windowSettingsContainer.style.flexGrow = "1.5";
-    //windowSettingsContainer.style.minWidth = "30%";
+    windowSettingsContainer.style.overflowY = "scroll";
     windowSettingsContainer.style.height = "100%";
     windowSettingsContainer.style.borderRight = "1px solid";
 
@@ -3086,7 +3134,7 @@ bonkHUD.createWindowControl = function (name, ind) {
     let visiblityCheck = document.createElement("input");
     visiblityCheck.id = bonkHUD.windowHold[ind].id + "-visibility-check";
     visiblityCheck.type = "checkbox"; // Slider type for range selection
-    if (bonkHUD.windowHold[ind].visibility == "visible") {
+    if (bonkHUD.windowHold[ind].display == "block") {
         visiblityCheck.checked = true;
     }
     else {
@@ -3096,8 +3144,8 @@ bonkHUD.createWindowControl = function (name, ind) {
     visiblityCheck.style.verticalAlign = "middle";
     visiblityCheck.oninput = function () {
         let control = document.getElementById(bonkHUD.windowHold[ind].id + "-drag"); // Update the UI opacity in real-time;
-        control.style.visibility = this.checked ? "visible" : "hidden";
-        bonkHUD.windowHold[ind].visibility = control.style.visibility;
+        control.style.display = this.checked ? "block" : "none";
+        bonkHUD.windowHold[ind].block = control.style.block;
         bonkHUD.saveUISetting(bonkHUD.windowHold[ind].id);
     };
     holdRight.appendChild(visiblityCheck); // Place the slider into the slider container
@@ -3139,8 +3187,25 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     dragItem.style.width = bonkHUD.windowHold[ind].width; //width ? width : "172";
     dragItem.style.height = bonkHUD.windowHold[ind].height; //height ? height : minHeight;
     //dragItem.style.minHeight = minHeight; // Minimum height to prevent deformation
-    dragItem.style.visibility = bonkHUD.windowHold[ind].visibility;
+    dragItem.style.display = bonkHUD.windowHold[ind].display;
+    dragItem.style.visibility = "visible";
     dragItem.style.opacity = bonkHUD.windowHold[ind].opacity;
+
+    let dragNW = document.createElement("div");
+    dragNW.classList.add("bonkhud-resizer");
+    dragNW.classList.add("north-west");
+
+    let dragNE = document.createElement("div");
+    dragNE.classList.add("bonkhud-resizer");
+    dragNE.classList.add("north-east");
+
+    let dragSE = document.createElement("div");
+    dragSE.classList.add("bonkhud-resizer");
+    dragSE.classList.add("south-east");
+
+    let dragSW = document.createElement("div");
+    dragSW.classList.add("bonkhud-resizer");
+    dragSW.classList.add("south-west");
 
     // Create the header
     let header = document.createElement("div");
@@ -3148,6 +3213,7 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     header.classList.add("newbonklobby_boxtop");
     header.classList.add("newbonklobby_boxtop_classic");
     header.classList.add("bonkhud-header-color");
+    header.style.visibility = "visible";
 
     // Create the title span
     let title = document.createElement("span");
@@ -3158,14 +3224,15 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     title.style.textAlign = "center";
 
     // Create the resize button
-    let resizeButton = document.createElement("div");
-    resizeButton.classList.add("bonkhud-header-button");
-    resizeButton.classList.add("bonkhud-title-color");
-    resizeButton.classList.add("bonkhud-resize");
-    resizeButton.innerText = ":::"; // Use an appropriate icon or text
-    resizeButton.style.lineHeight = "22px";
-    resizeButton.style.textIndent = "5px";
-    resizeButton.style.cursor = "nwse-resize";
+    let openCloseButton = document.createElement("div");
+    openCloseButton.classList.add("bonkhud-header-button");
+    openCloseButton.classList.add("bonkhud-title-color");
+    openCloseButton.classList.add("bonkhud-resize");
+    openCloseButton.innerText = "△"; // Use an appropriate icon or text
+    openCloseButton.style.fontSize = "15px";
+    openCloseButton.style.lineHeight = "25px";
+    openCloseButton.style.textIndent = "5px";
+    openCloseButton.style.cursor = "cell";
 
     let closeButton = document.createElement("div");
     closeButton.classList.add("bonkhud-header-button");
@@ -3177,10 +3244,14 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
 
     // Append the title and resize button to the header
     header.appendChild(title);
-    header.appendChild(resizeButton);
+    header.appendChild(openCloseButton);
     header.appendChild(closeButton);
 
     // Append the header to the dragItem
+    dragItem.appendChild(dragNW);
+    dragItem.appendChild(dragNE);
+    dragItem.appendChild(dragSE);
+    dragItem.appendChild(dragSW);
     dragItem.appendChild(header);
 
     // Create the key table
@@ -3201,10 +3272,10 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     document.body.appendChild(dragItem);
 
     closeButton.addEventListener('click', (e) => {
-        dragItem.style.visibility = "hidden";
+        dragItem.style.display = "none";
         let visCheck = document.getElementById(id + "-visibility-check");
         visCheck.checked = false;
-        bonkHUD.windowHold[ind].visibility = dragItem.style.visibility;
+        bonkHUD.windowHold[ind].display = dragItem.style.display;
         bonkHUD.saveUISetting(id);
     });
 
@@ -3212,7 +3283,19 @@ bonkHUD.createWindow = function (name, id, bodyHTML, minHeight) {
     dragItem.addEventListener('mousedown', (e) => bonkHUD.dragStart(e, dragItem));
 
     // Add event listeners for resizing
-    resizeButton.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem));
+    openCloseButton.addEventListener('mousedown', (e) => {
+        if(openCloseButton.innerText == "△") {
+            dragItem.style.visibility = "hidden";
+            openCloseButton.innerText = "▽";
+        } else {
+            dragItem.style.visibility = "visible";
+            openCloseButton.innerText = "△";
+        }
+    });
+    dragNW.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "nw"));
+    dragNE.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "ne"));
+    dragSE.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "se"));
+    dragSW.addEventListener('mousedown', (e) => bonkHUD.startResizing(e, dragItem, "sw"));
 
     bonkHUD.updateStyleSettings(); //! probably slow but it works, its not like someone will have 100's of windows
 };
@@ -3234,7 +3317,7 @@ bonkHUD.getUISetting = function (id) {
             bottom: "0rem",
             right: "0rem",
             opacity: "1",
-            visibility: "visible",
+            display: "block",
         }
     }
     return setting;
@@ -3378,16 +3461,18 @@ bonkHUD.dragEnd = function (dragMoveFn, dragItem) {
 };
 
 // Function to start resizing the UI
-bonkHUD.startResizing = function (e, dragItem) {
+bonkHUD.startResizing = function (e, dragItem, dir) {
     e.stopPropagation(); // Prevent triggering dragStart for dragItem
 
     let startX = e.clientX;
     let startY = e.clientY;
+    let windowX = parseInt(window.getComputedStyle(dragItem).right, 10);
+    let windowY = parseInt(window.getComputedStyle(dragItem).bottom, 10);
     let startWidth = parseInt(window.getComputedStyle(dragItem).width, 10);
     let startHeight = parseInt(window.getComputedStyle(dragItem).height, 10);
 
     function doResize(e) {
-        bonkHUD.resizeMove(e, startX, startY, startWidth, startHeight, dragItem);
+        bonkHUD.resizeMove(e, startX, startY, windowX, windowY, startWidth, startHeight, dragItem, dir);
     }
 
     function stopResizing() {
@@ -3399,20 +3484,38 @@ bonkHUD.startResizing = function (e, dragItem) {
 };
 
 // Function to handle the resize event
-bonkHUD.resizeMove = function (e, startX, startY, startWidth, startHeight, dragItem) {
-    let newWidth = startWidth - (e.clientX - startX);
-    let newHeight = startHeight - (e.clientY - startY);
-
-    // Enforce minimum dimensions
-    newWidth = Math.max(154, newWidth);
-    newHeight = Math.max(30, newHeight);
-
-    dragItem.style.width = bonkHUD.pxTorem(newWidth) + 'rem';
-    dragItem.style.height = bonkHUD.pxTorem(newHeight) + 'rem';
+bonkHUD.resizeMove = function (e, startX, startY, windowX, windowY, startWidth, startHeight, dragItem, dir) {
+    let newWidth = 0;
+    let newHeight = 0;
+    if(dir == "nw") {
+        newWidth = startWidth - (e.clientX - startX);
+        newHeight = startHeight - (e.clientY - startY);
+        dragItem.style.height = bonkHUD.pxTorem(Math.max(30, newHeight)) + 'rem';
+        dragItem.style.width = bonkHUD.pxTorem(Math.max(154, newWidth)) + 'rem';
+    } else if(dir == "sw") {
+        newWidth = startWidth - (e.clientX - startX);
+        newHeight = startHeight + (e.clientY - startY);
+        dragItem.style.height = bonkHUD.pxTorem(Math.max(30, newHeight)) + 'rem';
+        dragItem.style.bottom = bonkHUD.pxTorem(windowY - (newHeight < 30 ? 30 - startHeight : e.clientY - startY)) + 'rem';
+        dragItem.style.width = bonkHUD.pxTorem(Math.max(154, newWidth)) + 'rem';
+    } else if(dir == "ne") {
+        newWidth = startWidth + (e.clientX - startX);
+        newHeight = startHeight - (e.clientY - startY);
+        dragItem.style.height = bonkHUD.pxTorem(Math.max(30, newHeight)) + 'rem';
+        dragItem.style.width = bonkHUD.pxTorem(Math.max(154, newWidth)) + 'rem';
+        dragItem.style.right = bonkHUD.pxTorem(windowX - (newWidth < 154 ? 154 - startWidth : e.clientX - startX)) + 'rem';
+    } else {
+        newWidth = startWidth + (e.clientX - startX);
+        newHeight = startHeight + (e.clientY - startY);
+        dragItem.style.height = bonkHUD.pxTorem(Math.max(30, newHeight)) + 'rem';
+        dragItem.style.bottom = bonkHUD.pxTorem(windowY - (newHeight < 30 ? 30 - startHeight : e.clientY - startY)) + 'rem';
+        dragItem.style.width = bonkHUD.pxTorem(Math.max(154, newWidth)) + 'rem';
+        dragItem.style.right = bonkHUD.pxTorem(windowX - (newWidth < 154 ? 154 - startWidth : e.clientX - startX)) + 'rem';
+    }
 };
 
 // Function to stop the resize event
-bonkHUD.resizeEnd = function (resizeMoveFn, dragItem) {
+bonkHUD.resizeEnd = function (resizeMoveFn, dragItem, dir) {
     document.removeEventListener('mousemove', resizeMoveFn);
     let ind = bonkHUD.getWindowIndexByID(dragItem.id.substring(0, dragItem.id.length - 5));
     bonkHUD.windowHold[ind].width = dragItem.style.width;
@@ -3457,6 +3560,10 @@ bonkHUD.clamp = function (val, min, max) {
 
 bonkHUD.pxTorem = function (px) {
     return px / parseFloat(getComputedStyle(document.documentElement).fontSize);
+};
+
+bonkHUD.remTopx = function (rem) {
+    return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
 };
 
 //? might make more of these for use in the main settings window
