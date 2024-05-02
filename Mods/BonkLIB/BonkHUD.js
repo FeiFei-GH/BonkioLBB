@@ -125,7 +125,7 @@ bonkHUD.initialize = function () {
     windowSettingsContainer.classList.add("bonkhud-scrollbar-kit");
     windowSettingsContainer.classList.add("bonkhud-scrollbar-other");
     windowSettingsContainer.style.flexGrow = "1.5";
-    //windowSettingsContainer.style.minWidth = "30%";
+    windowSettingsContainer.style.overflowY = "scroll";
     windowSettingsContainer.style.height = "100%";
     windowSettingsContainer.style.borderRight = "1px solid";
 

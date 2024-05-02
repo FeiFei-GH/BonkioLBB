@@ -15,96 +15,131 @@
 // *Everything should be inside this object to prevent conflict with other prgrams.
 window.pkrUtils = {};
 
-// #region //!------------------Injector------------------
-// *Injecting code into src
-pkrUtils.injector = function (src) {
-    let newSrc = src;
-
-    //! Inject capZoneEvent fire
-    let orgCode = `K$h[9]=K$h[0][0][K$h[2][138]]()[K$h[2][115]];`;
-    let newCode = `
-        K$h[9]=K$h[0][0][K$h[2][138]]()[K$h[2][115]];
-        
-        try {
-            // Initialize
-            let inputState = z0M[0][0];
-            let currentFrame = inputState.rl;
-            let playerID = K$h[0][0].m_userData.arrayID;
-            let capID = K$h[1];
-            
-            
-        } catch(err) {
-            console.error("ERROR: capZoneEvent");
-            console.error(err);
-        }`;
-
-    newSrc = newSrc.replace(orgCode, newCode);
-    
-    //! Inject
-    orgCode = `doCapZone(c5K,E4_,j1P,X5a) {`;
-    newCode = `
-        doCapZone(c5K,E4_,j1P,X5a) {
-        
-        try {
-            console.log(c5K);
-            console.log(E4_);
-            console.log(j1P);
-            console.log(X5a);
-            
-        } catch(err) {
-            console.error("ERROR: capZoneEvent");
-            console.error(err);
-        }`;
-
-    newSrc = newSrc.replace(orgCode, newCode);
-    
-    //! Inject stepEvent fire
-    orgCode = `return z0M[720];`;
-    newCode = `
-        try {
-            let inputStateClone = JSON.parse(JSON.stringify(z0M[0][0]));
-            let currentFrame = inputStateClone.rl;
-            let gameStateClone = JSON.parse(JSON.stringify(z0M[720]));
-            
-            z0M[720].capZones[0].p = 0;
-            
-            console.log(z0M[720]);
-        } catch(err) {
-            console.error("ERROR: stepEvent");
-            console.error(err);
-        }
-        
-        return z0M[720];`;
-
-    newSrc = newSrc.replace(orgCode, newCode);
-
-    return newSrc;
-};
-
-// Compatibility with Excigma's code injector userscript
-if (!window.bonkCodeInjectors) window.bonkCodeInjectors = [];
-window.bonkCodeInjectors.push((bonkCode) => {
-    try {
-        return pkrUtils.injector(bonkCode);
-    } catch (error) {
-        alert(`Injecting failed`);
-        throw error;
-    }
-});
-// #endregion
+pkrUtils.data = 0;
 
 // #region //!------------------Use bonkAPI as listener-----------------
-bonkAPI.addEventListener("stepEvent", (e) => {
-    let inputState = e.inputState;
-    let myData = inputState.discs[bonkAPI.getMyID()];
 
-    let specialCD = myData.a1a;
-    let xPos = myData.x;
-    let yPos = myData.y;
-    let xVel = myData.xv;
-    let yVel = myData.yv;
+let init = function () {
+    let graphicsRef = new Map();
+    let uiCtx = 0;
+    let scale = 1;
+    let mapScale = 1;
+    let screenWidth = 1000;
+    let goResize = false;
 
-    //console.log(`specialCD: ${specialCD}, xPos: ${xPos}, yPos: ${yPos}, xVel: ${xVel}, yVel: ${yVel}`);
-});
+    let inGameList = [];
 
-// #endregion
+    let resizeCtx = function () {
+        graphicsRef.forEach((val, key, map) => {
+            val.resize();
+        });
+    }
+
+    bonkAPI.addEventListener("playerChange", (e) => {
+        inGameList = bonkAPI.getPlayersInLobbyID();
+        if(!e.hasLeft) {
+            let c = new window.PIXI.Container();
+            c.y = -scale;
+            let specialHold = new window.PIXI.Graphics();
+            specialHold.lineStyle(1, 0xebebeb);
+            specialHold.drawRect(0, 0, 0.5 * scale, 2 * scale);
+            specialHold.endFill();
+            let sContainer = new window.PIXI.Container();
+            sContainer.y = -2 * scale;
+            let special = new window.PIXI.Graphics();
+            special.beginFill(0xd4feff);
+            special.drawRect(0, 0, 0.5 * scale, 2 * scale);
+            special.endFill();
+            sContainer.addChild(special);
+            c.addChild(sContainer);
+            c.addChild(specialHold);
+            uiCtx.addChild(c);
+            console.log(special);
+            console.log(specialHold);
+
+            let resizeFunc = function () {
+                console.log("UNO");
+                specialHold.clear();
+                specialHold.lineStyle(1, 0xebebeb);
+                specialHold.drawRect(0, -2 * scale, 0.5 * scale, 2 * scale);
+                specialHold.endFill();
+
+                sContainer.y = -2 * scale;
+
+                special.clear();
+                special.beginFill(0xd4feff);
+                special.drawRect(0, 0, 0.5 * scale, 2 * scale);
+                special.endFill();
+                console.log(special);
+            }
+
+            let refHold = {
+                container: c,
+                specialBar: sContainer,
+                resize: resizeFunc,
+            }
+            graphicsRef.set(e.userID, refHold);
+        }
+        else {
+            graphicsRef.get(e.userID).container.destroy();
+            graphicsRef.delete(e.userID);
+        }
+    });
+
+    bonkAPI.addEventListener("graphicsReady", (e) => {
+        uiCtx = new window.PIXI.Container();
+        resizeCtx();
+        bonkAPI.pixiCtx.addChild(uiCtx);
+        console.log(uiCtx);
+    });
+
+    bonkAPI.addEventListener('gameStart', (e) => {
+        try {
+            mapScale = 730 / e.mapData.physics.ppm;
+            goResize = true;
+        } catch(er) {console.log(er)}
+    });
+
+    bonkAPI.addEventListener("stepEvent", (e) => {
+        if(bonkAPI.isInGame()) {
+            let inputState = e.inputState;
+
+            for(let i = 0; i < inGameList.length; i++) {
+                let info = graphicsRef.get(inGameList[i]);
+
+                try {
+                    let xPos = inputState.discs[inGameList[i]].x;
+                    let yPos = inputState.discs[inGameList[i]].y;
+                    //console.log(e.width + ": " + xPos);
+                    info.specialBar.scale.y = inputState.discs[inGameList[i]].a1a / 1000;
+                    info.container.x = xPos * scale;
+                    info.container.y = yPos * scale - scale;
+                    info.container.visible = true;
+                    //e.g.drawCircle(xPos * 12, yPos * 12, 5, 5);
+                } catch(er) {
+                    //console.log(er);
+                    if(info) {
+                        info.container.visible = false;
+                    }
+                }
+            }
+        }
+    });
+
+    bonkAPI.addEventListener("graphicsUpdate", (e) => {
+        //console.log("g");
+        if(screenWidth != e.width || goResize) {
+            screenWidth = e.width;
+            scale = screenWidth / mapScale;
+            resizeCtx();
+            goResize = false;
+        }
+    });
+    console.log("PkrUtils Loaded");
+}
+
+if (document.readyState === "complete" || document.readyState === "interactive") {
+    init();
+} else {
+    document.addEventListener("DOMContentLoaded", init);
+}

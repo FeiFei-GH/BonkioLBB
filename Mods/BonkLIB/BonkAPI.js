@@ -834,7 +834,7 @@ bonkAPI.receive_ChatMessage = function (args) {
 
 /**
  * Data given by host after join.
- * @function receive_gameState
+ * @function receive_InitialData
  * @fires modeChange
  * @param {JSON} args - Packet received by websocket.
  * @returns {JSON} arguements
@@ -1017,6 +1017,7 @@ bonkAPI.receive_LocalXPGain = function (args) {
  * game state is sent.
  * @function receive_gameState
  * @fires modeChange
+ * @fires gameStart
  * @param {JSON} args - Packet received by websocket.
  * @returns {JSON} arguements
  */
@@ -1033,6 +1034,23 @@ bonkAPI.receive_gameState = function (args) {
         bonkAPI.events.fireEvent("modeChange", sendObj);
     }
 
+    /**
+     * When game has started
+     * @event gameStart
+     * @type {object}
+     * @property {string} mapData - Encoded map data, must decode it to use
+     * @property {object} startData - Extra game specific data
+     */
+    if (bonkAPI.events.hasEvent["gameStart"]) {
+        //! change name of mapdata since it is not map data, probably gamestate
+        //! do the same in triggerstart
+        var sendObj = {
+            mapData: bonkAPI.decodeMap(args[1]["gs"]["map"]),
+            startData: args[3],
+        };
+        bonkAPI.events.fireEvent("gameStart", sendObj);
+    }
+  
     return args;
 };
 
@@ -1455,6 +1473,10 @@ bonkAPI.onLoaded = () => {
             }
             //console.log(bonkAPI.parentDraw);
             if(canv != 0 && bonkAPI.parentDraw) {
+                //! might do something might not
+                while(bonkAPI.parentDraw.parent != null) {
+                    bonkAPI.parentDraw = bonkAPI.parentDraw.parent;
+                }
                 /**
                  * When a new frame is rendered when in game. It is recomended
                  * to not create new graphics or clear graphics every frame if
@@ -1470,7 +1492,7 @@ bonkAPI.onLoaded = () => {
                     let h = parseInt(canv.style.height);
                     //bonkAPI.pixiCtx.x = w / 2;
                     //bonkAPI.pixiCtx.y = h / 2;
-                    bonkAPI.pixiStage = {"children":[]};
+                    bonkAPI.pixiStage = 0;
                     for(let i = 0; i < bonkAPI.parentDraw.children.length; i++){
                         if(bonkAPI.parentDraw.children[i].constructor.name == "e"){
                             //console.log(bonkAPI.parentDraw);
@@ -1593,147 +1615,151 @@ bonkAPI.onLoaded = () => {
 
     class bonkAPI_bytebuffer {
         constructor() {
-            var g1d = [arguments];
-            this.index = 0;
-            this.buffer = new ArrayBuffer(100 * 1024);
-            this.view = new DataView(this.buffer);
-            this.implicitClassAliasArray = [];
-            this.implicitStringArray = [];
-            this.bodgeCaptureZoneDataIdentifierArray = [];
+          var g1d = [arguments];
+          this.index = 0;
+          this.buffer = new ArrayBuffer(100*1024);
+          this.view = new DataView(this.buffer);
+          this.implicitClassAliasArray = [];
+          this.implicitStringArray = [];
+          this.bodgeCaptureZoneDataIdentifierArray = [];
         }
+        
         readByte() {
-            var N0H = [arguments];
-            N0H[4] = this.view.getUint8(this.index);
-            this.index += 1;
-            return N0H[4];
+          var N0H = [arguments];
+          N0H[4] = this.view.getUint8(this.index);
+          this.index += 1;
+          return N0H[4];
         }
         writeByte(z0w) {
-            var v8$ = [arguments];
-            this.view.setUint8(this.index, v8$[0][0]);
-            this.index += 1;
+          var v8$ = [arguments];
+          this.view.setUint8(this.index, v8$[0][0]);
+          this.index += 1;
         }
         readInt() {
-            var A71 = [arguments];
-            A71[6] = this.view.getInt32(this.index);
-            this.index += 4;
-            return A71[6];
+          var A71 = [arguments];
+          A71[6] = this.view.getInt32(this.index);
+          this.index += 4;
+          return A71[6];
         }
         writeInt(W6i) {
-            var p5u = [arguments];
-            this.view.setInt32(this.index, p5u[0][0]);
-            this.index += 4;
+          var p5u = [arguments];
+          this.view.setInt32(this.index, p5u[0][0]);
+          this.index += 4;
         }
         readShort() {
-            var R1R = [arguments];
-            R1R[9] = this.view.getInt16(this.index);
-            this.index += 2;
-            return R1R[9];
+          var R1R = [arguments];
+          R1R[9] = this.view.getInt16(this.index);
+          this.index += 2;
+          return R1R[9];
         }
         writeShort(H8B) {
-            var d_3 = [arguments];
-            this.view.setInt16(this.index, d_3[0][0]);
-            this.index += 2;
+          var d_3 = [arguments];
+          this.view.setInt16(this.index, d_3[0][0]);
+          this.index += 2;
         }
         readUint() {
-            var W2$ = [arguments];
-            W2$[8] = this.view.getUint32(this.index);
-            this.index += 4;
-            return W2$[8];
+          var W2$ = [arguments];
+          W2$[8] = this.view.getUint32(this.index);
+          this.index += 4;
+          return W2$[8];
         }
         writeUint(B2X) {
-            var f8B = [arguments];
-            this.view.setUint32(this.index, f8B[0][0]);
-            this.index += 4;
+          var f8B = [arguments];
+          this.view.setUint32(this.index, f8B[0][0]);
+          this.index += 4;
         }
         readBoolean() {
-            var h6P = [arguments];
-            h6P[6] = this.readByte();
-            return h6P[6] == 1;
+          var h6P = [arguments];
+          h6P[6] = this.readByte();
+          return h6P[6] == 1;
         }
         writeBoolean(Y3I) {
-            var l79 = [arguments];
-            if (l79[0][0]) {
-                this.writeByte(1);
-            } else {
-                this.writeByte(0);
-            }
+          var l79 = [arguments];
+          if (l79[0][0]) {
+            this.writeByte(1);
+          } else {
+            this.writeByte(0);
+          }
         }
         readDouble() {
-            var V60 = [arguments];
-            V60[4] = this.view.getFloat64(this.index);
-            this.index += 8;
-            return V60[4];
+          var V60 = [arguments];
+          V60[4] = this.view.getFloat64(this.index);
+          this.index += 8;
+          return V60[4];
         }
         writeDouble(z4Z) {
-            var O41 = [arguments];
-            this.view.setFloat64(this.index, O41[0][0]);
-            this.index += 8;
+          var O41 = [arguments];
+          this.view.setFloat64(this.index, O41[0][0]);
+          this.index += 8;
         }
         readFloat() {
-            var I0l = [arguments];
-            I0l[5] = this.view.getFloat32(this.index);
-            this.index += 4;
-            return I0l[5];
+          var I0l = [arguments];
+          I0l[5] = this.view.getFloat32(this.index);
+          this.index += 4;
+          return I0l[5];
         }
         writeFloat(y4B) {
-            var B0v = [arguments];
-            this.view.setFloat32(this.index, B0v[0][0]);
-            this.index += 4;
+          var B0v = [arguments];
+          this.view.setFloat32(this.index, B0v[0][0]);
+          this.index += 4;
         }
         readUTF() {
-            var d6I = [arguments];
-            d6I[8] = this.readByte();
-            d6I[7] = this.readByte();
-            d6I[9] = d6I[8] * 256 + d6I[7];
-            d6I[1] = new Uint8Array(d6I[9]);
-            for (d6I[6] = 0; d6I[6] < d6I[9]; d6I[6]++) {
-                d6I[1][d6I[6]] = this.readByte();
-            }
-            return bonkAPI.textdecoder.decode(d6I[1]);
+          var d6I = [arguments];
+          d6I[8] = this.readByte();
+          d6I[7] = this.readByte();
+          d6I[9] = d6I[8] * 256 + d6I[7];
+          d6I[1] = new Uint8Array(d6I[9]);
+          for (d6I[6] = 0; d6I[6] < d6I[9]; d6I[6]++) {
+            d6I[1][d6I[6]] = this.readByte();
+          }
+          return bonkAPI.textdecoder.decode(d6I[1]);
         }
         writeUTF(L3Z) {
-            var Z75 = [arguments];
-            Z75[4] = bonkAPI.textencoder.encode(Z75[0][0]);
-            Z75[3] = Z75[4].length;
-            Z75[5] = Math.floor(Z75[3] / 256);
-            Z75[8] = Z75[3] % 256;
-            this.writeByte(Z75[5]);
-            this.writeByte(Z75[8]);
-            Z75[7] = this;
-            Z75[4].forEach(I_O);
-            function I_O(s0Q, H4K, j$o) {
-                var N0o = [arguments];
-                Z75[7].writeByte(N0o[0][0]);
-            }
+          var Z75 = [arguments];
+          Z75[4] = bonkAPI.textencoder.encode(Z75[0][0]);
+          Z75[3] = Z75[4].length;
+          Z75[5] = Math.floor(Z75[3]/256);
+          Z75[8] = Z75[3] % 256;
+          this.writeByte(Z75[5]);
+          this.writeByte(Z75[8]);
+          Z75[7] = this;
+          Z75[4].forEach(I_O);
+          function I_O(s0Q, H4K, j$o) {
+            var N0o = [arguments];
+            Z75[7].writeByte(N0o[0][0]);
+          }
         }
         toBase64() {
-            var P4$ = [arguments];
-            P4$[4] = "";
-            P4$[9] = new Uint8Array(this.buffer);
-            P4$[8] = this.index;
-            for (P4$[7] = 0; P4$[7] < P4$[8]; P4$[7]++) {
-                P4$[4] += String.fromCharCode(P4$[9][P4$[7]]);
-            }
-            return window.btoa(P4$[4]);
+          var P4$ = [arguments];
+          P4$[4] = "";
+          P4$[9] = new Uint8Array(this.buffer);
+          P4$[8] = this.index;
+          for (P4$[7] = 0; P4$[7] < P4$[8]; P4$[7]++) {
+            P4$[4] += String.fromCharCode(P4$[9][P4$[7]]);
+          }
+          return Gwindow.btoa(P4$[4]);
         }
         fromBase64(W69, A8Q) {
-            var o0n = [arguments];
-            o0n[8] = window.pako;
-            o0n[6] = window.atob(o0n[0][0]);
-            o0n[9] = o0n[6].length;
-            o0n[4] = new Uint8Array(o0n[9]);
-            for (o0n[1] = 0; o0n[1] < o0n[9]; o0n[1]++) {
-                o0n[4][o0n[1]] = o0n[6].charCodeAt(o0n[1]);
-            }
-            if (o0n[0][1] === true) {
-                o0n[5] = o0n[8].inflate(o0n[4]);
-                o0n[4] = o0n[5];
-            }
-            this.buffer = o0n[4].buffer.slice(o0n[4].byteOffset, o0n[4].byteLength + o0n[4].byteOffset);
-            this.view = new DataView(this.buffer);
-            this.index = 0;
+          var o0n = [arguments];
+          o0n[8] = Gwindow.pako;
+          o0n[6] = Gwindow.atob(o0n[0][0]);
+          o0n[9] = o0n[6].length;
+          o0n[4] = new Uint8Array(o0n[9]);
+          for (o0n[1] = 0; o0n[1] < o0n[9]; o0n[1]++) {
+            o0n[4][o0n[1]] = o0n[6].charCodeAt(o0n[1]);
+          }
+          if (o0n[0][1] === true) {
+            o0n[5] = o0n[8].inflate(o0n[4]);
+            o0n[4] = o0n[5];
+          }
+          this.buffer = o0n[4].buffer.slice(
+            o0n[4].byteOffset,
+            o0n[4].byteLength + o0n[4].byteOffset
+          );
+          this.view = new DataView(this.buffer);
+          this.index = 0;
         }
-    }
+      }
 
     bonkAPI.ISdecode = function (rawdata) {
         rawdata_caseflipped = "";
@@ -1781,7 +1807,7 @@ bonkAPI.onLoaded = () => {
 
     bonkAPI.encodeMap = function (W2A) {
         var M3n = [arguments];
-        M3n[1] = new bytebuffer2();
+        M3n[1] = new bonkAPI_bytebuffer();
         M3n[9] = M3n[0][0].physics;
         M3n[0][0].v = 15;
         M3n[1].writeShort(M3n[0][0].v);
@@ -2009,7 +2035,7 @@ bonkAPI.onLoaded = () => {
     bonkAPI.decodeMap = function (map) {
         var F5W = [arguments];
         var b64mapdata = LZString.decompressFromEncodedURIComponent(map);
-        var binaryReader = new bytebuffer2();
+        var binaryReader = new bonkAPI_bytebuffer();
         binaryReader.fromBase64(b64mapdata, false);
         map = {
             v: 1,
