@@ -160,7 +160,7 @@ bonkAPI.addEventListener("createRoom", (e) => {
 });
 
 // Event listener for when user(mod user) joins a room
-bonkAPI.addEventListener("onJoin", (e) => {
+bonkAPI.addEventListener("joinRoom", (e) => {
     //console.log("on Join event received", e);
     //console.log("User ID", e.userID);
     // Set the player name in the player selector to the current user
@@ -176,33 +176,36 @@ bonkAPI.addEventListener("onJoin", (e) => {
 // Main function to construct and add the key table UI to the DOM
 const addKeyTable = () => {
     // Create the key table
-    let keyTable = document.createElement("table");
+    let keyTable = document.createElement("div");
+
     keyTable.innerHTML = `
-        <tbody>
-            <tr>
-                <td style="display: flex; justify-content: center; align-items: center;">
-                    <select id="player_selector">
-                        <option id="selector_option_user">......</option>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <td id="Special" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">Special</td>
-                <td id="↑" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">↑</td>
-                <td id="Heavy" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">Heavy</td>
-            </tr>
-            <tr>
-                <td id="←" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">←</td>
-                <td id="↓" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">↓</td>
-                <td id="→" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">→</td>
-            </tr>
-        </tbody>`;
+        <table style="flex: 1 1 auto;">
+            <tbody>
+                <tr>
+                    <td id="Special" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">Special</td>
+                    <td id="↑" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">↑</td>
+                    <td id="Heavy" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">Heavy</td>
+                </tr>
+                <tr>
+                    <td id="←" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">←</td>
+                    <td id="↓" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">↓</td>
+                    <td id="→" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">→</td>
+                </tr>
+            </tbody>
+        </table>
+        <div style="flex: 0 1 auto;padding: 10px;">
+            <select id="player_selector">
+                <option id="selector_option_user">......</option>
+            </select>
+        </div>`;
 
     bonkHUD.createWindow("KeyTable", "keytable_window", keyTable, "100px");
     let keytable_window = document.getElementById("keytable_window");
     keytable_window.style.width = "100%";
-    keytable_window.style.height = "calc(100% - 30px)"; // Adjusted height for header
+    keytable_window.style.height = "calc(100% - 32px)";
     keytable_window.style.padding = "0";
+    keytable_window.style.display = "flex";
+    keytable_window.style.flexFlow = "column";
 
     bonkHUD.loadUISetting("keytable_window");
 

@@ -1,0 +1,25 @@
+{
+  "name": "bonkiolbb",
+  "version": "1.49.02",
+  "description": "Bonkio Projects",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "generate-lib": "node ./Mods/BonkLIB/GenerateBonkLIB.js",
+    "generate-docs": "jsdoc --configure jsdoc.json --verbose"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/XyaoFeiFei/BonkioLBB.git"
+  },
+  "author": "FeiFei",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/XyaoFeiFei/BonkioLBB/issues"
+  },
+  "homepage": "https://github.com/XyaoFeiFei/BonkioLBB#readme",
+  "dependencies": {
+    "clean-jsdoc-theme": "^4.2.18",
+    "jsdoc": "^4.0.2"
+  }
+}
