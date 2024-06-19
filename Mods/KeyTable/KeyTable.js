@@ -342,7 +342,7 @@ const addKeyTable = () => {
     downInput.onchange = saveFunction;
     rightInput.onchange = saveFunction;
 
-    bonkHUD.createWindow("KeyTable", "1.0.4", "keytable_window", keyTable, keyTableSettings);
+    bonkHUD.createWindow("KeyTable", "keytable_window", "1.0.4", keyTable, keyTableSettings);
     let keytable_window = document.getElementById("keytable_window");
     keytable_window.style.width = "100%";
     keytable_window.style.height = "calc(100% - 32px)";
