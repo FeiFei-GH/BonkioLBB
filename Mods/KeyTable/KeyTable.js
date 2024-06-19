@@ -24,32 +24,28 @@ const height = "100px";
 // Variable to track the most recent key input by the user
 KeyTable.latestInput = 0;
 KeyTable.currentPlayerID = 0;
-
-// Updates the visual representation of keys based on user input
-KeyTable.keyStyle = (keyname) => {
-    // Mapping of key names to their corresponding binary input value
-    let inputValues = {
-        '←': 1, '→': 2, '↑': 4, '↓': 8, 'Heavy': 16, 'Special': 32
-    };
-    // Change the key's background color if it's currently pressed
-    let keyElement = document.getElementById(keyname);
-    keyElement.style.backgroundColor = KeyTable.latestInput & inputValues[keyname] ? bonkHUD.styleHold.buttonColorHover.color : bonkHUD.styleHold.buttonColor.color;
+KeyTable.frameCount = [0, 0, 0, 0, 0, 0];
+// !could make these arrays but better visibly (specific naming)
+KeyTable.keys = {};
+KeyTable.keyFilter = {
+    'left': 1, 'right': 2, 'up': 4, 'down': 8, 'heavy': 16, 'special': 32
 };
 
 // Refresh the styles for all keys on the UI
 KeyTable.updateKeyStyles = () => {
-    let keys = ['←', '↑', '→', '↓', 'Heavy', 'Special'];
-    keys.forEach(KeyTable.keyStyle);
+    Object.entries(KeyTable.keys).forEach(([dir, element]) => {
+        // Change the key's background color if it's currently pressed
+        element.style.backgroundColor = KeyTable.latestInput & KeyTable.keyFilter[dir] ? bonkHUD.styleHold.buttonColorHover.color : bonkHUD.styleHold.buttonColor.color;
+    });
 };
 
 // Reset the background color of all keys to the default state
 KeyTable.keyTableReset = () => {
-    let keys = ['←', '↑', '→', '↓', 'Heavy', 'Special'];
-    keys.forEach(key => {
-        document.getElementById(key).style.backgroundColor = bonkHUD.styleHold.buttonColor.color;
+    Object.entries(KeyTable.keys).forEach(([dir, element]) => {
+        element.style.backgroundColor = bonkHUD.styleHold.buttonColor.color;
     });
 };
-
+ 
 // Event listener function to change the player selected in the player selector
 KeyTable.select_player = () => {
     let player_selector = document.getElementById("player_selector");
@@ -65,7 +61,7 @@ KeyTable.create_option = (userID) => {
     let playerName = bonkAPI.getPlayerNameByID(userID);
     let player_selector = document.getElementById("player_selector");
     let newOption = document.createElement("option");
-    newOption.innerText = playerName;
+    newOption.textContent = playerName;
     newOption.value = userID;
     newOption.id = "selector_option_" + userID;
     player_selector.appendChild(newOption);
@@ -120,6 +116,12 @@ bonkAPI.addEventListener("gameInputs", (e) => {
     }
 });
 
+/*bonkAPI.addEventListener("stepEvent", (e) => {
+    for(int i = 0; i < KeyTable.keys) {
+
+    }
+});*/
+
 // Event listener for when a user joins the game
 bonkAPI.addEventListener("userJoin", (e) => {
     //console.log("User join event received", e);
@@ -152,7 +154,7 @@ bonkAPI.addEventListener("createRoom", (e) => {
     // Set the player name in the player selector to the current user
     let option = document.getElementById("selector_option_user");
     let playerName = bonkAPI.getPlayerNameByID(e.userID);
-    option.innerText = playerName;
+    option.textContent = playerName;
     option.value = e.userID;
     KeyTable.currentPlayerID = e.userID;
     // Reset the player selector to the default state
@@ -166,7 +168,7 @@ bonkAPI.addEventListener("joinRoom", (e) => {
     // Set the player name in the player selector to the current user
     let option = document.getElementById("selector_option_user");
     let playerName = bonkAPI.getPlayerNameByID(bonkAPI.getMyID());
-    option.innerText = playerName;
+    option.textContent = playerName;
     option.value = bonkAPI.getMyID();
     KeyTable.currentPlayerID = bonkAPI.getMyID();
     // Update the player list in the player selector
@@ -178,28 +180,169 @@ const addKeyTable = () => {
     // Create the key table
     let keyTable = document.createElement("div");
 
-    keyTable.innerHTML = `
-        <table style="flex: 1 1 auto;">
-            <tbody>
-                <tr>
-                    <td id="Special" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">Special</td>
-                    <td id="↑" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">↑</td>
-                    <td id="Heavy" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">Heavy</td>
-                </tr>
-                <tr>
-                    <td id="←" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">←</td>
-                    <td id="↓" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">↓</td>
-                    <td id="→" class="bonkhud-button-color bonkhud-text-color" style="width: 34%; text-align: center;">→</td>
-                </tr>
-            </tbody>
-        </table>
-        <div style="flex: 0 1 auto;padding: 10px;">
-            <select id="player_selector">
-                <option id="selector_option_user">......</option>
-            </select>
-        </div>`;
+    let keyHold = document.createElement("table");
+    keyHold.style.flex = "1 1 auto";
 
-    bonkHUD.createWindow("KeyTable", "keytable_window", keyTable, "100px");
+    let tableBody = document.createElement("tbody");
+    let topRow = document.createElement("tr");
+    KeyTable.keys["special"] = document.createElement("td");
+    KeyTable.keys["special"].classList.add("bonkhud-button-color");
+    KeyTable.keys["special"].classList.add("bonkhud-text-color");
+    KeyTable.keys["special"].style.width = "34%";
+    KeyTable.keys["special"].style.textAlign = "center";
+    KeyTable.keys["special"].textContent = "Special";
+
+    KeyTable.keys["up"] = document.createElement("td");
+    KeyTable.keys["up"].classList.add("bonkhud-button-color");
+    KeyTable.keys["up"].classList.add("bonkhud-text-color");
+    KeyTable.keys["up"].style.width = "34%";
+    KeyTable.keys["up"].style.textAlign = "center";
+    KeyTable.keys["up"].textContent = "↑";
+
+    KeyTable.keys["heavy"] = document.createElement("td");
+    KeyTable.keys["heavy"].classList.add("bonkhud-button-color");
+    KeyTable.keys["heavy"].classList.add("bonkhud-text-color");
+    KeyTable.keys["heavy"].style.width = "34%";
+    KeyTable.keys["heavy"].style.textAlign = "center";
+    KeyTable.keys["heavy"].textContent = "Heavy";
+
+    let botRow = document.createElement("tr");
+    KeyTable.keys["left"] = document.createElement("td");
+    KeyTable.keys["left"].classList.add("bonkhud-button-color");
+    KeyTable.keys["left"].classList.add("bonkhud-text-color");
+    KeyTable.keys["left"].style.width = "34%";
+    KeyTable.keys["left"].style.textAlign = "center";
+    KeyTable.keys["left"].textContent = "←";
+
+    KeyTable.keys["down"] = document.createElement("td");
+    KeyTable.keys["down"].classList.add("bonkhud-button-color");
+    KeyTable.keys["down"].classList.add("bonkhud-text-color");
+    KeyTable.keys["down"].style.width = "34%";
+    KeyTable.keys["down"].style.textAlign = "center";
+    KeyTable.keys["down"].textContent = "↓";
+
+    KeyTable.keys["right"] = document.createElement("td");
+    KeyTable.keys["right"].classList.add("bonkhud-button-color");
+    KeyTable.keys["right"].classList.add("bonkhud-text-color");
+    KeyTable.keys["right"].style.width = "34%";
+    KeyTable.keys["right"].style.textAlign = "center";
+    KeyTable.keys["right"].textContent = "→";
+
+    let pSelectorHold = document.createElement("div");
+    pSelectorHold.style.flex = "0 1 auto";
+    pSelectorHold.style.padding = "10px";
+
+    let pSelector = document.createElement("select");
+    pSelector.id = "player_selector";
+
+    let pOption = document.createElement("option");
+    pOption.id = "selector_option_user";
+    pOption.textContent = "......";
+
+    topRow.appendChild(KeyTable.keys["special"]);
+    topRow.appendChild(KeyTable.keys["up"]);
+    topRow.appendChild(KeyTable.keys["heavy"]);
+
+    botRow.appendChild(KeyTable.keys["left"]);
+    botRow.appendChild(KeyTable.keys["down"]);
+    botRow.appendChild(KeyTable.keys["right"]);
+
+    tableBody.appendChild(topRow);
+    tableBody.appendChild(botRow);
+
+    pSelector.appendChild(pOption);
+
+    pSelectorHold.appendChild(pSelector);
+
+    keyHold.appendChild(tableBody);
+
+    keyTable.appendChild(keyHold);
+    keyTable.appendChild(pSelectorHold);
+
+    let keyTableSettings = document.createElement('div');
+    keyTableSettings.display = "flex";
+
+    let inputTopRow = document.createElement('div');
+    inputTopRow.display = "flex";
+
+    let heavyInput = document.createElement('input');
+    heavyInput.setAttribute("type", "text");
+    heavyInput.value = "Heavy";
+    heavyInput.minWidth = "30%";
+    heavyInput.flexGrow = "1";
+
+    let upInput = document.createElement('input');
+    upInput.setAttribute("type", "text");
+    upInput.value = "↑";
+    upInput.minWidth = "30%";
+    upInput.flexGrow = "1";
+
+    let specialInput = document.createElement('input');
+    specialInput.setAttribute("type", "text");
+    specialInput.value = "Special";
+    specialInput.minWidth = "30%";
+    specialInput.flexGrow = "1";
+
+    let inputBottomRow = document.createElement('div');
+    inputBottomRow.display = "flex";
+
+    let leftInput = document.createElement('input');
+    leftInput.setAttribute("type", "text");
+    leftInput.value = "←";
+    leftInput.minWidth = "30%";
+    leftInput.flexGrow = "1";
+
+    let downInput = document.createElement('input');
+    downInput.setAttribute("type", "text");
+    downInput.value = "↓";
+    downInput.minWidth = "30%";
+    downInput.flexGrow = "1";
+
+    let rightInput = document.createElement('input');
+    rightInput.setAttribute("type", "text");
+    rightInput.value = "→";
+    rightInput.minWidth = "30%";
+    rightInput.flexGrow = "1";
+
+    inputTopRow.appendChild(heavyInput);
+    inputTopRow.appendChild(upInput);
+    inputTopRow.appendChild(specialInput);
+
+    inputBottomRow.appendChild(leftInput);
+    inputBottomRow.appendChild(downInput);
+    inputBottomRow.appendChild(rightInput);
+
+    keyTableSettings.appendChild(inputTopRow);
+    keyTableSettings.appendChild(inputBottomRow);
+
+    let saveFunction = function() {
+        let setting = {
+            "heavy": heavyInput.value,
+            "up": upInput.value,
+            "special": specialInput.value,
+            "left": leftInput.value,
+            "down": downInput.value,
+            "right": rightInput.value,
+        };
+        bonkHUD.saveModSetting("keytable_window", setting);
+
+        KeyTable.keys["heavy"].textContent = heavyInput.value;
+        KeyTable.keys["up"].textContent = upInput.value;
+        KeyTable.keys["special"].textContent = specialInput.value;
+        KeyTable.keys["left"].textContent = leftInput.value;
+        KeyTable.keys["down"].textContent = downInput.value;
+        KeyTable.keys["right"].textContent = rightInput.value;
+        KeyTable.updateKeyStyles();
+    }
+
+    heavyInput.onchange = saveFunction;
+    upInput.onchange = saveFunction;
+    specialInput.onchange = saveFunction;
+    leftInput.onchange = saveFunction;
+    downInput.onchange = saveFunction;
+    rightInput.onchange = saveFunction;
+
+    bonkHUD.createWindow("KeyTable", "1.0.4", "keytable_window", keyTable, keyTableSettings);
     let keytable_window = document.getElementById("keytable_window");
     keytable_window.style.width = "100%";
     keytable_window.style.height = "calc(100% - 32px)";
@@ -208,6 +351,23 @@ const addKeyTable = () => {
     keytable_window.style.flexFlow = "column";
 
     bonkHUD.loadUISetting("keytable_window");
+
+    let recoveredSetting = bonkHUD.getModSetting("keytable_window");
+    if(recoveredSetting) {
+        KeyTable.keys["heavy"].textContent = recoveredSetting["heavy"];
+        KeyTable.keys["up"].textContent = recoveredSetting["up"];
+        KeyTable.keys["special"].textContent = recoveredSetting["special"];
+        KeyTable.keys["left"].textContent = recoveredSetting["left"];
+        KeyTable.keys["down"].textContent = recoveredSetting["down"];
+        KeyTable.keys["right"].textContent = recoveredSetting["right"];
+
+        heavyInput.value = recoveredSetting["heavy"];
+        upInput.value = recoveredSetting["up"];
+        specialInput.value = recoveredSetting["special"];
+        leftInput.value = recoveredSetting["left"];
+        downInput.value = recoveredSetting["down"];
+        rightInput.value = recoveredSetting["right"];
+    }
 
     // Initialize the key styles
     KeyTable.updateKeyStyles();
