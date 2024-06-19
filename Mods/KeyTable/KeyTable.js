@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         KeyTable
-// @version      1.3.48
+// @version      1.4.48
 // @description  Add a customizable key table overlay to the bonk.io game
 // @author       BZD
 // @namespace    http://tampermonkey.net/

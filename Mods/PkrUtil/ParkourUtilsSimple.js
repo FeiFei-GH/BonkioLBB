@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ParkourUtilsTemp
 // @namespace    http://tampermonkey.net/
-// @version      1.0.48
+// @version      1.1.48
 // @description  Parkour Utilities
 // @author       FeiFei
 // @license      MIT
@@ -364,7 +364,7 @@ const addPkrDiv = () => {
         </div>
         <div id="pkrutils_marker_hold" style="padding:10px"></div>`;
 
-    bonkHUD.createWindow("pkrUtils", "pkr_utils_window", pkrDiv, "100px");
+    bonkHUD.createWindow("pkrUtils", "pkr_utils_window", "1.0.4", pkrDiv, "100px");
     /*let keytable_window = document.getElementById("keytable_window");
     keytable_window.style.width = "100%";
     keytable_window.style.height = "calc(100% - 32px)";
